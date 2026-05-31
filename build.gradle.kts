@@ -59,9 +59,9 @@ tasks.register<Javadoc>("aggregatedJavadocs") {
         )
     }
 
-    dependsOn(subprojects.map { it.tasks.named("classes") })
+    dependsOn(subprojects.filter { it.name != "localServerApp" }.map { it.tasks.named("classes") })
 
-    subprojects.forEach { proj ->
+    subprojects.filter { it.name != "localServerApp" }.forEach { proj ->
         proj.extensions.findByType(JavaPluginExtension::class.java)?.sourceSets?.getByName("main")?.let { main ->
             source(main.allJava)
             classpath += main.output + proj.configurations.getByName("compileClasspath")
