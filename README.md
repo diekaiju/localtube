@@ -29,6 +29,12 @@ To compile and launch the local server app:
 3. Tap **Start Server** to spin up the background service (runs as a foreground service with a notification displaying your network URL).
 4. Connect to `http://localhost:8080` (or `http://<your-device-ip>:8080`) from any browser on the same network to start streaming!
 
+### 📸 Screenshots
+
+| Android App Interface | Web Interface Home | Web Interface Player |
+|:---:|:---:|:---:|
+| ![Android App Interface](screenshots/app_interface.jpg) | ![Web Interface Home](screenshots/web_interface_home.jpg) | ![Web Interface Player](screenshots/web_interface_watch.jpg) |
+
 ---
 
 ## 📦 Extractor Library Usage
