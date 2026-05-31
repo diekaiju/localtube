@@ -1,10 +1,37 @@
-# NewPipe Extractor
+# LocalTube (NewPipe Extractor)
 
 [![CI](https://github.com/TeamNewPipe/NewPipeExtractor/actions/workflows/ci.yml/badge.svg?branch=dev&event=schedule)](https://github.com/TeamNewPipe/NewPipeExtractor/actions/workflows/ci.yml) [![JIT Pack Badge](https://jitpack.io/v/teamnewpipe/NewPipeExtractor.svg)](https://jitpack.io/#teamnewpipe/NewPipeExtractor) [JDoc](https://teamnewpipe.github.io/NewPipeExtractor/javadoc/) • [Documentation](https://teamnewpipe.github.io/documentation/)
 
-NewPipe Extractor is a library for extracting things from streaming sites. It is a core component of [NewPipe](https://github.com/TeamNewPipe/NewPipe), but could be used independently.
+**LocalTube** is a fork of [NewPipe Extractor](https://github.com/TeamNewPipe/NewPipeExtractor) that bundles a self-hosted local HTTP server Android application (`localServerApp`). It allows you to host, browse, search, and stream content from streaming platforms directly from any device in your local network using a standard web browser.
 
-## Usage
+## 📺 LocalTube Application (`localServerApp`)
+
+**LocalTube** transforms the stateless `NewPipeExtractor` library into a private, self-hosted streaming web server.
+
+### 🌟 Key Features
+
+- **Decentralized Local Server**: Runs a lightweight, concurrent Java HTTP server on your Android device (default port `8080`), serving a modern, responsive web interface.
+- **Cross-Device Playback**: Connect to the server from any device on your local Wi-Fi network (PC, laptop, smart TV, tablet) by visiting the local IP (e.g., `http://192.168.1.100:8080`).
+- **Private Watch History**: Keeps track of your watched videos locally on the device using a secure SQLite database (`HistoryDbHelper`) without external telemetry or tracking.
+- **HTML5 Player & Stream Proxying**: Proxies video/audio streams through the local server to bypass client-side signature/throttling restrictions, supporting range headers (seeking/fast-forwarding) directly inside native browser HTML5 elements.
+- **Multi-Service Ready**: Leveraging the extractor core, it is designed to support extraction across YouTube, SoundCloud, PeerTube, Bandcamp, and media.ccc.de.
+
+### 🛠️ Build and Run
+
+To compile and launch the local server app:
+
+1. **Build and install** the application on your Android device/emulator:
+   ```bash
+   ./gradlew :localServerApp:installDebug
+   ```
+   *(Or open the repository in Android Studio and run the `:localServerApp` module).*
+2. **Open the LocalTube App** on your device.
+3. Tap **Start Server** to spin up the background service (runs as a foreground service with a notification displaying your network URL).
+4. Connect to `http://localhost:8080` (or `http://<your-device-ip>:8080`) from any browser on the same network to start streaming!
+
+---
+
+## 📦 Extractor Library Usage
 
 NewPipe Extractor is available at JitPack's Maven repo.
 
