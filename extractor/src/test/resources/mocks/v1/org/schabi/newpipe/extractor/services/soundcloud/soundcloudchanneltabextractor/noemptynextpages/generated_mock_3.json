@@ -1,0 +1,77 @@
+{
+  "request": {
+    "httpMethod": "GET",
+    "url": "https://api-v2.soundcloud.com/users/73637815/tracks?offset\u003d2026-01-20T18%3A40%3A21.000Z%2Ctracks%2C00000000002250998000\u0026limit\u003d20\u0026client_id\u003dCkCiIyf14rHi27fhk7HxhPOzc85okfSJ",
+    "headers": {
+      "Accept-Language": [
+        "en-GB, en;q\u003d0.9"
+      ]
+    },
+    "localization": {
+      "languageCode": "en",
+      "countryCode": "GB"
+    }
+  },
+  "response": {
+    "responseCode": 200,
+    "responseMessage": "OK",
+    "responseHeaders": {
+      "accept-ch": [
+        "Sec-CH-UA,Sec-CH-UA-Mobile,Sec-CH-UA-Platform,Sec-CH-UA-Arch,Sec-CH-UA-Full-Version-List,Sec-CH-UA-Model,Sec-CH-Device-Memory"
+      ],
+      "cache-control": [
+        "private, max-age\u003d0"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json; charset\u003dutf-8"
+      ],
+      "date": [
+        "Sat, 21 Feb 2026 01:08:06 GMT"
+      ],
+      "referrer-policy": [
+        "no-referrer"
+      ],
+      "server": [
+        "am/2"
+      ],
+      "set-cookie": [
+        "datadome\u003dvrBelT91oPRDdLQ6moV~UO0FIhKaUj~56NyXsEIyw20aa83~SJNy5iav8stXBzrSBCwO1vvZHsiMcxp4TyqvKcxaHlkcfeza~kGhM4rgahgq44n4yyCz7XJHISm4XXU1; Max-Age\u003d31536000; Domain\u003d.soundcloud.com; Path\u003d/; Secure; SameSite\u003dLax"
+      ],
+      "strict-transport-security": [
+        "max-age\u003d63072000"
+      ],
+      "vary": [
+        "Origin"
+      ],
+      "via": [
+        "1.1 cb2b840821313909da7f7890ec5606ba.cloudfront.net (CloudFront)"
+      ],
+      "x-amz-cf-id": [
+        "3wt9FB2i-tfM0Clcdn3v22BcN7s96Ox-huPC4ZV1_goWuyBSaLi5lg\u003d\u003d"
+      ],
+      "x-amz-cf-pop": [
+        "HAM50-P5"
+      ],
+      "x-cache": [
+        "Miss from cloudfront"
+      ],
+      "x-content-type-options": [
+        "nosniff"
+      ],
+      "x-datadome": [
+        "protected"
+      ],
+      "x-frame-options": [
+        "DENY"
+      ],
+      "x-robots-tag": [
+        "noindex"
+      ]
+    },
+    "responseBody": "{\"collection\":[],\"next_href\":\"https://api-v2.soundcloud.com/users/73637815/tracks?offset\u003d2026-01-16T19%3A54%3A39.000Z%2Ctracks%2C00000000002248806227\u0026limit\u003d20\",\"query_urn\":null}",
+    "latestUrl": "https://api-v2.soundcloud.com/users/73637815/tracks?offset\u003d2026-01-20T18%3A40%3A21.000Z%2Ctracks%2C00000000002250998000\u0026limit\u003d20\u0026client_id\u003dCkCiIyf14rHi27fhk7HxhPOzc85okfSJ"
+  }
+}

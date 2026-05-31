@@ -1,0 +1,68 @@
+{
+  "request": {
+    "httpMethod": "GET",
+    "url": "https://api-widget.soundcloud.com/resolve?url\u003dhttps%3A%2F%2Fsoundcloud.com%2Fithinkthatthisuserdontexist\u0026format\u003djson\u0026client_id\u003dCkCiIyf14rHi27fhk7HxhPOzc85okfSJ",
+    "headers": {
+      "Accept-Language": [
+        "en-GB, en;q\u003d0.9"
+      ]
+    },
+    "localization": {
+      "languageCode": "en",
+      "countryCode": "GB"
+    }
+  },
+  "response": {
+    "responseCode": 404,
+    "responseMessage": "Not Found",
+    "responseHeaders": {
+      "cache-control": [
+        "private, max-age\u003d0"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json; charset\u003dutf-8"
+      ],
+      "date": [
+        "Sat, 21 Feb 2026 01:08:32 GMT"
+      ],
+      "referrer-policy": [
+        "no-referrer"
+      ],
+      "server": [
+        "am/2"
+      ],
+      "strict-transport-security": [
+        "max-age\u003d63072000"
+      ],
+      "vary": [
+        "Origin"
+      ],
+      "via": [
+        "1.1 8631757cdb9873ebb5fb3acf7eb48b94.cloudfront.net (CloudFront)"
+      ],
+      "x-amz-cf-id": [
+        "NGGmH-1_vwOJBNDNMfL8zLBngFfTYueKNw6Lgdy3h_WDxk7Xxq845A\u003d\u003d"
+      ],
+      "x-amz-cf-pop": [
+        "HAM50-P6"
+      ],
+      "x-cache": [
+        "Error from cloudfront"
+      ],
+      "x-content-type-options": [
+        "nosniff"
+      ],
+      "x-frame-options": [
+        "DENY"
+      ],
+      "x-robots-tag": [
+        "noindex"
+      ]
+    },
+    "responseBody": "{}",
+    "latestUrl": "https://api-widget.soundcloud.com/resolve?url\u003dhttps%3A%2F%2Fsoundcloud.com%2Fithinkthatthisuserdontexist\u0026format\u003djson\u0026client_id\u003dCkCiIyf14rHi27fhk7HxhPOzc85okfSJ"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "request": {
+    "httpMethod": "GET",
+    "url": "https://api-v2.soundcloud.com/media/soundcloud:tracks:1356023209/aca35be0-c9a7-4d9d-bdc9-cf016bffa39c/stream/hls?client_id\u003dCkCiIyf14rHi27fhk7HxhPOzc85okfSJ\u0026track_authorization\u003deyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJnZW8iOiJERSIsInN1YiI6IiIsInJpZCI6IiIsImlhdCI6MTc3MTYzNjEwM30.e0iU2H2-D7Q9-88zIGOfiIoQx4HIkYIq789kzWNUPKw",
+    "headers": {
+      "Accept-Language": [
+        "en-GB, en;q\u003d0.9"
+      ]
+    },
+    "localization": {
+      "languageCode": "en",
+      "countryCode": "GB"
+    }
+  },
+  "response": {
+    "responseCode": 200,
+    "responseMessage": "OK",
+    "responseHeaders": {
+      "cache-control": [
+        "private, max-age\u003d0"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json; charset\u003dutf-8"
+      ],
+      "date": [
+        "Sat, 21 Feb 2026 01:08:24 GMT"
+      ],
+      "referrer-policy": [
+        "no-referrer"
+      ],
+      "server": [
+        "am/2"
+      ],
+      "strict-transport-security": [
+        "max-age\u003d63072000"
+      ],
+      "vary": [
+        "Origin"
+      ],
+      "via": [
+        "1.1 cb2b840821313909da7f7890ec5606ba.cloudfront.net (CloudFront)"
+      ],
+      "x-amz-cf-id": [
+        "9vWbpalv_ZA8dcYIodNKgyptov5R-JtFQDFgQ2KU9HtQp8BDRJDFAQ\u003d\u003d"
+      ],
+      "x-amz-cf-pop": [
+        "HAM50-P5"
+      ],
+      "x-cache": [
+        "Miss from cloudfront"
+      ],
+      "x-content-type-options": [
+        "nosniff"
+      ],
+      "x-frame-options": [
+        "DENY"
+      ],
+      "x-robots-tag": [
+        "noindex"
+      ]
+    },
+    "responseBody": "{\"url\":\"https://cf-hls-media.sndcdn.com/playlist/cyaz0oXJYbdt.128.mp3/playlist.m3u8?Policy\u003deyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLWhscy1tZWRpYS5zbmRjZG4uY29tL3BsYXlsaXN0L2N5YXowb1hKWWJkdC4xMjgubXAzL3BsYXlsaXN0Lm0zdTgqIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzcxNjM3NzI0fX19XX0_\u0026Signature\u003dSSZg5dpv5PTcb4f11ucpj8obAKI7NyybjT5WCVaCRssIM1QYOYzAJcPa1hbPDuSvRx4if4yng58aIcnp~7elNiYV1iaLPfx-4AHUklzZeCTcFBGfsclXk8BbNCaDKeSWa8~2Y5TSFIuiBvWYXsioXxH6Tfg1dA1T~ui5NwsxdnRRyN9j805W~DAZych5aIozrBuKU0jEBrQjQMPVfV22rxauTvx2~11J4zn-ElI6Prs6gXZDg0IayLbFr4HLbhqPULk6w2kxuWF633GYDTjghIcx75vxSZOtgc9mpO5Vb5Exq1ea3vFgJ~TN6JiwlyQY9~rJKcYnUuU6AmguOQRDcA__\u0026Key-Pair-Id\u003dAPKAI6TU7MMXM5DG6EPQ\"}",
+    "latestUrl": "https://api-v2.soundcloud.com/media/soundcloud:tracks:1356023209/aca35be0-c9a7-4d9d-bdc9-cf016bffa39c/stream/hls?client_id\u003dCkCiIyf14rHi27fhk7HxhPOzc85okfSJ\u0026track_authorization\u003deyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJnZW8iOiJERSIsInN1YiI6IiIsInJpZCI6IiIsImlhdCI6MTc3MTYzNjEwM30.e0iU2H2-D7Q9-88zIGOfiIoQx4HIkYIq789kzWNUPKw"
+  }
+}

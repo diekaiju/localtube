@@ -1,0 +1,68 @@
+{
+  "request": {
+    "httpMethod": "GET",
+    "url": "https://api-v2.soundcloud.com/users/217903802/followings?client_id\u003dCkCiIyf14rHi27fhk7HxhPOzc85okfSJ\u0026limit\u003d200",
+    "headers": {
+      "Accept-Language": [
+        "en-GB, en;q\u003d0.9"
+      ]
+    },
+    "localization": {
+      "languageCode": "en",
+      "countryCode": "GB"
+    }
+  },
+  "response": {
+    "responseCode": 200,
+    "responseMessage": "OK",
+    "responseHeaders": {
+      "cache-control": [
+        "private, max-age\u003d0"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json; charset\u003dutf-8"
+      ],
+      "date": [
+        "Sat, 21 Feb 2026 01:08:32 GMT"
+      ],
+      "referrer-policy": [
+        "no-referrer"
+      ],
+      "server": [
+        "am/2"
+      ],
+      "strict-transport-security": [
+        "max-age\u003d63072000"
+      ],
+      "vary": [
+        "Origin"
+      ],
+      "via": [
+        "1.1 cb2b840821313909da7f7890ec5606ba.cloudfront.net (CloudFront)"
+      ],
+      "x-amz-cf-id": [
+        "s4ou2BbQlqc6kGH6B4SaNjcKFER9Ylz_N3_TjK8KQI9hEl6AugkAQA\u003d\u003d"
+      ],
+      "x-amz-cf-pop": [
+        "HAM50-P5"
+      ],
+      "x-cache": [
+        "Miss from cloudfront"
+      ],
+      "x-content-type-options": [
+        "nosniff"
+      ],
+      "x-frame-options": [
+        "DENY"
+      ],
+      "x-robots-tag": [
+        "noindex"
+      ]
+    },
+    "responseBody": "{\"collection\":[{\"avatar_url\":\"https://i1.sndcdn.com/avatars-000516550104-ydetap-large.jpg\",\"city\":null,\"comments_count\":0,\"country_code\":null,\"created_at\":\"2017-07-27T21:50:19Z\",\"creator_subscriptions\":[{\"product\":{\"id\":\"free\"}}],\"creator_subscription\":{\"product\":{\"id\":\"free\"}},\"description\":null,\"followers_count\":30531,\"followings_count\":0,\"first_name\":\"\",\"full_name\":\"\",\"groups_count\":0,\"id\":322530553,\"kind\":\"user\",\"last_modified\":\"2021-11-16T00:00:01Z\",\"last_name\":\"\",\"likes_count\":0,\"playlist_likes_count\":0,\"permalink\":\"jflaofficial\",\"permalink_url\":\"https://soundcloud.com/jflaofficial\",\"playlist_count\":31,\"reposts_count\":null,\"track_count\":276,\"uri\":\"https://api.soundcloud.com/users/soundcloud%3Ausers%3A322530553\",\"urn\":\"soundcloud:users:322530553\",\"username\":\"J.Fla\",\"verified\":true,\"visuals\":null,\"badges\":{\"pro\":false,\"creator_mid_tier\":false,\"pro_unlimited\":false,\"verified\":true},\"station_urn\":\"soundcloud:system-playlists:artist-stations:322530553\",\"station_permalink\":\"artist-stations:322530553\",\"date_of_birth\":null}],\"next_href\":null,\"query_urn\":null}",
+    "latestUrl": "https://api-v2.soundcloud.com/users/217903802/followings?client_id\u003dCkCiIyf14rHi27fhk7HxhPOzc85okfSJ\u0026limit\u003d200"
+  }
+}
