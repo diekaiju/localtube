@@ -192,27 +192,51 @@ public class LocalHttpServer {
 
             try {
                 StreamingService service = NewPipe.getService(serviceId);
-                SearchExtractor extractor = service.getSearchExtractor("trending");
-
                 List<InfoItem> items;
                 Page next;
 
                 if (nextPage != null) {
+                    SearchExtractor extractor = service.getSearchExtractor("trending");
                     InfoItemsPage<InfoItem> page = extractor.getPage(nextPage);
                     items = page.getItems();
                     next = page.getNextPage();
                 } else {
+                    List<String> preferred = dbHelper.getPreferredKeywords();
+                    SearchExtractor extractor;
+                    if (!preferred.isEmpty()) {
+                        String query = generateHomeQuery(preferred);
+                        log("Generating personalized home feed for query: " + query);
+                        extractor = service.getSearchExtractor(query);
+                    } else {
+                        extractor = service.getSearchExtractor("trending");
+                    }
                     extractor.fetchPage();
                     items = extractor.getInitialPage().getItems();
                     next = extractor.getInitialPage().getNextPage();
                 }
 
-                String html = HtmlRenderer.renderHome(serviceId, items, next);
+                List<InfoItem> filtered = filterItems(items);
+                String html = HtmlRenderer.renderHome(serviceId, filtered, next);
                 sendResponse(os, 200, html, "text/html; charset=UTF-8");
             } catch (Exception e) {
                 List<CachedVideo> cachedVideos = dbHelper.getCachedVideos();
                 String html = HtmlRenderer.renderOfflineHome(serviceId, "Offline - Showing cached content (" + e.getMessage() + ")", cachedVideos);
                 sendResponse(os, 200, html, "text/html; charset=UTF-8");
+            }
+        }
+
+        private String generateHomeQuery(List<String> preferred) {
+            if (preferred == null || preferred.isEmpty()) return "trending";
+            java.util.Random rand = new java.util.Random();
+            if (preferred.size() >= 2 && rand.nextDouble() < 0.3) {
+                int idx1 = rand.nextInt(preferred.size());
+                int idx2 = rand.nextInt(preferred.size());
+                while (idx1 == idx2) {
+                    idx2 = rand.nextInt(preferred.size());
+                }
+                return preferred.get(idx1) + " " + preferred.get(idx2);
+            } else {
+                return preferred.get(rand.nextInt(preferred.size()));
             }
         }
 
@@ -244,7 +268,8 @@ public class LocalHttpServer {
                     next = extractor.getInitialPage().getNextPage();
                 }
 
-                String html = HtmlRenderer.renderSearch(serviceId, query, items, next);
+                List<InfoItem> filtered = filterItems(items);
+                String html = HtmlRenderer.renderSearch(serviceId, query, filtered, next);
                 sendResponse(os, 200, html, "text/html; charset=UTF-8");
             } catch (Exception e) {
                 List<CachedVideo> cachedVideos = dbHelper.getCachedVideos();
@@ -413,26 +438,36 @@ public class LocalHttpServer {
             ChannelExtractor channelExtractor = service.getChannelExtractor(channelUrl);
             channelExtractor.fetchPage();
 
-            InfoItemsPage<? extends InfoItem> itemsPage;
+            List<InfoItem> items;
+            Page next;
             if ("playlists".equals(tab)) {
                 ChannelTabExtractor tabExtractor = service.getChannelTabExtractorFromIdAndBaseUrl(channelExtractor.getId(), "playlists", channelExtractor.getBaseUrl());
                 if (nextPage != null) {
-                    itemsPage = tabExtractor.getPage(nextPage);
+                    InfoItemsPage<? extends InfoItem> page = tabExtractor.getPage(nextPage);
+                    items = (List<InfoItem>) page.getItems();
+                    next = page.getNextPage();
                 } else {
                     tabExtractor.fetchPage();
-                    itemsPage = tabExtractor.getInitialPage();
+                    InfoItemsPage<? extends InfoItem> page = tabExtractor.getInitialPage();
+                    items = (List<InfoItem>) page.getItems();
+                    next = page.getNextPage();
                 }
             } else {
                 ChannelTabExtractor tabExtractor = service.getChannelTabExtractorFromIdAndBaseUrl(channelExtractor.getId(), "videos", channelExtractor.getBaseUrl());
                 if (nextPage != null) {
-                    itemsPage = tabExtractor.getPage(nextPage);
+                    InfoItemsPage<? extends InfoItem> page = tabExtractor.getPage(nextPage);
+                    items = (List<InfoItem>) page.getItems();
+                    next = page.getNextPage();
                 } else {
                     tabExtractor.fetchPage();
-                    itemsPage = tabExtractor.getInitialPage();
+                    InfoItemsPage<? extends InfoItem> page = tabExtractor.getInitialPage();
+                    items = (List<InfoItem>) page.getItems();
+                    next = page.getNextPage();
                 }
             }
 
-            String html = HtmlRenderer.renderChannel(serviceId, channelExtractor, tab, itemsPage);
+            List<InfoItem> filtered = filterItems(items);
+            String html = HtmlRenderer.renderChannel(serviceId, channelExtractor, tab, filtered, next);
             sendResponse(os, 200, html, "text/html; charset=UTF-8");
         }
 
@@ -446,15 +481,21 @@ public class LocalHttpServer {
             StreamingService service = NewPipe.getService(serviceId);
             PlaylistExtractor extractor = service.getPlaylistExtractor(playlistUrl);
             
-            InfoItemsPage<? extends InfoItem> itemsPage;
+            List<InfoItem> items;
+            Page next;
             if (nextPage != null) {
-                itemsPage = extractor.getPage(nextPage);
+                InfoItemsPage<? extends InfoItem> page = extractor.getPage(nextPage);
+                items = (List<InfoItem>) page.getItems();
+                next = page.getNextPage();
             } else {
                 extractor.fetchPage();
-                itemsPage = extractor.getInitialPage();
+                InfoItemsPage<? extends InfoItem> page = extractor.getInitialPage();
+                items = (List<InfoItem>) page.getItems();
+                next = page.getNextPage();
             }
 
-            String html = HtmlRenderer.renderPlaylist(serviceId, extractor, itemsPage);
+            List<InfoItem> filtered = filterItems(items);
+            String html = HtmlRenderer.renderPlaylist(serviceId, extractor, filtered, next);
             sendResponse(os, 200, html, "text/html; charset=UTF-8");
         }
 
@@ -598,6 +639,62 @@ public class LocalHttpServer {
                 // Client connection closed
             }
             os.flush();
+        }
+
+
+        private List<InfoItem> filterItems(List<InfoItem> items) {
+            if (items == null) return null;
+            boolean hideWatched = dbHelper.getHideWatched();
+            boolean hideShorts = dbHelper.getHideShorts();
+            List<String> blockedKeywords = dbHelper.getBlockedKeywords();
+            List<String> blockedChannels = dbHelper.getBlockedChannels();
+
+            List<InfoItem> filtered = new java.util.ArrayList<>();
+            java.util.Set<String> watchedUrls = new java.util.HashSet<>();
+            if (hideWatched) {
+                for (InfoItem hist : dbHelper.getHistory()) {
+                    watchedUrls.add(hist.getUrl());
+                }
+            }
+
+            for (InfoItem item : items) {
+                if (hideWatched && watchedUrls.contains(item.getUrl())) {
+                    continue;
+                }
+
+                if (hideShorts && item instanceof StreamInfoItem) {
+                    StreamInfoItem stream = (StreamInfoItem) item;
+                    if (stream.getDuration() > 0 && stream.getDuration() <= 120) {
+                        continue;
+                    }
+                }
+
+                boolean hasBlockedKeyword = false;
+                String titleLower = item.getName().toLowerCase(java.util.Locale.US);
+                for (String keyword : blockedKeywords) {
+                    if (!keyword.isEmpty() && titleLower.contains(keyword.toLowerCase(java.util.Locale.US))) {
+                        hasBlockedKeyword = true;
+                        break;
+                    }
+                }
+                if (hasBlockedKeyword) continue;
+
+                boolean hasBlockedChannel = false;
+                if (item instanceof StreamInfoItem) {
+                    StreamInfoItem stream = (StreamInfoItem) item;
+                    String uploaderLower = stream.getUploaderName() != null ? stream.getUploaderName().toLowerCase(java.util.Locale.US) : "";
+                    for (String channel : blockedChannels) {
+                        if (!channel.isEmpty() && uploaderLower.contains(channel.toLowerCase(java.util.Locale.US))) {
+                            hasBlockedChannel = true;
+                            break;
+                        }
+                    }
+                }
+                if (hasBlockedChannel) continue;
+
+                filtered.add(item);
+            }
+            return filtered;
         }
     }
 }

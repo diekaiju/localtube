@@ -91,7 +91,30 @@ public class HtmlRenderer {
             ".channel-tabs-selector { display: flex; background-color: #ffffff; border-top: 1px solid #e5e5e5; padding: 4px 16px; }\n" +
             ".channel-tab-btn { padding: 12px 20px; font-size: 14px; font-weight: 600; color: #606060; border-bottom: 3px solid transparent; cursor: pointer; }\n" +
             ".channel-tab-btn.active { color: #0f0f0f; border-bottom-color: #0f0f0f; }\n" +
-            ".loading-placeholder { text-align: center; font-size: 16px; padding: 50px 0; color: #606060; }";
+            ".loading-placeholder { text-align: center; font-size: 16px; padding: 50px 0; color: #606060; }\n" +
+            ".settings-card { background-color: #ffffff; padding: 28px; border-radius: 16px; border: 1px solid #e5e5e5; max-width: 650px; margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }\n" +
+            ".settings-title { font-size: 22px; font-weight: 700; margin-bottom: 24px; color: #0f0f0f; }\n" +
+            ".settings-section { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #f2f2f2; }\n" +
+            ".settings-section:last-child { border-bottom: none; }\n" +
+            ".settings-section-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #0f0f0f; }\n" +
+            ".setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }\n" +
+            ".setting-label-group { display: flex; flex-direction: column; gap: 4px; }\n" +
+            ".setting-label { font-size: 14px; font-weight: 500; color: #0f0f0f; }\n" +
+            ".setting-desc { font-size: 12px; color: #606060; }\n" +
+            ".switch { position: relative; display: inline-block; width: 46px; height: 26px; }\n" +
+            ".switch input { opacity: 0; width: 0; height: 0; }\n" +
+            ".slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .3s; border-radius: 26px; }\n" +
+            ".slider:before { position: absolute; content: ''; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; }\n" +
+            "input:checked + .slider { background-color: #0f0f0f; }\n" +
+            "input:checked + .slider:before { transform: translateX(20px); }\n" +
+            ".textarea-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }\n" +
+            ".textarea-label { font-size: 14px; font-weight: 500; color: #0f0f0f; }\n" +
+            ".settings-textarea { width: 100%; height: 100px; padding: 12px; border-radius: 8px; border: 1px solid #cccccc; background-color: #ffffff; color: #0f0f0f; font-size: 14px; outline: none; transition: border-color 0.15s ease; resize: vertical; font-family: inherit; }\n" +
+            ".settings-textarea:focus { border-color: #1c62b9; }\n" +
+            ".btn-save { display: inline-block; width: 100%; padding: 12px; border-radius: 24px; font-size: 14px; font-weight: 600; text-align: center; border: none; cursor: pointer; transition: background 0.2s; }\n" +
+            ".btn-save-primary { background-color: #0f0f0f; color: #ffffff; }\n" +
+            ".btn-save-primary:hover { background-color: #272727; }\n" +
+            ".alert-banner { background-color: #e6f4ea; color: #137333; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-weight: 500; border: 1px solid #ceead6; display: flex; align-items: center; gap: 8px; }";
 
     // Supported platform details
     public static final String[] SERVICE_NAMES = {"YouTube"};
@@ -348,7 +371,7 @@ public class HtmlRenderer {
     }
 
     // Render Channel Profile page
-    public static String renderChannel(int serviceId, ChannelExtractor channel, String activeTab, InfoItemsPage<? extends InfoItem> itemsPage) throws Exception {
+    public static String renderChannel(int serviceId, ChannelExtractor channel, String activeTab, List<InfoItem> items, Page nextPage) throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append(getHeaderHtml(serviceId, ""));
         sb.append("<div class=\"container\">\n")
@@ -370,11 +393,11 @@ public class HtmlRenderer {
           .append("  </div>\n"); // Close channel-header
 
         // Render uploads/playlist grid
-        if (itemsPage != null && !itemsPage.getItems().isEmpty()) {
-            renderGrid(sb, serviceId, (List) itemsPage.getItems());
+        if (items != null && !items.isEmpty()) {
+            renderGrid(sb, serviceId, items);
 
-            if (itemsPage.hasNextPage()) {
-                String serializedPage = serializePage(itemsPage.getNextPage());
+            if (nextPage != null) {
+                String serializedPage = serializePage(nextPage);
                 if (serializedPage != null) {
                     sb.append("  <div class=\"pagination\">\n")
                       .append("    <a href=\"/channel?serviceId=").append(serviceId).append("&id=").append(channel.getLinkHandler().getUrl())
@@ -392,7 +415,7 @@ public class HtmlRenderer {
     }
 
     // Render Playlist view
-    public static String renderPlaylist(int serviceId, PlaylistExtractor playlist, InfoItemsPage<? extends InfoItem> itemsPage) throws Exception {
+    public static String renderPlaylist(int serviceId, PlaylistExtractor playlist, List<InfoItem> items, Page nextPage) throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append(getHeaderHtml(serviceId, ""));
         sb.append("<div class=\"container\">\n")
@@ -402,11 +425,11 @@ public class HtmlRenderer {
           .append(playlist.getStreamCount() >= 0 ? playlist.getStreamCount() + " items" : "").append("</span>\n")
           .append("  </div>\n");
 
-        if (itemsPage != null && !itemsPage.getItems().isEmpty()) {
-            renderGrid(sb, serviceId, (List) itemsPage.getItems());
+        if (items != null && !items.isEmpty()) {
+            renderGrid(sb, serviceId, items);
 
-            if (itemsPage.hasNextPage()) {
-                String serializedPage = serializePage(itemsPage.getNextPage());
+            if (nextPage != null) {
+                String serializedPage = serializePage(nextPage);
                 if (serializedPage != null) {
                     sb.append("  <div class=\"pagination\">\n")
                       .append("    <a href=\"/playlist?serviceId=").append(serviceId).append("&id=").append(playlist.getLinkHandler().getUrl())

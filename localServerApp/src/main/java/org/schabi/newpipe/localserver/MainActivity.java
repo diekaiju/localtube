@@ -4,13 +4,20 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.text.SimpleDateFormat;
@@ -25,6 +32,9 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
     private TextView textLogs;
     private Button btnToggle;
     private Button btnOpenBrowser;
+    private Button btnSettings;
+    private com.google.android.material.card.MaterialCardView cardStatus;
+    private TextView statusIndicator;
 
     private ServerService serverService;
     private boolean isBound = false;
@@ -58,6 +68,9 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
         textLogs = findViewById(R.id.text_logs);
         btnToggle = findViewById(R.id.btn_toggle);
         btnOpenBrowser = findViewById(R.id.btn_open_browser);
+        btnSettings = findViewById(R.id.btn_settings);
+        cardStatus = findViewById(R.id.card_status);
+        statusIndicator = findViewById(R.id.status_indicator);
 
         // Bind log callback
         LocalHttpServer.setLogListener(this);
@@ -87,6 +100,14 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
             }
         });
 
+        btnSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(intent);
+            }
+        });
+
         // Bind to Service
         Intent intent = new Intent(this, ServerService.class);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
@@ -102,10 +123,16 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
     }
 
     private void updateUi() {
+        if (cardStatus == null || statusIndicator == null) return;
         if (isBound && serverService != null && serverService.isRunning()) {
+            cardStatus.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#132D1B")));
+            cardStatus.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#2E7D32")));
             textStatus.setText("Status: Running");
-            textStatus.setTextColor(0xFF00FF00); // Green
+            textStatus.setTextColor(Color.parseColor("#4CAF50"));
+            statusIndicator.setText("🟢");
+
             btnToggle.setText("Stop Server");
+            btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#E53935"))); // Red
             btnOpenBrowser.setEnabled(true);
 
             String localIp = ServerService.getLocalIpAddress();
@@ -114,9 +141,14 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
                     (localIp != null ? "Network Link: http://" + localIp + ":8080" : "");
             textUrls.setText(addressText);
         } else {
+            cardStatus.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#2D1313")));
+            cardStatus.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#C62828")));
             textStatus.setText("Status: Stopped");
-            textStatus.setTextColor(0xFFFF5555); // Red
+            textStatus.setTextColor(Color.parseColor("#E53935"));
+            statusIndicator.setText("🔴");
+
             btnToggle.setText("Start Server");
+            btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#4CAF50"))); // Green
             btnOpenBrowser.setEnabled(false);
             textIpAddress.setText("IP Address: Not Available");
             textUrls.setText("Server is not running.");
@@ -153,4 +185,5 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
         LocalHttpServer.setLogListener(null);
         super.onDestroy();
     }
+
 }

@@ -22,6 +22,12 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:label="Settings"
+            android:theme="@style/Theme.LocalMediaServer.Settings" />
+
         <service
             android:name=".ServerService"
             android:enabled="true"

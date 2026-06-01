@@ -17,7 +17,7 @@ import java.util.List;
 public class HistoryDbHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "history.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     private static final String TABLE_HISTORY = "watch_history";
     private static final String KEY_ID = "id";
@@ -33,6 +33,10 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
     private static final String KEY_DESCRIPTION = "description";
     private static final String KEY_STATUS = "status";
     private static final String KEY_PROGRESS = "progress";
+
+    private static final String TABLE_SETTINGS = "filter_settings";
+    private static final String KEY_SETTING_KEY = "setting_key";
+    private static final String KEY_SETTING_VALUE = "setting_value";
 
     private static HistoryDbHelper instance;
 
@@ -72,6 +76,12 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
                 + KEY_TIMESTAMP + " INTEGER"
                 + ")";
         db.execSQL(CREATE_CACHED_TABLE);
+
+        String CREATE_SETTINGS_TABLE = "CREATE TABLE " + TABLE_SETTINGS + "("
+                + KEY_SETTING_KEY + " TEXT PRIMARY KEY,"
+                + KEY_SETTING_VALUE + " TEXT"
+                + ")";
+        db.execSQL(CREATE_SETTINGS_TABLE);
     }
 
     @Override
@@ -90,6 +100,13 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
                     + KEY_TIMESTAMP + " INTEGER"
                     + ")";
             db.execSQL(CREATE_CACHED_TABLE);
+        }
+        if (oldVersion < 3) {
+            String CREATE_SETTINGS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_SETTINGS + "("
+                    + KEY_SETTING_KEY + " TEXT PRIMARY KEY,"
+                    + KEY_SETTING_VALUE + " TEXT"
+                    + ")";
+            db.execSQL(CREATE_SETTINGS_TABLE);
         }
     }
 
@@ -249,5 +266,77 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
     public void deleteCachedVideo(String url) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_CACHED, KEY_URL + " = ?", new String[]{url});
+    }
+
+    public void setSetting(String key, String value) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_SETTING_KEY, key);
+        values.put(KEY_SETTING_VALUE, value);
+        db.insertWithOnConflict(TABLE_SETTINGS, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    public String getSetting(String key, String defaultValue) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String selectQuery = "SELECT " + KEY_SETTING_VALUE + " FROM " + TABLE_SETTINGS + " WHERE " + KEY_SETTING_KEY + " = ?";
+        try (Cursor cursor = db.rawQuery(selectQuery, new String[]{key})) {
+            if (cursor.moveToFirst()) {
+                int valIdx = cursor.getColumnIndex(KEY_SETTING_VALUE);
+                return valIdx != -1 ? cursor.getString(valIdx) : defaultValue;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return defaultValue;
+    }
+
+    public boolean getHideWatched() {
+        return "true".equals(getSetting("hide_watched", "false"));
+    }
+
+    public boolean getHideShorts() {
+        return "true".equals(getSetting("hide_shorts", "false"));
+    }
+
+    public List<String> getBlockedKeywords() {
+        String val = getSetting("blocked_keywords", "");
+        List<String> list = new ArrayList<>();
+        if (!val.isEmpty()) {
+            for (String s : val.split("\n")) {
+                String trimmed = s.trim();
+                if (!trimmed.isEmpty()) {
+                    list.add(trimmed);
+                }
+            }
+        }
+        return list;
+    }
+
+    public List<String> getBlockedChannels() {
+        String val = getSetting("blocked_channels", "");
+        List<String> list = new ArrayList<>();
+        if (!val.isEmpty()) {
+            for (String s : val.split("\n")) {
+                String trimmed = s.trim();
+                if (!trimmed.isEmpty()) {
+                    list.add(trimmed);
+                }
+            }
+        }
+        return list;
+    }
+
+    public List<String> getPreferredKeywords() {
+        String val = getSetting("preferred_keywords", "");
+        List<String> list = new ArrayList<>();
+        if (!val.isEmpty()) {
+            for (String s : val.split("\n")) {
+                String trimmed = s.trim();
+                if (!trimmed.isEmpty()) {
+                    list.add(trimmed);
+                }
+            }
+        }
+        return list;
     }
 }
