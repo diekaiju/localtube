@@ -31,9 +31,9 @@ To compile and launch the local server app:
 
 ### 📸 Screenshots
 
-| Android App Interface | Web Interface Home | Personalized recommendations |
+| Android App Interface | Web Interface Home | Personalization |
 |:---:|:---:|:---:|
-| ![Android App Interface](screenshots/app_interface.jpg) | ![Web Interface Home](screenshots/web_interface_home.jpg) | ![Personalized recommendations](screenshots/web_interface_watch.jpg) |
+| ![Android App Interface](screenshots/app_interface.jpg) | ![Web Interface Home](screenshots/web_interface_home.jpg) | ![Personalization](screenshots/web_interface_watch.jpg) |
 
 ---
 
