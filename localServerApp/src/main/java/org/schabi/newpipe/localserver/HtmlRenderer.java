@@ -147,9 +147,11 @@ public class HtmlRenderer {
 
         String ytActive = "youtube".equals(activeTab) ? "active" : "";
         String histActive = "history".equals(activeTab) ? "active" : "";
+        String cachedActive = "cached".equals(activeTab) ? "active" : "";
 
         sb.append("    <a href=\"/\" class=\"service-tab ").append(ytActive).append("\">YouTube</a>\n")
-          .append("    <a href=\"/history\" class=\"service-tab ").append(histActive).append("\">📜 History</a>\n");
+          .append("    <a href=\"/history\" class=\"service-tab ").append(histActive).append("\">📜 History</a>\n")
+          .append("    <a href=\"/cache\" class=\"service-tab ").append(cachedActive).append("\">📥 Cached</a>\n");
 
         sb.append("  </div>\n")
           .append("</header>\n");
@@ -238,7 +240,7 @@ public class HtmlRenderer {
     }
 
     // Renders Watch Media page
-    public static String renderWatch(int serviceId, StreamInfo info) {
+    public static String renderWatch(int serviceId, StreamInfo info, CachedVideo cachedVideo) {
         StringBuilder sb = new StringBuilder();
         sb.append(getHeaderHtml(serviceId, ""));
         sb.append("<div class=\"container\">\n")
@@ -295,9 +297,19 @@ public class HtmlRenderer {
           .append("              <a href=\"/channel?serviceId=").append(serviceId).append("&id=").append(info.getUploaderUrl()).append("\" class=\"uploader-name\">")
           .append(info.getUploaderName()).append("</a>\n")
           .append("              <span class=\"uploader-subs\">").append(info.getUploaderSubscriberCount() >= 0 ? info.getUploaderSubscriberCount() + " subscribers" : "").append("</span>\n")
-          .append("            </div>\n")
-          .append("            <button class=\"subscribe-btn\">Subscribe</button>\n")
-          .append("          </div>\n");
+          .append("            </div>\n");
+
+        if (cachedVideo == null) {
+            sb.append("            <a href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:#007acc; text-decoration:none;\">📥 Cache Offline</a>\n");
+        } else if ("COMPLETED".equals(cachedVideo.getStatus())) {
+            sb.append("            <a href=\"/cache?action=delete&id=").append(encodeUrl(info.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:#d9534f; text-decoration:none;\">🗑️ Delete Cache</a>\n");
+        } else if ("DOWNLOADING".equals(cachedVideo.getStatus()) || "PENDING".equals(cachedVideo.getStatus())) {
+            sb.append("            <span class=\"subscribe-btn\" style=\"background-color:#f0ad4e; text-decoration:none; cursor:default; pointer-events:none;\">⏳ Caching (").append(cachedVideo.getProgress()).append("%)</span>\n");
+        } else if ("FAILED".equals(cachedVideo.getStatus())) {
+            sb.append("            <a href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:#d9534f; text-decoration:none;\">❌ Retry Cache</a>\n");
+        }
+
+        sb.append("          </div>\n");
 
         // Description
         sb.append("          <div class=\"media-description\">")
@@ -309,16 +321,6 @@ public class HtmlRenderer {
         sb.append("        <div class=\"comments-section\">\n")
           .append("          <h3 class=\"comment-count\">💬 Comments</h3>\n");
         
-        List<InfoItem> comments = info.getRelatedItems(); // Related items sometimes double as details.
-        // Wait, comments are loaded via commentsExtractor or relatedItems depending on service configuration.
-        // For comments, NewPipeExtractor uses commentsExtractor. We will render related stream items in the sidebar
-        // and comments at the bottom if comments exist.
-        
-        // Let's populate the bottom of Watch page with whatever comments are retrieved.
-        // If we don't have separate comment pages loaded, we can put a placeholder or show them if extracted.
-        // We will make a call for comments if needed, but for simplicity of this template we will render comments
-        // if they are provided, or render the comments section nicely.
-        
         sb.append("          <div class=\"loading-placeholder\">Access comments by opening the related section below or scrolling.</div>\n");
         sb.append("        </div>\n")
           .append("      </div>\n"); // Close main-content
@@ -329,7 +331,7 @@ public class HtmlRenderer {
         for (InfoItem related : info.getRelatedItems()) {
             sb.append("        <div class=\"card\" style=\"margin-bottom:12px; flex-direction:row; height:90px;\">\n")
               .append("          <img src=\"").append(getThumbnailUrl(related.getThumbnails())).append("\" style=\"width:120px; height:100%; object-fit:cover;\">\n")
-              .append("          <div class=\"card-details\" style=\"padding:8dp; justify-content:space-between;\">\n")
+              .append("          <div class=\"card-details\" style=\"padding:8px; justify-content:space-between;\">\n")
               .append("            <a href=\"/watch?serviceId=").append(serviceId).append("&id=").append(related.getUrl()).append("\" class=\"card-title\" style=\"font-size:12px; -webkit-line-clamp:2;\">")
               .append(related.getName()).append("</a>\n")
               .append("            <span class=\"card-meta\" style=\"font-size:10px;\">").append(related.getName()).append("</span>\n")
@@ -501,5 +503,166 @@ public class HtmlRenderer {
         } catch (Exception e) {
             return url;
         }
+    }
+
+    public static String renderCachedWatch(int serviceId, CachedVideo video, List<CachedVideo> otherCached) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getHeaderHtml(serviceId, "", "cached"));
+        sb.append("<div class=\"container\">\n")
+          .append("  <div class=\"player-container\">\n")
+          .append("    <div class=\"player-layout\">\n")
+          .append("      <div class=\"main-content\">\n");
+
+        sb.append("        <video controls autoplay class=\"native-player\" poster=\"/thumbnail?id=").append(encodeUrl(video.getUrl())).append("\">\n")
+          .append("          <source src=\"/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(video.getUrl())).append("\" type=\"video/mp4\">\n")
+          .append("          Your browser does not support the HTML5 video tag.\n")
+          .append("        </video>\n");
+
+        // Title and Stats
+        sb.append("        <div class=\"media-info\">\n")
+          .append("          <h1 class=\"media-title\">").append(video.getTitle()).append("</h1>\n")
+          .append("          <div class=\"media-stats\">\n")
+          .append("            <span>💾 Cached Offline</span>\n")
+          .append("            <span>📅 ").append(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US).format(new java.util.Date(video.getTimestamp()))).append("</span>\n")
+          .append("          </div>\n");
+
+        // Uploader profile card
+        sb.append("          <div class=\"uploader-profile\">\n")
+          .append("            <div class=\"uploader-info\">\n")
+          .append("              <span class=\"uploader-name\">").append(video.getUploader()).append("</span>\n")
+          .append("            </div>\n")
+          .append("            <a href=\"/cache?action=delete&id=").append(encodeUrl(video.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:#d9534f; text-decoration:none;\">🗑️ Delete Cache</a>\n")
+          .append("          </div>\n");
+
+        // Description
+        sb.append("          <div class=\"media-description\">")
+          .append(video.getDescription() != null && !video.getDescription().isEmpty() ? video.getDescription() : "No description cached.")
+          .append("          </div>\n")
+          .append("        </div>\n");
+
+        sb.append("      </div>\n"); // Close main-content
+
+        // Related Items Sidebar
+        sb.append("      <div class=\"sidebar\">\n")
+          .append("        <h3 style=\"font-size: 16px; font-weight: 700; margin-bottom: 12px;\">Other Cached Videos</h3>\n");
+        int count = 0;
+        for (CachedVideo other : otherCached) {
+            if (other.getUrl().equals(video.getUrl())) continue;
+            count++;
+            sb.append("        <div class=\"card\" style=\"margin-bottom:12px; flex-direction:row; height:90px;\">\n")
+              .append("          <img src=\"/thumbnail?id=").append(encodeUrl(other.getUrl())).append("\" style=\"width:120px; height:100%; object-fit:cover; border-radius:8px;\">\n")
+              .append("          <div class=\"card-details\" style=\"padding:8px; justify-content:space-between;\">\n")
+              .append("            <a href=\"/watch?serviceId=").append(serviceId).append("&id=").append(encodeUrl(other.getUrl())).append("\" class=\"card-title\" style=\"font-size:12px; -webkit-line-clamp:2;\">")
+              .append(other.getTitle()).append("</a>\n")
+              .append("            <span class=\"card-meta\" style=\"font-size:10px;\">").append(other.getUploader()).append("</span>\n")
+              .append("          </div>\n")
+              .append("        </div>\n");
+        }
+        if (count == 0) {
+            sb.append("<div style=\"font-size:13px; color:#606060;\">No other cached videos.</div>\n");
+        }
+        sb.append("      </div>\n"); // Close sidebar
+
+        sb.append("    </div>\n") // Close player-layout
+          .append("  </div>\n") // Close player-container
+          .append("</div>\n"); // Close container
+
+        return wrapInTemplate(video.getTitle() + " - LocalTube", sb.toString());
+    }
+
+    public static String renderCachedList(int serviceId, List<CachedVideo> items) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getHeaderHtml(serviceId, "", "cached"));
+        sb.append("<div class=\"container\">\n")
+          .append("  <h2 style=\"margin-bottom: 20px; font-weight: 700;\">📥 Cached Videos</h2>\n");
+
+        if (items == null || items.isEmpty()) {
+            sb.append("<div class=\"loading-placeholder\">No cached videos found. Browse videos and click \"Cache Offline\" to save them!</div>\n");
+        } else {
+            sb.append("  <div class=\"grid\">\n");
+            for (CachedVideo item : items) {
+                String clickUrl = "/watch?serviceId=" + serviceId + "&id=" + encodeUrl(item.getUrl());
+                String statusLabel = "";
+                String statusColor = "#606060";
+                if ("COMPLETED".equals(item.getStatus())) {
+                    statusLabel = "✅ Saved Offline";
+                    statusColor = "#2b8a3e";
+                } else if ("DOWNLOADING".equals(item.getStatus())) {
+                    statusLabel = "⏳ Caching (" + item.getProgress() + "%)";
+                    statusColor = "#e67e22";
+                } else if ("PENDING".equals(item.getStatus())) {
+                    statusLabel = "⏳ Pending...";
+                    statusColor = "#9b59b6";
+                } else if ("FAILED".equals(item.getStatus())) {
+                    statusLabel = "❌ Failed";
+                    statusColor = "#c0392b";
+                }
+
+                sb.append("    <div class=\"card\" style=\"position: relative;\">\n")
+                  .append("      <a href=\"").append(clickUrl).append("\">\n")
+                  .append("        <img class=\"card-thumbnail\" src=\"/thumbnail?id=").append(encodeUrl(item.getUrl())).append("\">\n")
+                  .append("      </a>\n")
+                  .append("      <div class=\"card-details\">\n")
+                  .append("        <a href=\"").append(clickUrl).append("\" class=\"card-title\">").append(item.getTitle()).append("</a>\n")
+                  .append("        <div class=\"card-meta\">\n")
+                  .append("          <span class=\"card-uploader\">").append(item.getUploader()).append("</span>\n")
+                  .append("          <div style=\"display:flex; justify-content:space-between; align-items:center; margin-top:8px;\">\n")
+                  .append("            <span style=\"color:").append(statusColor).append("; font-weight:bold; font-size:12px;\">").append(statusLabel).append("</span>\n")
+                  .append("            <a href=\"/cache?action=delete&id=").append(encodeUrl(item.getUrl())).append("\" style=\"color:#d9534f; font-weight:bold; font-size:12px;\">🗑️ Delete</a>\n")
+                  .append("          </div>\n")
+                  .append("        </div>\n")
+                  .append("      </div>\n")
+                  .append("    </div>\n");
+            }
+            sb.append("  </div>\n");
+        }
+
+        sb.append("</div>\n");
+        return wrapInTemplate("Cached Videos - LocalTube", sb.toString());
+    }
+
+    public static String renderOfflineHome(int serviceId, String errorMessage, List<CachedVideo> items) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getHeaderHtml(serviceId, "", "cached"));
+        sb.append("<div class=\"container\">\n")
+          .append("  <div style=\"background-color:#fce8e6; color:#c5221f; padding:16px; border-radius:12px; margin-bottom:24px; font-size:14px; font-weight:500; border: 1px solid #fad2cf;\">\n")
+          .append("    📶 You are currently offline (").append(errorMessage).append("). Showing your locally cached videos.\n")
+          .append("  </div>\n")
+          .append("  <h2 style=\"margin-bottom: 20px; font-weight: 700;\">📥 Offline Library</h2>\n");
+
+        boolean hasItems = false;
+        if (items != null) {
+            for (CachedVideo item : items) {
+                if ("COMPLETED".equals(item.getStatus())) {
+                    hasItems = true;
+                    break;
+                }
+            }
+        }
+
+        if (!hasItems) {
+            sb.append("<div class=\"loading-placeholder\">No offline videos available. Connect to the internet to cache videos!</div>\n");
+        } else {
+            sb.append("  <div class=\"grid\">\n");
+            for (CachedVideo item : items) {
+                if (!"COMPLETED".equals(item.getStatus())) continue;
+                String clickUrl = "/watch?serviceId=" + serviceId + "&id=" + encodeUrl(item.getUrl());
+                sb.append("    <div class=\"card\">\n")
+                  .append("      <a href=\"").append(clickUrl).append("\">\n")
+                  .append("        <img class=\"card-thumbnail\" src=\"/thumbnail?id=").append(encodeUrl(item.getUrl())).append("\">\n")
+                  .append("      </a>\n")
+                  .append("      <div class=\"card-details\">\n")
+                  .append("        <a href=\"").append(clickUrl).append("\" class=\"card-title\">").append(item.getTitle()).append("</a>\n")
+                  .append("        <div class=\"card-meta\">\n")
+                  .append("          <span class=\"card-uploader\">").append(item.getUploader()).append("</span>\n")
+                  .append("        </div>\n")
+                  .append("      </div>\n")
+                  .append("    </div>\n");
+            }
+            sb.append("  </div>\n");
+        }
+
+        sb.append("</div>\n");
+        return wrapInTemplate("Offline Dashboard - LocalTube", sb.toString());
     }
 }

@@ -76,7 +76,7 @@ public class LocalHttpServer {
                 while (isRunning) {
                     try {
                         Socket socket = serverSocket.accept();
-                        threadPool.execute(new ClientHandler(socket, dbHelper));
+                        threadPool.execute(new ClientHandler(socket, dbHelper, context));
                     } catch (IOException e) {
                         if (!isRunning) break;
                         log("Socket accept error: " + e.getMessage());
@@ -102,10 +102,12 @@ public class LocalHttpServer {
     private static class ClientHandler implements Runnable {
         private final Socket socket;
         private final HistoryDbHelper dbHelper;
+        private final android.content.Context context;
 
-        public ClientHandler(Socket socket, HistoryDbHelper dbHelper) {
+        public ClientHandler(Socket socket, HistoryDbHelper dbHelper, android.content.Context context) {
             this.socket = socket;
             this.dbHelper = dbHelper;
+            this.context = context;
         }
 
         @Override
@@ -161,6 +163,10 @@ public class LocalHttpServer {
                         handlePlaylist(os, params);
                     } else if (path.equals("/stream")) {
                         handleStreamProxy(os, params, requestHeaders);
+                    } else if (path.equals("/cache")) {
+                        handleCache(os, params);
+                    } else if (path.equals("/thumbnail")) {
+                        handleThumbnail(os, params);
                     } else {
                         sendResponse(os, 404, "Page Not Found", "text/plain; charset=UTF-8");
                     }
@@ -184,24 +190,30 @@ public class LocalHttpServer {
             String nextPageStr = params.get("nextPage");
             Page nextPage = HtmlRenderer.deserializePage(nextPageStr);
 
-            StreamingService service = NewPipe.getService(serviceId);
-            SearchExtractor extractor = service.getSearchExtractor("trending");
+            try {
+                StreamingService service = NewPipe.getService(serviceId);
+                SearchExtractor extractor = service.getSearchExtractor("trending");
 
-            List<InfoItem> items;
-            Page next;
+                List<InfoItem> items;
+                Page next;
 
-            if (nextPage != null) {
-                InfoItemsPage<InfoItem> page = extractor.getPage(nextPage);
-                items = page.getItems();
-                next = page.getNextPage();
-            } else {
-                extractor.fetchPage();
-                items = extractor.getInitialPage().getItems();
-                next = extractor.getInitialPage().getNextPage();
+                if (nextPage != null) {
+                    InfoItemsPage<InfoItem> page = extractor.getPage(nextPage);
+                    items = page.getItems();
+                    next = page.getNextPage();
+                } else {
+                    extractor.fetchPage();
+                    items = extractor.getInitialPage().getItems();
+                    next = extractor.getInitialPage().getNextPage();
+                }
+
+                String html = HtmlRenderer.renderHome(serviceId, items, next);
+                sendResponse(os, 200, html, "text/html; charset=UTF-8");
+            } catch (Exception e) {
+                List<CachedVideo> cachedVideos = dbHelper.getCachedVideos();
+                String html = HtmlRenderer.renderOfflineHome(serviceId, "Offline - Showing cached content (" + e.getMessage() + ")", cachedVideos);
+                sendResponse(os, 200, html, "text/html; charset=UTF-8");
             }
-
-            String html = HtmlRenderer.renderHome(serviceId, items, next);
-            sendResponse(os, 200, html, "text/html; charset=UTF-8");
         }
 
         private void handleSearch(OutputStream os, Map<String, String> params) throws Exception {
@@ -215,41 +227,67 @@ public class LocalHttpServer {
             String nextPageStr = params.get("nextPage");
             Page nextPage = HtmlRenderer.deserializePage(nextPageStr);
 
-            StreamingService service = NewPipe.getService(serviceId);
-            SearchExtractor extractor = service.getSearchExtractor(query);
-            
-            List<InfoItem> items;
-            Page next;
+            try {
+                StreamingService service = NewPipe.getService(serviceId);
+                SearchExtractor extractor = service.getSearchExtractor(query);
+                
+                List<InfoItem> items;
+                Page next;
 
-            if (nextPage != null) {
-                InfoItemsPage<InfoItem> page = extractor.getPage(nextPage);
-                items = page.getItems();
-                next = page.getNextPage();
-            } else {
-                extractor.fetchPage();
-                items = extractor.getInitialPage().getItems();
-                next = extractor.getInitialPage().getNextPage();
+                if (nextPage != null) {
+                    InfoItemsPage<InfoItem> page = extractor.getPage(nextPage);
+                    items = page.getItems();
+                    next = page.getNextPage();
+                } else {
+                    extractor.fetchPage();
+                    items = extractor.getInitialPage().getItems();
+                    next = extractor.getInitialPage().getNextPage();
+                }
+
+                String html = HtmlRenderer.renderSearch(serviceId, query, items, next);
+                sendResponse(os, 200, html, "text/html; charset=UTF-8");
+            } catch (Exception e) {
+                List<CachedVideo> cachedVideos = dbHelper.getCachedVideos();
+                String html = HtmlRenderer.renderOfflineHome(serviceId, "Offline - Showing cached content", cachedVideos);
+                sendResponse(os, 200, html, "text/html; charset=UTF-8");
             }
-
-            String html = HtmlRenderer.renderSearch(serviceId, query, items, next);
-            sendResponse(os, 200, html, "text/html; charset=UTF-8");
         }
 
         private void handleWatch(OutputStream os, Map<String, String> params) throws Exception {
             int serviceId = getServiceId(params);
             String mediaUrl = params.get("id");
 
-            StreamingService service = NewPipe.getService(serviceId);
-            StreamInfo info = StreamInfo.getInfo(service, mediaUrl);
-
-            String thumbUrl = "";
-            if (info.getThumbnails() != null && !info.getThumbnails().isEmpty()) {
-                thumbUrl = info.getThumbnails().get(info.getThumbnails().size() - 1).getUrl();
+            CachedVideo cachedVideo = dbHelper.getCachedVideo(mediaUrl);
+            if (cachedVideo != null && "COMPLETED".equals(cachedVideo.getStatus())) {
+                List<CachedVideo> otherCached = dbHelper.getCachedVideos();
+                String html = HtmlRenderer.renderCachedWatch(serviceId, cachedVideo, otherCached);
+                sendResponse(os, 200, html, "text/html; charset=UTF-8");
+                return;
             }
-            dbHelper.saveToHistory(info.getName(), info.getUrl(), info.getUploaderName(), thumbUrl);
 
-            String html = HtmlRenderer.renderWatch(serviceId, info);
-            sendResponse(os, 200, html, "text/html; charset=UTF-8");
+            try {
+                StreamingService service = NewPipe.getService(serviceId);
+                StreamInfo info = StreamInfo.getInfo(service, mediaUrl);
+
+                String thumbUrl = "";
+                if (info.getThumbnails() != null && !info.getThumbnails().isEmpty()) {
+                    thumbUrl = info.getThumbnails().get(info.getThumbnails().size() - 1).getUrl();
+                }
+                dbHelper.saveToHistory(info.getName(), info.getUrl(), info.getUploaderName(), thumbUrl);
+
+                String html = HtmlRenderer.renderWatch(serviceId, info, cachedVideo);
+                sendResponse(os, 200, html, "text/html; charset=UTF-8");
+            } catch (Exception e) {
+                if (cachedVideo != null) {
+                    List<CachedVideo> otherCached = dbHelper.getCachedVideos();
+                    String html = HtmlRenderer.renderCachedWatch(serviceId, cachedVideo, otherCached);
+                    sendResponse(os, 200, html, "text/html; charset=UTF-8");
+                } else {
+                    List<CachedVideo> cachedVideos = dbHelper.getCachedVideos();
+                    String html = HtmlRenderer.renderOfflineHome(serviceId, "Offline - " + e.getMessage(), cachedVideos);
+                    sendResponse(os, 200, html, "text/html; charset=UTF-8");
+                }
+            }
         }
 
         private void handleHistory(OutputStream os, Map<String, String> params) throws Exception {
@@ -262,6 +300,16 @@ public class LocalHttpServer {
         private void handleStreamProxy(OutputStream os, Map<String, String> params, Map<String, String> requestHeaders) throws Exception {
             int serviceId = getServiceId(params);
             String mediaUrl = params.get("id");
+
+            CachedVideo cachedVideo = dbHelper.getCachedVideo(mediaUrl);
+            if (cachedVideo != null && "COMPLETED".equals(cachedVideo.getStatus())) {
+                java.io.File file = new java.io.File(cachedVideo.getVideoLocalPath());
+                if (file.exists()) {
+                    log("Serving local cached video for: " + mediaUrl);
+                    serveLocalFile(os, file, requestHeaders, "video/mp4");
+                    return;
+                }
+            }
 
             StreamingService service = NewPipe.getService(serviceId);
             StreamExtractor extractor = service.getStreamExtractor(mediaUrl);
@@ -449,6 +497,106 @@ public class LocalHttpServer {
                     "Content-Length: 0\r\n" +
                     "Connection: close\r\n\r\n";
             os.write(response.getBytes("UTF-8"));
+            os.flush();
+        }
+
+        private void handleCache(OutputStream os, Map<String, String> params) throws Exception {
+            int serviceId = getServiceId(params);
+            String action = params.get("action");
+            String mediaUrl = params.get("id");
+
+            if ("add".equals(action) && mediaUrl != null && !mediaUrl.isEmpty()) {
+                VideoCacheManager.getInstance(context).startCaching(mediaUrl, serviceId);
+                sendRedirect(os, "/watch?serviceId=" + serviceId + "&id=" + java.net.URLEncoder.encode(mediaUrl, "UTF-8"));
+                return;
+            } else if ("delete".equals(action) && mediaUrl != null && !mediaUrl.isEmpty()) {
+                VideoCacheManager.getInstance(context).deleteCache(mediaUrl);
+                sendRedirect(os, "/cache?serviceId=" + serviceId);
+                return;
+            }
+
+            List<CachedVideo> cachedVideos = dbHelper.getCachedVideos();
+            String html = HtmlRenderer.renderCachedList(serviceId, cachedVideos);
+            sendResponse(os, 200, html, "text/html; charset=UTF-8");
+        }
+
+        private void handleThumbnail(OutputStream os, Map<String, String> params) throws Exception {
+            String mediaUrl = params.get("id");
+            CachedVideo cachedVideo = dbHelper.getCachedVideo(mediaUrl);
+            if (cachedVideo != null && cachedVideo.getThumbnailLocalPath() != null) {
+                java.io.File thumbFile = new java.io.File(cachedVideo.getThumbnailLocalPath());
+                if (thumbFile.exists()) {
+                    serveLocalFile(os, thumbFile, new HashMap<>(), "image/jpeg");
+                    return;
+                }
+            }
+            sendResponse(os, 404, "Thumbnail not found", "text/plain");
+        }
+
+        private void serveLocalFile(OutputStream os, java.io.File file, Map<String, String> requestHeaders, String contentType) throws IOException {
+            long fileSize = file.length();
+            long start = 0;
+            long end = fileSize - 1;
+            boolean isRange = false;
+
+            String rangeHeader = requestHeaders.get("range");
+            if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
+                String rangeValue = rangeHeader.substring(6);
+                int minusIdx = rangeValue.indexOf('-');
+                if (minusIdx >= 0) {
+                    try {
+                        String startStr = rangeValue.substring(0, minusIdx).trim();
+                        if (!startStr.isEmpty()) {
+                            start = Long.parseLong(startStr);
+                        }
+                        String endStr = rangeValue.substring(minusIdx + 1).trim();
+                        if (!endStr.isEmpty()) {
+                            end = Long.parseLong(endStr);
+                        }
+                        isRange = true;
+                    } catch (NumberFormatException e) {
+                        // Keep default full range
+                    }
+                }
+            }
+
+            if (start > end || start < 0 || end >= fileSize) {
+                isRange = false;
+                start = 0;
+                end = fileSize - 1;
+            }
+
+            long contentLength = end - start + 1;
+            int responseCode = isRange ? 206 : 200;
+            String status = isRange ? "Partial Content" : "OK";
+
+            StringBuilder headBuilder = new StringBuilder();
+            headBuilder.append("HTTP/1.1 ").append(responseCode).append(" ").append(status).append("\r\n");
+            headBuilder.append("Content-Type: ").append(contentType).append("\r\n");
+            headBuilder.append("Content-Length: ").append(contentLength).append("\r\n");
+            headBuilder.append("Accept-Ranges: bytes\r\n");
+            if (isRange) {
+                headBuilder.append("Content-Range: bytes ").append(start).append("-").append(end).append("/").append(fileSize).append("\r\n");
+            }
+            headBuilder.append("Connection: close\r\n\r\n");
+
+            os.write(headBuilder.toString().getBytes("UTF-8"));
+            os.flush();
+
+            try (java.io.RandomAccessFile raf = new java.io.RandomAccessFile(file, "r")) {
+                raf.seek(start);
+                byte[] buffer = new byte[8192];
+                long bytesRemaining = contentLength;
+                while (bytesRemaining > 0) {
+                    int readSize = (int) Math.min(buffer.length, bytesRemaining);
+                    int read = raf.read(buffer, 0, readSize);
+                    if (read == -1) break;
+                    os.write(buffer, 0, read);
+                    bytesRemaining -= read;
+                }
+            } catch (IOException e) {
+                // Client connection closed
+            }
             os.flush();
         }
     }
