@@ -47,11 +47,25 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
             ServerService.LocalBinder binder = (ServerService.LocalBinder) service;
             serverService = binder.getService();
             isBound = true;
+            serverService.setStatusListener(new ServerService.ServerStatusListener() {
+                @Override
+                public void onStatusChanged(final boolean isRunning) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateUi();
+                        }
+                    });
+                }
+            });
             updateUi();
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            if (serverService != null) {
+                serverService.setStatusListener(null);
+            }
             isBound = false;
             updateUi();
         }
@@ -179,6 +193,9 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
     @Override
     protected void onDestroy() {
         if (isBound) {
+            if (serverService != null) {
+                serverService.setStatusListener(null);
+            }
             unbindService(serviceConnection);
             isBound = false;
         }

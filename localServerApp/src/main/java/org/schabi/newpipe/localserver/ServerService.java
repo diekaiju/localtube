@@ -29,6 +29,15 @@ public class ServerService extends Service {
     private LocalHttpServer server;
     private boolean isRunning = false;
     private final IBinder binder = new LocalBinder();
+    private ServerStatusListener statusListener;
+
+    public interface ServerStatusListener {
+        void onStatusChanged(boolean isRunning);
+    }
+
+    public void setStatusListener(ServerStatusListener listener) {
+        this.statusListener = listener;
+    }
 
     public class LocalBinder extends Binder {
         ServerService getService() {
@@ -84,10 +93,16 @@ public class ServerService extends Service {
             server.startServer();
             isRunning = true;
             LocalHttpServer.log("Local server running at: " + getLocalAddress());
+            if (statusListener != null) {
+                statusListener.onStatusChanged(true);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             LocalHttpServer.setLogListener(null);
             stopSelf();
+            if (statusListener != null) {
+                statusListener.onStatusChanged(false);
+            }
         }
     }
 
@@ -98,6 +113,9 @@ public class ServerService extends Service {
         isRunning = false;
         stopForeground(true);
         stopSelf();
+        if (statusListener != null) {
+            statusListener.onStatusChanged(false);
+        }
     }
 
     public boolean isRunning() {

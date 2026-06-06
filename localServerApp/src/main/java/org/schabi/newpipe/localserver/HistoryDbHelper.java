@@ -10,6 +10,8 @@ import org.schabi.newpipe.extractor.Image;
 import org.schabi.newpipe.extractor.InfoItem;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 import org.schabi.newpipe.extractor.stream.StreamType;
+import org.schabi.newpipe.extractor.channel.ChannelInfoItem;
+import org.schabi.newpipe.extractor.playlist.PlaylistInfoItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +19,7 @@ import java.util.List;
 public class HistoryDbHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "history.db";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 5;
 
     private static final String TABLE_HISTORY = "watch_history";
     private static final String KEY_ID = "id";
@@ -37,6 +39,16 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
     private static final String TABLE_SETTINGS = "filter_settings";
     private static final String KEY_SETTING_KEY = "setting_key";
     private static final String KEY_SETTING_VALUE = "setting_value";
+
+    private static final String TABLE_SUBSCRIPTIONS = "subscriptions";
+    private static final String KEY_CHANNEL_URL = "channel_url";
+    private static final String KEY_CHANNEL_NAME = "channel_name";
+    private static final String KEY_CHANNEL_AVATAR = "channel_avatar";
+
+    private static final String TABLE_BOOKMARKED_PLAYLISTS = "bookmarked_playlists";
+    private static final String KEY_PLAYLIST_URL = "playlist_url";
+    private static final String KEY_PLAYLIST_NAME = "playlist_name";
+    private static final String KEY_PLAYLIST_UPLOADER = "playlist_uploader";
 
     private static HistoryDbHelper instance;
 
@@ -82,6 +94,24 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
                 + KEY_SETTING_VALUE + " TEXT"
                 + ")";
         db.execSQL(CREATE_SETTINGS_TABLE);
+
+        String CREATE_SUBSCRIPTIONS_TABLE = "CREATE TABLE " + TABLE_SUBSCRIPTIONS + "("
+                + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + KEY_CHANNEL_URL + " TEXT UNIQUE,"
+                + KEY_CHANNEL_NAME + " TEXT,"
+                + KEY_CHANNEL_AVATAR + " TEXT,"
+                + KEY_TIMESTAMP + " INTEGER"
+                + ")";
+        db.execSQL(CREATE_SUBSCRIPTIONS_TABLE);
+
+        String CREATE_PLAYLISTS_TABLE = "CREATE TABLE " + TABLE_BOOKMARKED_PLAYLISTS + "("
+                + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + KEY_PLAYLIST_URL + " TEXT UNIQUE,"
+                + KEY_PLAYLIST_NAME + " TEXT,"
+                + KEY_PLAYLIST_UPLOADER + " TEXT,"
+                + KEY_TIMESTAMP + " INTEGER"
+                + ")";
+        db.execSQL(CREATE_PLAYLISTS_TABLE);
     }
 
     @Override
@@ -107,6 +137,26 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
                     + KEY_SETTING_VALUE + " TEXT"
                     + ")";
             db.execSQL(CREATE_SETTINGS_TABLE);
+        }
+        if (oldVersion < 4) {
+            String CREATE_SUBSCRIPTIONS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_SUBSCRIPTIONS + "("
+                    + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + KEY_CHANNEL_URL + " TEXT UNIQUE,"
+                    + KEY_CHANNEL_NAME + " TEXT,"
+                    + KEY_CHANNEL_AVATAR + " TEXT,"
+                    + KEY_TIMESTAMP + " INTEGER"
+                    + ")";
+            db.execSQL(CREATE_SUBSCRIPTIONS_TABLE);
+        }
+        if (oldVersion < 5) {
+            String CREATE_PLAYLISTS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_BOOKMARKED_PLAYLISTS + "("
+                    + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + KEY_PLAYLIST_URL + " TEXT UNIQUE,"
+                    + KEY_PLAYLIST_NAME + " TEXT,"
+                    + KEY_PLAYLIST_UPLOADER + " TEXT,"
+                    + KEY_TIMESTAMP + " INTEGER"
+                    + ")";
+            db.execSQL(CREATE_PLAYLISTS_TABLE);
         }
     }
 
@@ -336,6 +386,113 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
                     list.add(trimmed);
                 }
             }
+        }
+        return list;
+    }
+
+    public void addSubscription(String channelUrl, String channelName, String channelAvatar) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_CHANNEL_URL, channelUrl);
+        values.put(KEY_CHANNEL_NAME, channelName);
+        values.put(KEY_CHANNEL_AVATAR, channelAvatar);
+        values.put(KEY_TIMESTAMP, System.currentTimeMillis());
+        db.insertWithOnConflict(TABLE_SUBSCRIPTIONS, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    public void removeSubscription(String channelUrl) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_SUBSCRIPTIONS, KEY_CHANNEL_URL + " = ?", new String[]{channelUrl});
+    }
+
+    public boolean isSubscribed(String channelUrl) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String selectQuery = "SELECT 1 FROM " + TABLE_SUBSCRIPTIONS + " WHERE " + KEY_CHANNEL_URL + " = ?";
+        try (Cursor cursor = db.rawQuery(selectQuery, new String[]{channelUrl})) {
+            return cursor.moveToFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public List<InfoItem> getSubscriptions() {
+        List<InfoItem> subList = new ArrayList<>();
+        String selectQuery = "SELECT * FROM " + TABLE_SUBSCRIPTIONS + " ORDER BY " + KEY_CHANNEL_NAME + " ASC";
+        SQLiteDatabase db = this.getReadableDatabase();
+        try (Cursor cursor = db.rawQuery(selectQuery, null)) {
+            if (cursor.moveToFirst()) {
+                int urlIdx = cursor.getColumnIndex(KEY_CHANNEL_URL);
+                int nameIdx = cursor.getColumnIndex(KEY_CHANNEL_NAME);
+                int avatarIdx = cursor.getColumnIndex(KEY_CHANNEL_AVATAR);
+
+                do {
+                    String url = urlIdx != -1 ? cursor.getString(urlIdx) : "";
+                    String name = nameIdx != -1 ? cursor.getString(nameIdx) : "";
+                    String avatar = avatarIdx != -1 ? cursor.getString(avatarIdx) : "";
+
+                    ChannelInfoItem item = new ChannelInfoItem(0, url, name);
+                    if (avatar != null && !avatar.isEmpty()) {
+                        item.setThumbnails(List.of(new Image(avatar, Image.HEIGHT_UNKNOWN, Image.WIDTH_UNKNOWN, Image.ResolutionLevel.UNKNOWN)));
+                    }
+                    subList.add(item);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return subList;
+    }
+
+    public void addPlaylistBookmark(String playlistUrl, String playlistName, String playlistUploader) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_PLAYLIST_URL, playlistUrl);
+        values.put(KEY_PLAYLIST_NAME, playlistName);
+        values.put(KEY_PLAYLIST_UPLOADER, playlistUploader);
+        values.put(KEY_TIMESTAMP, System.currentTimeMillis());
+        db.insertWithOnConflict(TABLE_BOOKMARKED_PLAYLISTS, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    public void removePlaylistBookmark(String playlistUrl) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_BOOKMARKED_PLAYLISTS, KEY_PLAYLIST_URL + " = ?", new String[]{playlistUrl});
+    }
+
+    public boolean isPlaylistBookmarked(String playlistUrl) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String selectQuery = "SELECT 1 FROM " + TABLE_BOOKMARKED_PLAYLISTS + " WHERE " + KEY_PLAYLIST_URL + " = ?";
+        try (Cursor cursor = db.rawQuery(selectQuery, new String[]{playlistUrl})) {
+            return cursor.moveToFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public List<InfoItem> getBookmarkedPlaylists() {
+        List<InfoItem> list = new ArrayList<>();
+        String selectQuery = "SELECT * FROM " + TABLE_BOOKMARKED_PLAYLISTS + " ORDER BY " + KEY_PLAYLIST_NAME + " ASC";
+        SQLiteDatabase db = this.getReadableDatabase();
+        try (Cursor cursor = db.rawQuery(selectQuery, null)) {
+            if (cursor.moveToFirst()) {
+                int urlIdx = cursor.getColumnIndex(KEY_PLAYLIST_URL);
+                int nameIdx = cursor.getColumnIndex(KEY_PLAYLIST_NAME);
+                int uploaderIdx = cursor.getColumnIndex(KEY_PLAYLIST_UPLOADER);
+
+                do {
+                    String url = urlIdx != -1 ? cursor.getString(urlIdx) : "";
+                    String name = nameIdx != -1 ? cursor.getString(nameIdx) : "";
+                    String uploader = uploaderIdx != -1 ? cursor.getString(uploaderIdx) : "";
+
+                    PlaylistInfoItem item = new PlaylistInfoItem(0, url, name);
+                    item.setUploaderName(uploader);
+                    // Add generic fallback thumbnail for playlists
+                    list.add(item);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return list;
     }

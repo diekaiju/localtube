@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,7 +77,7 @@ public class LocalHttpServer {
                 while (isRunning) {
                     try {
                         Socket socket = serverSocket.accept();
-                        threadPool.execute(new ClientHandler(socket, dbHelper, context));
+                        threadPool.execute(new ClientHandler(socket, dbHelper, context, threadPool));
                     } catch (IOException e) {
                         if (!isRunning) break;
                         log("Socket accept error: " + e.getMessage());
@@ -103,11 +104,13 @@ public class LocalHttpServer {
         private final Socket socket;
         private final HistoryDbHelper dbHelper;
         private final android.content.Context context;
+        private final ExecutorService executorService;
 
-        public ClientHandler(Socket socket, HistoryDbHelper dbHelper, android.content.Context context) {
+        public ClientHandler(Socket socket, HistoryDbHelper dbHelper, android.content.Context context, ExecutorService executorService) {
             this.socket = socket;
             this.dbHelper = dbHelper;
             this.context = context;
+            this.executorService = executorService;
         }
 
         @Override
@@ -148,23 +151,37 @@ public class LocalHttpServer {
                     }
                 }
 
+                // Detect device class (TV vs Phone)
+                String ua = requestHeaders.get("user-agent");
+                boolean isTv = false;
+                if (ua != null) {
+                    String uaLower = ua.toLowerCase(java.util.Locale.US);
+                    isTv = uaLower.contains("tv") || uaLower.contains("googletv") || uaLower.contains("androidtv") || uaLower.contains("smarttv") || uaLower.contains("appletv") || uaLower.contains("roku") || uaLower.contains("aftb") || uaLower.contains("aftt") || uaLower.contains("firetv");
+                }
+
                 try {
                     if (path.equals("/")) {
-                        handleHome(os, params);
+                        handleHome(os, params, isTv);
                     } else if (path.equals("/search")) {
-                        handleSearch(os, params);
+                        handleSearch(os, params, isTv);
                     } else if (path.equals("/watch")) {
-                        handleWatch(os, params);
+                        handleWatch(os, params, isTv);
                     } else if (path.equals("/history")) {
-                        handleHistory(os, params);
+                        handleHistory(os, params, isTv);
                     } else if (path.equals("/channel")) {
-                        handleChannel(os, params);
+                        handleChannel(os, params, isTv);
                     } else if (path.equals("/playlist")) {
-                        handlePlaylist(os, params);
+                        handlePlaylist(os, params, isTv);
                     } else if (path.equals("/stream")) {
                         handleStreamProxy(os, params, requestHeaders);
                     } else if (path.equals("/cache")) {
-                        handleCache(os, params);
+                        handleCache(os, params, isTv);
+                    } else if (path.equals("/subscriptions")) {
+                        handleSubscriptions(os, params, isTv);
+                    } else if (path.equals("/subscribe")) {
+                        handleSubscribeAction(os, params);
+                    } else if (path.equals("/bookmark_playlist")) {
+                        handlePlaylistBookmarkAction(os, params);
                     } else if (path.equals("/thumbnail")) {
                         handleThumbnail(os, params);
                     } else {
@@ -185,7 +202,7 @@ public class LocalHttpServer {
             }
         }
 
-        private void handleHome(OutputStream os, Map<String, String> params) throws Exception {
+        private void handleHome(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
             int serviceId = getServiceId(params);
             String nextPageStr = params.get("nextPage");
             Page nextPage = HtmlRenderer.deserializePage(nextPageStr);
@@ -213,15 +230,79 @@ public class LocalHttpServer {
                     extractor.fetchPage();
                     items = extractor.getInitialPage().getItems();
                     next = extractor.getInitialPage().getNextPage();
+
+                    List<InfoItem> subscriptions = dbHelper.getSubscriptions();
+                    if (subscriptions != null && !subscriptions.isEmpty()) {
+                        List<InfoItem> selectedChannels = new ArrayList<>(subscriptions);
+                        java.util.Collections.shuffle(selectedChannels);
+                        int limit = Math.min(3, selectedChannels.size());
+                        List<java.util.concurrent.Future<List<InfoItem>>> futures = new ArrayList<>();
+                        for (int i = 0; i < limit; i++) {
+                            final String url = selectedChannels.get(i).getUrl();
+                            futures.add(executorService.submit(new java.util.concurrent.Callable<List<InfoItem>>() {
+                                @Override
+                                public List<InfoItem> call() throws Exception {
+                                    return fetchChannelUploads(service, url);
+                                }
+                            }));
+                        }
+                        List<InfoItem> channelItems = new ArrayList<>();
+                        for (java.util.concurrent.Future<List<InfoItem>> future : futures) {
+                            try {
+                                List<InfoItem> res = future.get(5, java.util.concurrent.TimeUnit.SECONDS);
+                                if (res != null) {
+                                    channelItems.addAll(res);
+                                }
+                            } catch (Exception e) {
+                                log("Future timeout/error fetching channel uploads: " + e.getMessage());
+                            }
+                        }
+                        if (!channelItems.isEmpty()) {
+                            java.util.Collections.shuffle(channelItems);
+                            List<InfoItem> mergedItems = new ArrayList<>();
+                            int channelIdx = 0;
+                            int feedIdx = 0;
+                            while (channelIdx < channelItems.size() || feedIdx < items.size()) {
+                                for (int k = 0; k < 2 && channelIdx < channelItems.size(); k++) {
+                                    mergedItems.add(channelItems.get(channelIdx++));
+                                }
+                                if (feedIdx < items.size()) {
+                                    mergedItems.add(items.get(feedIdx++));
+                                }
+                            }
+                            items = mergedItems;
+                        }
+                    }
                 }
 
                 List<InfoItem> filtered = filterItems(items);
-                String html = HtmlRenderer.renderHome(serviceId, filtered, next);
+                String html = HtmlRenderer.renderHome(serviceId, filtered, next, isTv);
                 sendResponse(os, 200, html, "text/html; charset=UTF-8");
             } catch (Exception e) {
                 List<CachedVideo> cachedVideos = dbHelper.getCachedVideos();
-                String html = HtmlRenderer.renderOfflineHome(serviceId, "Offline - Showing cached content (" + e.getMessage() + ")", cachedVideos);
+                String html = HtmlRenderer.renderOfflineHome(serviceId, "Offline - Showing cached content (" + e.getMessage() + ")", cachedVideos, isTv);
                 sendResponse(os, 200, html, "text/html; charset=UTF-8");
+            }
+        }
+
+        private List<InfoItem> fetchChannelUploads(StreamingService service, String channelUrl) {
+            try {
+                ChannelExtractor channelExtractor = service.getChannelExtractor(channelUrl);
+                channelExtractor.fetchPage();
+                ChannelTabExtractor tabExtractor = service.getChannelTabExtractorFromIdAndBaseUrl(channelExtractor.getId(), "videos", channelExtractor.getBaseUrl());
+                tabExtractor.fetchPage();
+                List<InfoItem> list = new ArrayList<>();
+                if (tabExtractor.getInitialPage() != null && tabExtractor.getInitialPage().getItems() != null) {
+                    for (Object item : tabExtractor.getInitialPage().getItems()) {
+                        if (item instanceof InfoItem) {
+                            list.add((InfoItem) item);
+                        }
+                    }
+                }
+                return list;
+            } catch (Exception e) {
+                log("Failed to fetch uploads for channel " + channelUrl + ": " + e.getMessage());
+                return new ArrayList<>();
             }
         }
 
@@ -240,7 +321,7 @@ public class LocalHttpServer {
             }
         }
 
-        private void handleSearch(OutputStream os, Map<String, String> params) throws Exception {
+        private void handleSearch(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
             int serviceId = getServiceId(params);
             String query = params.get("q");
             if (query == null || query.isEmpty()) {
@@ -269,23 +350,23 @@ public class LocalHttpServer {
                 }
 
                 List<InfoItem> filtered = filterItems(items);
-                String html = HtmlRenderer.renderSearch(serviceId, query, filtered, next);
+                String html = HtmlRenderer.renderSearch(serviceId, query, filtered, next, isTv);
                 sendResponse(os, 200, html, "text/html; charset=UTF-8");
             } catch (Exception e) {
                 List<CachedVideo> cachedVideos = dbHelper.getCachedVideos();
-                String html = HtmlRenderer.renderOfflineHome(serviceId, "Offline - Showing cached content", cachedVideos);
+                String html = HtmlRenderer.renderOfflineHome(serviceId, "Offline - Showing cached content", cachedVideos, isTv);
                 sendResponse(os, 200, html, "text/html; charset=UTF-8");
             }
         }
 
-        private void handleWatch(OutputStream os, Map<String, String> params) throws Exception {
+        private void handleWatch(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
             int serviceId = getServiceId(params);
             String mediaUrl = params.get("id");
 
             CachedVideo cachedVideo = dbHelper.getCachedVideo(mediaUrl);
             if (cachedVideo != null && "COMPLETED".equals(cachedVideo.getStatus())) {
                 List<CachedVideo> otherCached = dbHelper.getCachedVideos();
-                String html = HtmlRenderer.renderCachedWatch(serviceId, cachedVideo, otherCached);
+                String html = HtmlRenderer.renderCachedWatch(serviceId, cachedVideo, otherCached, isTv);
                 sendResponse(os, 200, html, "text/html; charset=UTF-8");
                 return;
             }
@@ -300,25 +381,26 @@ public class LocalHttpServer {
                 }
                 dbHelper.saveToHistory(info.getName(), info.getUrl(), info.getUploaderName(), thumbUrl);
 
-                String html = HtmlRenderer.renderWatch(serviceId, info, cachedVideo);
+                boolean isSubscribed = dbHelper.isSubscribed(info.getUploaderUrl());
+                String html = HtmlRenderer.renderWatch(serviceId, info, cachedVideo, isSubscribed, isTv);
                 sendResponse(os, 200, html, "text/html; charset=UTF-8");
             } catch (Exception e) {
                 if (cachedVideo != null) {
                     List<CachedVideo> otherCached = dbHelper.getCachedVideos();
-                    String html = HtmlRenderer.renderCachedWatch(serviceId, cachedVideo, otherCached);
+                    String html = HtmlRenderer.renderCachedWatch(serviceId, cachedVideo, otherCached, isTv);
                     sendResponse(os, 200, html, "text/html; charset=UTF-8");
                 } else {
                     List<CachedVideo> cachedVideos = dbHelper.getCachedVideos();
-                    String html = HtmlRenderer.renderOfflineHome(serviceId, "Offline - " + e.getMessage(), cachedVideos);
+                    String html = HtmlRenderer.renderOfflineHome(serviceId, "Offline - " + e.getMessage(), cachedVideos, isTv);
                     sendResponse(os, 200, html, "text/html; charset=UTF-8");
                 }
             }
         }
 
-        private void handleHistory(OutputStream os, Map<String, String> params) throws Exception {
+        private void handleHistory(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
             int serviceId = getServiceId(params);
             List<InfoItem> items = dbHelper.getHistory();
-            String html = HtmlRenderer.renderHistory(serviceId, items);
+            String html = HtmlRenderer.renderHistory(serviceId, items, isTv);
             sendResponse(os, 200, html, "text/html; charset=UTF-8");
         }
 
@@ -426,7 +508,7 @@ public class LocalHttpServer {
             }
         }
 
-        private void handleChannel(OutputStream os, Map<String, String> params) throws Exception {
+        private void handleChannel(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
             int serviceId = getServiceId(params);
             String channelUrl = params.get("id");
             String tab = params.getOrDefault("tab", "videos");
@@ -467,11 +549,12 @@ public class LocalHttpServer {
             }
 
             List<InfoItem> filtered = filterItems(items);
-            String html = HtmlRenderer.renderChannel(serviceId, channelExtractor, tab, filtered, next);
+            boolean isSubscribed = dbHelper.isSubscribed(channelExtractor.getLinkHandler().getUrl());
+            String html = HtmlRenderer.renderChannel(serviceId, channelExtractor, tab, filtered, next, isSubscribed, isTv);
             sendResponse(os, 200, html, "text/html; charset=UTF-8");
         }
 
-        private void handlePlaylist(OutputStream os, Map<String, String> params) throws Exception {
+        private void handlePlaylist(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
             int serviceId = getServiceId(params);
             String playlistUrl = params.get("id");
 
@@ -495,7 +578,8 @@ public class LocalHttpServer {
             }
 
             List<InfoItem> filtered = filterItems(items);
-            String html = HtmlRenderer.renderPlaylist(serviceId, extractor, filtered, next);
+            boolean isBookmarked = dbHelper.isPlaylistBookmarked(playlistUrl);
+            String html = HtmlRenderer.renderPlaylist(serviceId, extractor, filtered, next, isBookmarked, isTv);
             sendResponse(os, 200, html, "text/html; charset=UTF-8");
         }
 
@@ -541,7 +625,7 @@ public class LocalHttpServer {
             os.flush();
         }
 
-        private void handleCache(OutputStream os, Map<String, String> params) throws Exception {
+        private void handleCache(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
             int serviceId = getServiceId(params);
             String action = params.get("action");
             String mediaUrl = params.get("id");
@@ -557,8 +641,63 @@ public class LocalHttpServer {
             }
 
             List<CachedVideo> cachedVideos = dbHelper.getCachedVideos();
-            String html = HtmlRenderer.renderCachedList(serviceId, cachedVideos);
+            String html = HtmlRenderer.renderCachedList(serviceId, cachedVideos, isTv);
             sendResponse(os, 200, html, "text/html; charset=UTF-8");
+        }
+
+        private void handleSubscriptions(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
+            int serviceId = getServiceId(params);
+            List<InfoItem> channels = dbHelper.getSubscriptions();
+            List<InfoItem> playlists = dbHelper.getBookmarkedPlaylists();
+            String activeTab = params.getOrDefault("tab", "channels");
+            String html = HtmlRenderer.renderSubscriptions(serviceId, channels, playlists, activeTab, isTv);
+            sendResponse(os, 200, html, "text/html; charset=UTF-8");
+        }
+
+        private void handleSubscribeAction(OutputStream os, Map<String, String> params) throws Exception {
+            int serviceId = getServiceId(params);
+            String action = params.get("action");
+            String channelUrl = params.get("id");
+            String back = params.get("back");
+
+            if ("subscribe".equals(action) && channelUrl != null && !channelUrl.isEmpty()) {
+                String name = params.get("name");
+                String avatar = params.get("avatar");
+                dbHelper.addSubscription(channelUrl, name, avatar);
+            } else if ("unsubscribe".equals(action) && channelUrl != null && !channelUrl.isEmpty()) {
+                dbHelper.removeSubscription(channelUrl);
+            }
+
+            if (back != null && !back.isEmpty()) {
+                if (back.startsWith("/")) {
+                    sendRedirect(os, back);
+                } else {
+                    sendRedirect(os, "/watch?serviceId=" + serviceId + "&id=" + java.net.URLEncoder.encode(back, "UTF-8"));
+                }
+            } else {
+                sendRedirect(os, "/subscriptions?serviceId=" + serviceId);
+            }
+        }
+
+        private void handlePlaylistBookmarkAction(OutputStream os, Map<String, String> params) throws Exception {
+            int serviceId = getServiceId(params);
+            String action = params.get("action");
+            String playlistUrl = params.get("id");
+            String back = params.get("back");
+
+            if ("bookmark".equals(action) && playlistUrl != null && !playlistUrl.isEmpty()) {
+                String name = params.get("name");
+                String uploader = params.get("uploader");
+                dbHelper.addPlaylistBookmark(playlistUrl, name, uploader);
+            } else if ("unbookmark".equals(action) && playlistUrl != null && !playlistUrl.isEmpty()) {
+                dbHelper.removePlaylistBookmark(playlistUrl);
+            }
+
+            if (back != null && !back.isEmpty()) {
+                sendRedirect(os, back);
+            } else {
+                sendRedirect(os, "/subscriptions?serviceId=" + serviceId + "&tab=playlists");
+            }
         }
 
         private void handleThumbnail(OutputStream os, Map<String, String> params) throws Exception {
