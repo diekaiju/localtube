@@ -175,10 +175,6 @@ publishing {
                     password = System.getenv("SONATYPE_MAVEN_CENTRAL_PASSWORD")
                 }
             }
-            maven {
-                name = "local"
-                url = uri(layout.buildDirectory.dir("maven"))
-            }
         }
     }
 }
