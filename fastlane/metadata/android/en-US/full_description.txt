@@ -1,0 +1,9 @@
+LocalTube is an enhanced, self-hosted streaming server solution built on top of a specialized fork of NewPipe Extractor. By bundling a lightweight and concurrent Java HTTP server inside an Android application, LocalTube enables you to browse, search, and stream content from major streaming platforms directly from any device in your local network using a standard web browser.
+
+Key Features:
+- Decentralized Local Server: Runs a lightweight, concurrent Java HTTP server directly on your Android device (default port 8080), serving a modern, responsive web interface.
+- Cross-Device Playback: Connect seamlessly to the server from any device on your local network (PC, laptop, smart TV, tablet) by visiting your device's local IP.
+- Theme Customization: Toggle between modern Dark and clean Light themes instantly.
+- Private Watch History: Tracks your watched videos locally on the host device using a secure SQLite database, maintaining privacy with zero external telemetry or tracking.
+- HTML5 Player & Stream Proxying: Proxies stream traffic through the local server to bypass client-side signature and throttling restrictions, fully supporting seeking and fast-forwarding within native browser elements.
+- Multi-Service Ready: Ready to stream content across YouTube, SoundCloud, PeerTube, Bandcamp, and media.ccc.de.

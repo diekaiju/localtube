@@ -1,0 +1,1 @@
+Initial release with local HTTP server and SQLite watch history

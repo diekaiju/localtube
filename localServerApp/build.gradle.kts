@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application") version "8.7.3"
 }
@@ -10,10 +12,29 @@ android {
         applicationId = "org.schabi.newpipe.localserver"
         minSdk = 28
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            val localProperties = Properties()
+            val localPropertiesFile = rootProject.file("local.properties")
+            if (localPropertiesFile.exists()) {
+                val stream = localPropertiesFile.inputStream()
+                localProperties.load(stream)
+                stream.close()
+            }
+            val storeFileProp = localProperties.getProperty("signing.storeFile")
+            if (storeFileProp != null) {
+                storeFile = file(storeFileProp)
+                storePassword = localProperties.getProperty("signing.storePassword")
+                keyAlias = localProperties.getProperty("signing.keyAlias")
+                keyPassword = localProperties.getProperty("signing.keyPassword")
+            }
+        }
     }
 
     buildTypes {
@@ -23,6 +44,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 

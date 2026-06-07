@@ -1,0 +1,1 @@
+Added theme toggle (light/dark mode) and layout optimizations

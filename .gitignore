@@ -24,3 +24,8 @@ gradle-app.setting
 **/bin
 **.vscode
 *.code-workspace
+
+# Keystores and backups
+keystore_backup/
+*.jks
+*.keystore
