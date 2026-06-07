@@ -1,83 +1,84 @@
-# LocalTube (NewPipe Extractor)
+# LocalTube
 
-[![CI](https://github.com/TeamNewPipe/NewPipeExtractor/actions/workflows/ci.yml/badge.svg?branch=dev&event=schedule)](https://github.com/TeamNewPipe/NewPipeExtractor/actions/workflows/ci.yml) [![JIT Pack Badge](https://jitpack.io/v/teamnewpipe/NewPipeExtractor.svg)](https://jitpack.io/#teamnewpipe/NewPipeExtractor) [JDoc](https://teamnewpipe.github.io/NewPipeExtractor/javadoc/) • [Documentation](https://teamnewpipe.github.io/documentation/)
+[![CI Status](https://github.com/TeamNewPipe/NewPipeExtractor/actions/workflows/ci.yml/badge.svg?branch=dev&event=schedule)](https://github.com/TeamNewPipe/NewPipeExtractor/actions/workflows/ci.yml)
+[![JitPack Release](https://jitpack.io/v/teamnewpipe/NewPipeExtractor.svg)](https://jitpack.io/#teamnewpipe/NewPipeExtractor)
+[![API Reference](https://img.shields.io/badge/docs-JDoc-blue)](https://teamnewpipe.github.io/NewPipeExtractor/javadoc/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-**LocalTube** is a fork of [NewPipe Extractor](https://github.com/TeamNewPipe/NewPipeExtractor) that bundles a self-hosted local HTTP server Android application (`localServerApp`). It allows you to host, browse, search, and stream content from streaming platforms directly from any device in your local network using a standard web browser.
-
-## 📺 LocalTube Application (`localServerApp`)
-
-**LocalTube** transforms the stateless `NewPipeExtractor` library into a private, self-hosted streaming web server.
-
-### 🌟 Key Features
-
-- **Decentralized Local Server**: Runs a lightweight, concurrent Java HTTP server on your Android device (default port `8080`), serving a modern, responsive web interface.
-- **Cross-Device Playback**: Connect to the server from any device on your local Wi-Fi network (PC, laptop, smart TV, tablet) by visiting the local IP (e.g., `http://192.168.1.100:8080`).
-- **Private Watch History**: Keeps track of your watched videos locally on the device using a secure SQLite database (`HistoryDbHelper`) without external telemetry or tracking.
-- **HTML5 Player & Stream Proxying**: Proxies video/audio streams through the local server to bypass client-side signature/throttling restrictions, supporting range headers (seeking/fast-forwarding) directly inside native browser HTML5 elements.
-- **Multi-Service Ready**: Leveraging the extractor core, it is designed to support extraction across YouTube, SoundCloud, PeerTube, Bandcamp, and media.ccc.de.
-
-### 🛠️ Build and Run
-
-To compile and launch the local server app:
-
-1. **Build and install** the application on your Android device/emulator:
-   ```bash
-   ./gradlew :localServerApp:installDebug
-   ```
-   *(Or open the repository in Android Studio and run the `:localServerApp` module).*
-2. **Open the LocalTube App** on your device.
-3. Tap **Start Server** to spin up the background service (runs as a foreground service with a notification displaying your network URL).
-4. Connect to `http://localhost:8080` (or `http://<your-device-ip>:8080`) from any browser on the same network to start streaming!
-
-### 📸 Screenshots
-
-| Android App Interface | Web Interface Home | Personalization |
-|:---:|:---:|:---:|
-| ![Android App Interface](screenshots/app_interface.jpg) | ![Web Interface Home](screenshots/web_interface_home.jpg) | ![Personalization](screenshots/web_interface_watch.jpg) |
+**LocalTube** is an enhanced, self-hosted streaming server solution built on top of a specialized fork of [NewPipe Extractor](https://github.com/TeamNewPipe/NewPipeExtractor). By bundling a lightweight and concurrent Java HTTP server inside an Android application (`localServerApp`), LocalTube enables you to browse, search, and stream content from major streaming platforms directly from any device in your local network using a standard web browser.
 
 ---
 
-## 📦 Extractor Library Usage
+## 📺 LocalTube Application (`localServerApp`)
 
-NewPipe Extractor is available at JitPack's Maven repo.
+LocalTube transforms the stateless library core of NewPipe Extractor into a private, self-hosted streaming web server.
 
-If you're using Gradle, you could add NewPipe Extractor as a dependency with the following steps:
+### 🌟 Key Features
+- **Decentralized Local Server:** Runs a lightweight, concurrent Java HTTP server directly on your Android device (default port `8080`), serving a modern, responsive web interface.
+- **Cross-Device Playback:** Connect seamlessly to the server from any device on your local network (PC, laptop, smart TV, tablet) by visiting your device's local IP (e.g., `http://192.168.1.100:8080`).
+- **Theme Customization:** Toggle between modern Dark and clean Light themes instantly, with preferences preserved locally in browser storage.
+- **Private Watch History:** Tracks your watched videos locally on the host device using a secure SQLite database (`HistoryDbHelper`), maintaining privacy with zero external telemetry or tracking.
+- **HTML5 Player & Stream Proxying:** Proxies stream traffic through the local server to bypass client-side signature and throttling restrictions, fully supporting Range HTTP headers (seeking/fast-forwarding) within native browser elements.
+- **Multi-Service Ready:** Ready to stream content across YouTube, SoundCloud, PeerTube, Bandcamp, and media.ccc.de.
 
-1. Add `maven { url 'https://jitpack.io' }` to the `repositories` in your `build.gradle`.
-2. Add `implementation 'com.github.teamnewpipe:NewPipeExtractor:INSERT_VERSION_HERE'` to the `dependencies` in your `build.gradle`. Replace `INSERT_VERSION_HERE` with the [latest release](https://github.com/TeamNewPipe/NewPipeExtractor/releases/latest).
-3. If you are using tools to minimize your project, make sure to keep the files below, by e.g. adding the following lines to your proguard file:
- ```
-## Rules for NewPipeExtractor
--keep class org.mozilla.javascript.** { *; }
--keep class org.mozilla.classfile.ClassFileWriter
--dontwarn org.mozilla.javascript.tools.**
-```
+---
 
-> [!NOTE]
-> To use NewPipe Extractor in Android projects with a `minSdk` below 33, [core library desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring) with the `desugar_jdk_libs_nio` artifact is required.
+## 📸 Interface Preview
 
-### Testing changes
+| Android App Interface | Web Interface Home (Light) | Media Streaming & Details |
+| :---: | :---: | :---: |
+| ![Android App Interface](screenshots/app_interface.jpg) | ![Web Interface Home](screenshots/web_interface_home.jpg) | ![Streaming Interface](screenshots/web_interface_watch.jpg) |
 
-#### Maven Central
+---
 
-NewPipe Extractor's snapshots are available on Maven Central's snapshot repository. These versions
-are based on the commit's short hash (for e.g. `git rev-parse --short HEAD`) and are available for
-90 days since the date of publication/commit.
+## 🛠️ Build and Installation
 
-```kotlin
+To compile and launch the local server application:
+
+1. **Build and install** the application on your Android device or emulator:
+   ```bash
+   ./gradlew :localServerApp:installDebug
+   ```
+   *Alternatively, open this repository in Android Studio and run the `:localServerApp` run configuration.*
+
+2. **Run the Server:**
+   - Open the **LocalTube** app on your device.
+   - Tap **Start Server** to activate the foreground service. A persistent notification will display your active local network URL.
+   - Access `http://localhost:8080` (or `http://<your-device-ip>:8080`) from any browser on the same network.
+
+---
+
+## 📦 Extractor Library Integration
+
+The underlying extractor core can be used independently in other Gradle projects via JitPack.
+
+### 1. Repository Configuration
+Add the JitPack repository to your `settings.gradle` or root `build.gradle` file:
+```groovy
 repositories {
-    maven(url = "https://central.sonatype.com/repository/maven-snapshots/")
-}
-
-dependencies {
-    implementation("net.newpipe:extractor:${LAST_COMMIT_SHORT_HASH}-SNAPSHOT")
+    maven { url 'https://jitpack.io' }
 }
 ```
 
-#### Local
+### 2. Dependency Declaration
+Add the dependency to your application's `build.gradle`:
+```groovy
+dependencies {
+    implementation 'com.github.teamnewpipe:NewPipeExtractor:RELEASE_VERSION'
+}
+```
 
-To test changes quickly you can build the library locally. A good approach would be to add something like the following to your `settings.gradle`:
+> [!NOTE]  
+> If target SDK compatibility requires a `minSdk` below 33, configure [Core Library Desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring) utilizing the `desugar_jdk_libs_nio` artifact.
 
+---
+
+## 🧪 Advanced Library Testing
+
+For development and debugging, you can build and test the extractor library locally.
+
+### Option A: Gradle Composite Build (Recommended)
+Add the following configuration block to your client project's `settings.gradle` to substitute the published library with your local codebase:
 ```groovy
 includeBuild('../NewPipeExtractor') {
     dependencySubstitution {
@@ -86,33 +87,27 @@ includeBuild('../NewPipeExtractor') {
 }
 ```
 
-Another approach would be to use the local Maven repository, here's a gist of how to use it:
+### Option B: Local Maven Repository Publish
+1. Add `mavenLocal()` to your project's repository list (usually as the first entry to prioritize local builds).
+2. Run the build wrapper's install task to deploy to your local `.m2` repository:
+   ```bash
+   ./gradlew install
+   ```
+3. Reference your local version in your project dependencies (e.g., `com.github.teamnewpipe:NewPipeExtractor:LOCAL-SNAPSHOT`).
 
-1. Add `mavenLocal()` in your project `repositories` list (usually as the first entry to give priority above the others).
-2. It's _recommended_ that you change the `version` of this library (e.g. `LOCAL_SNAPSHOT`).
-3. Run gradle's `ìnstall` task to deploy this library to your local repository (using the wrapper, present in the root of this project: `./gradlew install`)
-4. Change the dependency version used in your project to match the one you chose in step 2 (`implementation 'com.github.teamnewpipe:NewPipeExtractor:LOCAL_SNAPSHOT'`)
+---
 
-
-> [!TIP]
-> Tip for Android Studio users: After you make changes and run the `install` task, use the menu option `File → "Sync with File System"` to refresh the library in your project.
-
-## Supported sites
-
-The following sites are currently supported:
-
+## 🌐 Supported Sites
+The extractor core natively fetches streaming data from:
 - YouTube
 - SoundCloud
-- media.ccc.de
-- PeerTube (no P2P)
+- PeerTube (Non-P2P playback)
 - Bandcamp
+- media.ccc.de
 
-## License
+---
 
-[![GNU GPLv3 Image](https://www.gnu.org/graphics/gplv3-127x51.png)](https://www.gnu.org/licenses/gpl-3.0.en.html)  
+## 📄 License
+This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.
 
-NewPipe Extractor is Free Software: You can use, study share and improve it at your
-will. Specifically you can redistribute and/or modify it under the terms of the
-[GNU General Public License](https://www.gnu.org/licenses/gpl.html) as
-published by the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.  
+[![GNU GPLv3](https://www.gnu.org/graphics/gplv3-127x51.png)](https://www.gnu.org/licenses/gpl-3.0.en.html)
