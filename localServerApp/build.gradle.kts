@@ -8,6 +8,13 @@ android {
     namespace = "org.schabi.newpipe.localserver"
     compileSdk = 34
 
+    dependenciesInfo {
+        // Disables dependency metadata when building APKs.
+        includeInApk = false
+        // Disables dependency metadata when building Android App Bundles.
+        includeInBundle = false
+    }
+
     defaultConfig {
         applicationId = "org.schabi.newpipe.localserver"
         minSdk = 28
