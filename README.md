@@ -111,3 +111,6 @@ The extractor core natively fetches streaming data from:
 This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.
 
 [![GNU GPLv3](https://www.gnu.org/graphics/gplv3-127x51.png)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+
+## Buy me a coffee
+if you want to Buy me a coffee : [buymeacoffee](https://tinyurl.com/utbunyw8)
