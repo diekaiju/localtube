@@ -12,7 +12,7 @@ allprojects {
         apply(plugin = "java-library")
     }
 
-    version = "v0.26.2"
+    version = "v0.26.3"
 
     tasks.withType<JavaCompile> {
         options.encoding = Charsets.UTF_8.toString()
