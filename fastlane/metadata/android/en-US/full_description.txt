@@ -6,4 +6,4 @@ Key Features:
 - Theme Customization: Toggle between modern Dark and clean Light themes instantly.
 - Private Watch History: Tracks your watched videos locally on the host device using a secure SQLite database, maintaining privacy with zero external telemetry or tracking.
 - HTML5 Player & Stream Proxying: Proxies stream traffic through the local server to bypass client-side signature and throttling restrictions, fully supporting seeking and fast-forwarding within native browser elements.
-- Multi-Service Ready: Ready to stream content across YouTube, SoundCloud, PeerTube, Bandcamp, and media.ccc.de.
+
