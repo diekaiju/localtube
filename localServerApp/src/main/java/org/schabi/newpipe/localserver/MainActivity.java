@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
     private TextView textIpAddress;
     private TextView textUrls;
     private TextView textLogs;
+    private android.widget.ScrollView scrollLogs;
     private Button btnToggle;
     private Button btnOpenBrowser;
     private Button btnSettings;
@@ -38,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
 
     private ServerService serverService;
     private boolean isBound = false;
-    private final StringBuilder logBuffer = new StringBuilder();
+    private final java.util.ArrayList<String> htmlLogLines = new java.util.ArrayList<>();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -80,11 +81,23 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
         textIpAddress = findViewById(R.id.text_ip_address);
         textUrls = findViewById(R.id.text_urls);
         textLogs = findViewById(R.id.text_logs);
+        scrollLogs = findViewById(R.id.scroll_logs);
         btnToggle = findViewById(R.id.btn_toggle);
         btnOpenBrowser = findViewById(R.id.btn_open_browser);
         btnSettings = findViewById(R.id.btn_settings);
         cardStatus = findViewById(R.id.card_status);
         statusIndicator = findViewById(R.id.status_indicator);
+
+        // Fix scrolling inside nested ScrollView
+        if (scrollLogs != null) {
+            scrollLogs.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, android.view.MotionEvent event) {
+                    v.getParent().requestDisallowInterceptTouchEvent(true);
+                    return false;
+                }
+            });
+        }
 
         // Bind log callback
         LocalHttpServer.setLogListener(this);
@@ -169,17 +182,82 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
         }
     }
 
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;")
+                   .replace("<", "&lt;")
+                   .replace(">", "&gt;")
+                   .replace("\"", "&quot;")
+                   .replace("'", "&#x27;");
+    }
+
+    private String formatLogToHtml(String time, String message) {
+        String escapedMessage = escapeHtml(message);
+        String colorTime = "#64748B"; // Slate-400
+        String colorMessage = "#E2E8F0"; // Slate-200 (default)
+
+        String lowerMsg = message.toLowerCase(Locale.US);
+        if (lowerMsg.contains("error") || lowerMsg.contains("exception") || lowerMsg.contains("failed")) {
+            colorMessage = "#F87171"; // Red-400
+        } else if (lowerMsg.contains("started") || lowerMsg.contains("completed")) {
+            colorMessage = "#4ADE80"; // Green-400
+        } else if (lowerMsg.contains("stopped")) {
+            colorMessage = "#FB923C"; // Orange-400
+        } else if (lowerMsg.startsWith("request:")) {
+            colorMessage = "#E2E8F0";
+            if (escapedMessage.contains(" GET ")) {
+                escapedMessage = escapedMessage.replace("Request:", "<font color='#F472B6'><b>REQ</b></font>") // Pink-400
+                                               .replace(" GET ", " <font color='#4ADE80'><b>GET</b></font> <font color='#38BDF8'>"); // LightBlue-400
+                escapedMessage += "</font>";
+            } else if (escapedMessage.contains(" POST ")) {
+                escapedMessage = escapedMessage.replace("Request:", "<font color='#F472B6'><b>REQ</b></font>")
+                                               .replace(" POST ", " <font color='#FB923C'><b>POST</b></font> <font color='#38BDF8'>");
+                escapedMessage += "</font>";
+            }
+        } else if (lowerMsg.contains("proxying stream") || lowerMsg.contains("serving local")) {
+            colorMessage = "#C084FC"; // Purple-400
+        }
+
+        if (lowerMsg.startsWith("request:")) {
+            return "<font color='" + colorTime + "'>[" + time + "]</font> " + escapedMessage + "<br/>";
+        } else {
+            return "<font color='" + colorTime + "'>[" + time + "]</font> <font color='" + colorMessage + "'>" + escapedMessage + "</font><br/>";
+        }
+    }
+
     @Override
     public void onLog(final String message) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 String time = dateFormat.format(new Date());
-                logBuffer.append("[").append(time).append("] ").append(message).append("\n");
-                if (logBuffer.length() > 50000) { // Limit console buffer size
-                    logBuffer.delete(0, 10000);
+                String formattedLine = formatLogToHtml(time, message);
+                htmlLogLines.add(formattedLine);
+                if (htmlLogLines.size() > 200) { // Limit buffer to 200 lines
+                    htmlLogLines.remove(0);
                 }
-                textLogs.setText(logBuffer.toString());
+
+                StringBuilder sb = new StringBuilder();
+                for (String line : htmlLogLines) {
+                    sb.append(line);
+                }
+
+                if (textLogs != null) {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                        textLogs.setText(android.text.Html.fromHtml(sb.toString(), android.text.Html.FROM_HTML_MODE_LEGACY));
+                    } else {
+                        textLogs.setText(android.text.Html.fromHtml(sb.toString()));
+                    }
+                }
+
+                if (scrollLogs != null) {
+                    scrollLogs.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            scrollLogs.fullScroll(View.FOCUS_DOWN);
+                        }
+                    });
+                }
             }
         });
     }

@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "org.schabi.newpipe.localserver"
-    compileSdk = 34
+    compileSdk = 36
 
     dependenciesInfo {
         // Disables dependency metadata when building APKs.
@@ -19,8 +19,8 @@ android {
         applicationId = "org.schabi.newpipe.localserver"
         minSdk = 28
         targetSdk = 34
-        versionCode = 3
-        versionName = "2.1"
+        versionCode = 4
+        versionName = "2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

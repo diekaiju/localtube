@@ -192,12 +192,13 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="250dp"
-                app:cardBackgroundColor="#000000"
+                app:cardBackgroundColor="#0F172A"
                 app:cardCornerRadius="12dp"
-                app:strokeColor="#2C2C2C"
+                app:strokeColor="#334155"
                 app:strokeWidth="1dp">
 
                 <ScrollView
+                    android:id="@+id/scroll_logs"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:padding="12dp">
@@ -207,7 +208,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="System logs will appear here...\n"
-                        android:textColor="#00FF00"
+                        android:textColor="#E2E8F0"
                         android:textSize="12sp"
                         android:typeface="monospace"
                         android:lineSpacingMultiplier="1.1"/>

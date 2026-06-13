@@ -1,0 +1,2 @@
+Made console logs scrollable and colorful
+Updated NewPipeExtractor to v0.26.3
