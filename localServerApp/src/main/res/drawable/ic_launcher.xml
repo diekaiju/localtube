@@ -10,140 +10,25 @@
         android:pathData="M0,0 L108,0 L108,108 L0,108 Z"
         android:fillColor="#FF0A1628"/>
 
-    <!-- SIGNAL ARCS — recentered at (54,59), all well inside circle safe zone -->
-
-    <!-- Outer arc -->
+    <!-- RED PLAY CARD -->
     <path
-        android:pathData="M32,48 A22,22 0 0,1 76,48"
-        android:strokeWidth="3.2"
-        android:strokeLineCap="round"
-        android:fillColor="#00000000">
-        <aapt:attr name="android:strokeColor">
-            <gradient
-                android:startX="32"
-                android:startY="48"
-                android:endX="76"
-                android:endY="48"
-                android:type="linear">
-                <item android:offset="0.0" android:color="#FF22D3EE"/>
-                <item android:offset="1.0" android:color="#FF34D399"/>
-            </gradient>
-        </aapt:attr>
-    </path>
-
-    <!-- Mid arc -->
-    <path
-        android:pathData="M39,52 A15,15 0 0,1 69,52"
-        android:strokeWidth="2.8"
-        android:strokeLineCap="round"
-        android:fillColor="#00000000"
-        android:strokeAlpha="0.82">
-        <aapt:attr name="android:strokeColor">
-            <gradient
-                android:startX="39"
-                android:startY="52"
-                android:endX="69"
-                android:endY="52"
-                android:type="linear">
-                <item android:offset="0.0" android:color="#FF22D3EE"/>
-                <item android:offset="1.0" android:color="#FF34D399"/>
-            </gradient>
-        </aapt:attr>
-    </path>
-
-    <!-- Inner arc -->
-    <path
-        android:pathData="M46,56 A8,8 0 0,1 62,56"
-        android:strokeWidth="2.4"
-        android:strokeLineCap="round"
-        android:fillColor="#00000000"
-        android:strokeAlpha="0.65">
-        <aapt:attr name="android:strokeColor">
-            <gradient
-                android:startX="46"
-                android:startY="56"
-                android:endX="62"
-                android:endY="56"
-                android:type="linear">
-                <item android:offset="0.0" android:color="#FF22D3EE"/>
-                <item android:offset="1.0" android:color="#FF34D399"/>
-            </gradient>
-        </aapt:attr>
-    </path>
-
-    <!-- Signal center dot -->
-    <path
-        android:pathData="M54,59 m-2.8,0 a2.8,2.8 0 1,0 5.6,0 a2.8,2.8 0 1,0 -5.6,0"
-        android:fillColor="#FF22D3EE"/>
-
-    <!-- SCREEN BODY -->
-    <path
-        android:pathData="M20,63 L88,63 C90.2,63 92,64.8 92,67 L92,95 C92,97.2 90.2,99 88,99 L20,99 C17.8,99 16,97.2 16,95 L16,67 C16,64.8 17.8,63 20,63 Z">
+        android:pathData="M30,32 h48 c6.6,0 12,5.4 12,12 v20 c0,6.6 -5.4,12 -12,12 h-48 c-6.6,0 -12,-5.4 -12,-12 v-20 c0,-6.6 5.4,-12 12,-12 Z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="54"
-                android:startY="63"
-                android:endX="54"
-                android:endY="99"
+                android:startX="18"
+                android:startY="32"
+                android:endX="90"
+                android:endY="76"
                 android:type="linear">
-                <item android:offset="0.0" android:color="#FF1E3A5F"/>
-                <item android:offset="1.0" android:color="#FF0F2440"/>
+                <item android:offset="0.0" android:color="#FFEF4444"/>
+                <item android:offset="1.0" android:color="#FFB91C1C"/>
             </gradient>
         </aapt:attr>
     </path>
-
-    <!-- Screen bezel -->
-    <path
-        android:pathData="M20,63 L88,63 C90.2,63 92,64.8 92,67 L92,95 C92,97.2 90.2,99 88,99 L20,99 C17.8,99 16,97.2 16,95 L16,67 C16,64.8 17.8,63 20,63 Z"
-        android:strokeWidth="1.2"
-        android:strokeColor="#802563EB"
-        android:fillColor="#00000000"/>
-
-    <!-- Screen glare -->
-    <path
-        android:pathData="M20,63 L88,63 C90.2,63 92,64.8 92,67 L92,69 L16,69 L16,67 C16,64.8 17.8,63 20,63 Z"
-        android:fillColor="#0DFFFFFF"/>
-
-    <!-- PLAY BUTTON GLOW -->
-    <path
-        android:pathData="M54,79 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0"
-        android:fillColor="#30EF4444"/>
 
     <!-- PLAY TRIANGLE -->
     <path
-        android:pathData="M50.5,74.5 L60.5,79 L50.5,83.5 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="50.5"
-                android:startY="74.5"
-                android:endX="60.5"
-                android:endY="83.5"
-                android:type="linear">
-                <item android:offset="0.0" android:color="#FFF87171"/>
-                <item android:offset="1.0" android:color="#FFEF4444"/>
-            </gradient>
-        </aapt:attr>
-    </path>
-
-    <!-- LAN DOTS — bottom right of screen -->
-    <path
-        android:pathData="M74,89 m-1.6,0 a1.6,1.6 0 1,0 3.2,0 a1.6,1.6 0 1,0 -3.2,0"
-        android:fillColor="#E622D3EE"/>
-    <path
-        android:pathData="M79,89 m-1.6,0 a1.6,1.6 0 1,0 3.2,0 a1.6,1.6 0 1,0 -3.2,0"
-        android:fillColor="#9922D3EE"/>
-    <path
-        android:pathData="M84,89 m-1.6,0 a1.6,1.6 0 1,0 3.2,0 a1.6,1.6 0 1,0 -3.2,0"
-        android:fillColor="#5922D3EE"/>
-
-    <!-- STAND NECK -->
-    <path
-        android:pathData="M50,99 L58,99 L58,104 L50,104 Z"
-        android:fillColor="#FF1E3A5F"/>
-
-    <!-- STAND BASE -->
-    <path
-        android:pathData="M43,104 L65,104 L63.5,108 L44.5,108 Z"
-        android:fillColor="#FF1E3A5F"/>
+        android:pathData="M47,43 L65,54 L47,65 Z"
+        android:fillColor="#FFFFFFFF"/>
 
 </vector>
