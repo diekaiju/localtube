@@ -983,7 +983,7 @@ public final class YoutubeParsingHelper {
                             thumbnail.getInt("width", Image.WIDTH_UNKNOWN),
                             ResolutionLevel.fromHeight(height));
                 })
-                .collect(Collectors.toUnmodifiableList());
+                .collect(Collectors.toList());
     }
 
     @Nonnull

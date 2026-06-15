@@ -20,6 +20,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -74,6 +76,32 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Copy crashes on any thread to system clipboard
+        final Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread thread, Throwable throwable) {
+                try {
+                    StringWriter sw = new StringWriter();
+                    PrintWriter pw = new PrintWriter(sw);
+                    throwable.printStackTrace(pw);
+                    String stackTrace = sw.toString();
+
+                    android.content.ClipboardManager clipboard = (android.content.ClipboardManager) 
+                            getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (clipboard != null) {
+                        android.content.ClipData clip = android.content.ClipData.newPlainText("App Crash Log", stackTrace);
+                        clipboard.setPrimaryClip(clip);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                if (defaultHandler != null) {
+                    defaultHandler.uncaughtException(thread, throwable);
+                }
+            }
+        });
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -122,7 +150,11 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
                 if (isBound && serverService != null && serverService.isRunning()) {
                     String url = serverService.getLocalAddress();
                     Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    startActivity(browserIntent);
+                    try {
+                        startActivity(browserIntent);
+                    } catch (android.content.ActivityNotFoundException e) {
+                        Toast.makeText(MainActivity.this, "No browser found to open link", Toast.LENGTH_LONG).show();
+                    }
                 }
             }
         });
