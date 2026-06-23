@@ -113,4 +113,7 @@ This project is licensed under the **GNU General Public License v3.0**. See the 
 [![GNU GPLv3](https://www.gnu.org/graphics/gplv3-127x51.png)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 ## Buy me a coffee
-if you want to Buy me a coffee : [buymeacoffee](https://tinyurl.com/utbunyw8)
+
+If you want to support the developer:
+
+ [![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/diekaiju)
