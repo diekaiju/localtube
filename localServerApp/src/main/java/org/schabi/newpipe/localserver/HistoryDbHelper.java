@@ -348,6 +348,11 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
         return "true".equals(getSetting("hide_shorts", "false"));
     }
 
+    public String getVideoQuality() {
+        return getSetting("video_quality", "360p");
+    }
+
+
     public List<String> getBlockedKeywords() {
         String val = getSetting("blocked_keywords", "");
         List<String> list = new ArrayList<>();
@@ -495,5 +500,191 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public String exportToJson() {
+        try {
+            org.json.JSONObject backup = new org.json.JSONObject();
+            SQLiteDatabase db = this.getReadableDatabase();
+
+            // 1. watch_history
+            org.json.JSONArray historyArr = new org.json.JSONArray();
+            try (Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_HISTORY, null)) {
+                if (cursor.moveToFirst()) {
+                    do {
+                        org.json.JSONObject row = new org.json.JSONObject();
+                        row.put(KEY_TITLE, cursor.getString(cursor.getColumnIndexOrThrow(KEY_TITLE)));
+                        row.put(KEY_URL, cursor.getString(cursor.getColumnIndexOrThrow(KEY_URL)));
+                        row.put(KEY_UPLOADER, cursor.getString(cursor.getColumnIndexOrThrow(KEY_UPLOADER)));
+                        row.put(KEY_THUMBNAIL, cursor.getString(cursor.getColumnIndexOrThrow(KEY_THUMBNAIL)));
+                        row.put(KEY_TIMESTAMP, cursor.getLong(cursor.getColumnIndexOrThrow(KEY_TIMESTAMP)));
+                        historyArr.put(row);
+                    } while (cursor.moveToNext());
+                }
+            }
+            backup.put(TABLE_HISTORY, historyArr);
+
+            // 2. cached_videos
+            org.json.JSONArray cachedArr = new org.json.JSONArray();
+            try (Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_CACHED, null)) {
+                if (cursor.moveToFirst()) {
+                    do {
+                        org.json.JSONObject row = new org.json.JSONObject();
+                        row.put(KEY_TITLE, cursor.getString(cursor.getColumnIndexOrThrow(KEY_TITLE)));
+                        row.put(KEY_URL, cursor.getString(cursor.getColumnIndexOrThrow(KEY_URL)));
+                        row.put(KEY_UPLOADER, cursor.getString(cursor.getColumnIndexOrThrow(KEY_UPLOADER)));
+                        row.put(KEY_THUMBNAIL_LOCAL, cursor.getString(cursor.getColumnIndexOrThrow(KEY_THUMBNAIL_LOCAL)));
+                        row.put(KEY_FILE_LOCAL, cursor.getString(cursor.getColumnIndexOrThrow(KEY_FILE_LOCAL)));
+                        row.put(KEY_DESCRIPTION, cursor.getString(cursor.getColumnIndexOrThrow(KEY_DESCRIPTION)));
+                        row.put(KEY_STATUS, cursor.getString(cursor.getColumnIndexOrThrow(KEY_STATUS)));
+                        row.put(KEY_PROGRESS, cursor.getInt(cursor.getColumnIndexOrThrow(KEY_PROGRESS)));
+                        row.put(KEY_TIMESTAMP, cursor.getLong(cursor.getColumnIndexOrThrow(KEY_TIMESTAMP)));
+                        cachedArr.put(row);
+                    } while (cursor.moveToNext());
+                }
+            }
+            backup.put(TABLE_CACHED, cachedArr);
+
+            // 3. filter_settings
+            org.json.JSONArray settingsArr = new org.json.JSONArray();
+            try (Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_SETTINGS, null)) {
+                if (cursor.moveToFirst()) {
+                    do {
+                        org.json.JSONObject row = new org.json.JSONObject();
+                        row.put(KEY_SETTING_KEY, cursor.getString(cursor.getColumnIndexOrThrow(KEY_SETTING_KEY)));
+                        row.put(KEY_SETTING_VALUE, cursor.getString(cursor.getColumnIndexOrThrow(KEY_SETTING_VALUE)));
+                        settingsArr.put(row);
+                    } while (cursor.moveToNext());
+                }
+            }
+            backup.put(TABLE_SETTINGS, settingsArr);
+
+            // 4. subscriptions
+            org.json.JSONArray subsArr = new org.json.JSONArray();
+            try (Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_SUBSCRIPTIONS, null)) {
+                if (cursor.moveToFirst()) {
+                    do {
+                        org.json.JSONObject row = new org.json.JSONObject();
+                        row.put(KEY_CHANNEL_URL, cursor.getString(cursor.getColumnIndexOrThrow(KEY_CHANNEL_URL)));
+                        row.put(KEY_CHANNEL_NAME, cursor.getString(cursor.getColumnIndexOrThrow(KEY_CHANNEL_NAME)));
+                        row.put(KEY_CHANNEL_AVATAR, cursor.getString(cursor.getColumnIndexOrThrow(KEY_CHANNEL_AVATAR)));
+                        row.put(KEY_TIMESTAMP, cursor.getLong(cursor.getColumnIndexOrThrow(KEY_TIMESTAMP)));
+                        subsArr.put(row);
+                    } while (cursor.moveToNext());
+                }
+            }
+            backup.put(TABLE_SUBSCRIPTIONS, subsArr);
+
+            // 5. bookmarked_playlists
+            org.json.JSONArray playlistsArr = new org.json.JSONArray();
+            try (Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_BOOKMARKED_PLAYLISTS, null)) {
+                if (cursor.moveToFirst()) {
+                    do {
+                        org.json.JSONObject row = new org.json.JSONObject();
+                        row.put(KEY_PLAYLIST_URL, cursor.getString(cursor.getColumnIndexOrThrow(KEY_PLAYLIST_URL)));
+                        row.put(KEY_PLAYLIST_NAME, cursor.getString(cursor.getColumnIndexOrThrow(KEY_PLAYLIST_NAME)));
+                        row.put(KEY_PLAYLIST_UPLOADER, cursor.getString(cursor.getColumnIndexOrThrow(KEY_PLAYLIST_UPLOADER)));
+                        row.put(KEY_TIMESTAMP, cursor.getLong(cursor.getColumnIndexOrThrow(KEY_TIMESTAMP)));
+                        playlistsArr.put(row);
+                    } while (cursor.moveToNext());
+                }
+            }
+            backup.put(TABLE_BOOKMARKED_PLAYLISTS, playlistsArr);
+
+            return backup.toString(2);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "{\"error\":\"" + e.getMessage() + "\"}";
+        }
+    }
+
+    public boolean importFromJson(String jsonString) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            org.json.JSONObject backup = new org.json.JSONObject(jsonString);
+
+            // 1. watch_history
+            if (backup.has(TABLE_HISTORY)) {
+                org.json.JSONArray arr = backup.getJSONArray(TABLE_HISTORY);
+                for (int i = 0; i < arr.length(); i++) {
+                    org.json.JSONObject row = arr.getJSONObject(i);
+                    ContentValues values = new ContentValues();
+                    values.put(KEY_TITLE, row.optString(KEY_TITLE));
+                    values.put(KEY_URL, row.optString(KEY_URL));
+                    values.put(KEY_UPLOADER, row.optString(KEY_UPLOADER));
+                    values.put(KEY_THUMBNAIL, row.optString(KEY_THUMBNAIL));
+                    values.put(KEY_TIMESTAMP, row.optLong(KEY_TIMESTAMP));
+                    db.insertWithOnConflict(TABLE_HISTORY, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                }
+            }
+
+            // 2. cached_videos
+            if (backup.has(TABLE_CACHED)) {
+                org.json.JSONArray arr = backup.getJSONArray(TABLE_CACHED);
+                for (int i = 0; i < arr.length(); i++) {
+                    org.json.JSONObject row = arr.getJSONObject(i);
+                    ContentValues values = new ContentValues();
+                    values.put(KEY_TITLE, row.optString(KEY_TITLE));
+                    values.put(KEY_URL, row.optString(KEY_URL));
+                    values.put(KEY_UPLOADER, row.optString(KEY_UPLOADER));
+                    values.put(KEY_THUMBNAIL_LOCAL, row.optString(KEY_THUMBNAIL_LOCAL));
+                    values.put(KEY_FILE_LOCAL, row.optString(KEY_FILE_LOCAL));
+                    values.put(KEY_DESCRIPTION, row.optString(KEY_DESCRIPTION));
+                    values.put(KEY_STATUS, row.optString(KEY_STATUS));
+                    values.put(KEY_PROGRESS, row.optInt(KEY_PROGRESS));
+                    values.put(KEY_TIMESTAMP, row.optLong(KEY_TIMESTAMP));
+                    db.insertWithOnConflict(TABLE_CACHED, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                }
+            }
+
+            // 3. filter_settings
+            if (backup.has(TABLE_SETTINGS)) {
+                org.json.JSONArray arr = backup.getJSONArray(TABLE_SETTINGS);
+                for (int i = 0; i < arr.length(); i++) {
+                    org.json.JSONObject row = arr.getJSONObject(i);
+                    ContentValues values = new ContentValues();
+                    values.put(KEY_SETTING_KEY, row.optString(KEY_SETTING_KEY));
+                    values.put(KEY_SETTING_VALUE, row.optString(KEY_SETTING_VALUE));
+                    db.insertWithOnConflict(TABLE_SETTINGS, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                }
+            }
+
+            // 4. subscriptions
+            if (backup.has(TABLE_SUBSCRIPTIONS)) {
+                org.json.JSONArray arr = backup.getJSONArray(TABLE_SUBSCRIPTIONS);
+                for (int i = 0; i < arr.length(); i++) {
+                    org.json.JSONObject row = arr.getJSONObject(i);
+                    ContentValues values = new ContentValues();
+                    values.put(KEY_CHANNEL_URL, row.optString(KEY_CHANNEL_URL));
+                    values.put(KEY_CHANNEL_NAME, row.optString(KEY_CHANNEL_NAME));
+                    values.put(KEY_CHANNEL_AVATAR, row.optString(KEY_CHANNEL_AVATAR));
+                    values.put(KEY_TIMESTAMP, row.optLong(KEY_TIMESTAMP));
+                    db.insertWithOnConflict(TABLE_SUBSCRIPTIONS, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                }
+            }
+
+            // 5. bookmarked_playlists
+            if (backup.has(TABLE_BOOKMARKED_PLAYLISTS)) {
+                org.json.JSONArray arr = backup.getJSONArray(TABLE_BOOKMARKED_PLAYLISTS);
+                for (int i = 0; i < arr.length(); i++) {
+                    org.json.JSONObject row = arr.getJSONObject(i);
+                    ContentValues values = new ContentValues();
+                    values.put(KEY_PLAYLIST_URL, row.optString(KEY_PLAYLIST_URL));
+                    values.put(KEY_PLAYLIST_NAME, row.optString(KEY_PLAYLIST_NAME));
+                    values.put(KEY_PLAYLIST_UPLOADER, row.optString(KEY_PLAYLIST_UPLOADER));
+                    values.put(KEY_TIMESTAMP, row.optLong(KEY_TIMESTAMP));
+                    db.insertWithOnConflict(TABLE_BOOKMARKED_PLAYLISTS, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                }
+            }
+
+            db.setTransactionSuccessful();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            db.endTransaction();
+        }
     }
 }

@@ -3,6 +3,7 @@ package org.schabi.newpipe.localserver;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.content.Intent;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +13,10 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
+
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
@@ -119,6 +124,8 @@ public class SettingsActivity extends AppCompatActivity {
     };
 
     private HistoryDbHelper db;
+    private androidx.activity.result.ActivityResultLauncher<Intent> exportLauncher;
+    private androidx.activity.result.ActivityResultLauncher<Intent> importLauncher;
     private final Set<String> preferredTopics = new HashSet<>();
     private final Set<String> blockedKeywords = new HashSet<>();
     private final Set<String> blockedChannels = new HashSet<>();
@@ -166,9 +173,11 @@ public class SettingsActivity extends AppCompatActivity {
         TabLayout tabLayout = findViewById(R.id.tab_layout);
         tabLayout.addTab(tabLayout.newTab().setText("Interests"));
         tabLayout.addTab(tabLayout.newTab().setText("Blocked"));
+        tabLayout.addTab(tabLayout.newTab().setText("Backup"));
 
         LinearLayout layoutInterests = findViewById(R.id.layout_interests);
         LinearLayout layoutBlocked = findViewById(R.id.layout_blocked);
+        LinearLayout layoutBackup = findViewById(R.id.layout_backup);
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
@@ -176,15 +185,116 @@ public class SettingsActivity extends AppCompatActivity {
                 if (tab.getPosition() == 0) {
                     layoutInterests.setVisibility(View.VISIBLE);
                     layoutBlocked.setVisibility(View.GONE);
-                } else {
+                    layoutBackup.setVisibility(View.GONE);
+                } else if (tab.getPosition() == 1) {
                     layoutInterests.setVisibility(View.GONE);
                     layoutBlocked.setVisibility(View.VISIBLE);
+                    layoutBackup.setVisibility(View.GONE);
+                } else {
+                    layoutInterests.setVisibility(View.GONE);
+                    layoutBlocked.setVisibility(View.GONE);
+                    layoutBackup.setVisibility(View.VISIBLE);
                 }
             }
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {}
             @Override
             public void onTabReselected(TabLayout.Tab tab) {}
+        });
+
+        // Setup Video Quality Spinner and final variables for reload
+        final Spinner spinnerVideoQuality = findViewById(R.id.spinner_video_quality);
+        final ArrayAdapter<String> qualityAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, new String[]{"144p", "240p", "360p", "480p", "720p", "1080p", "1440p (2K)", "2160p (4K)"});
+
+        // Initialize Backup & Restore launch intents
+        exportLauncher = registerForActivityResult(
+                new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        android.net.Uri uri = result.getData().getData();
+                        if (uri != null) {
+                            try (java.io.OutputStream os = getContentResolver().openOutputStream(uri)) {
+                                String json = db.exportToJson();
+                                if (os != null) {
+                                    os.write(json.getBytes("UTF-8"));
+                                    Toast.makeText(this, "Database exported successfully!", Toast.LENGTH_SHORT).show();
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    }
+                });
+
+        importLauncher = registerForActivityResult(
+                new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        android.net.Uri uri = result.getData().getData();
+                        if (uri != null) {
+                            try (java.io.InputStream is = getContentResolver().openInputStream(uri)) {
+                                if (is != null) {
+                                    java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+                                    byte[] buffer = new byte[8192];
+                                    int read;
+                                    while ((read = is.read(buffer)) != -1) {
+                                        baos.write(buffer, 0, read);
+                                    }
+                                    String json = baos.toString("UTF-8");
+                                    boolean success = db.importFromJson(json);
+                                    if (success) {
+                                        Toast.makeText(this, "Database imported successfully!", Toast.LENGTH_SHORT).show();
+                                        preferredTopics.clear();
+                                        preferredTopics.addAll(db.getPreferredKeywords());
+                                        blockedKeywords.clear();
+                                        blockedKeywords.addAll(db.getBlockedKeywords());
+                                        blockedChannels.clear();
+                                        blockedChannels.addAll(db.getBlockedChannels());
+                                        
+                                        buildPreferredChips();
+                                        buildCategories();
+                                        buildBlockedChips();
+                                        buildBlockedChannelChips();
+                                        buildBlockedSuggestions();
+                                        buildBlockedCategories();
+                                        swHideWatched.setChecked(db.getHideWatched());
+                                        swHideShorts.setChecked(db.getHideShorts());
+                                        
+                                        String curQuality = db.getVideoQuality();
+                                        for (int i = 0; i < qualityAdapter.getCount(); i++) {
+                                            if (qualityAdapter.getItem(i).startsWith(curQuality)) {
+                                                spinnerVideoQuality.setSelection(i);
+                                                break;
+                                            }
+                                        }
+                                    } else {
+                                        Toast.makeText(this, "Import failed: Invalid JSON or database error", Toast.LENGTH_LONG).show();
+                                    }
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                Toast.makeText(this, "Import failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    }
+                });
+
+        Button btnExportDb = findViewById(R.id.btn_export_db);
+        btnExportDb.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("application/json");
+            intent.putExtra(Intent.EXTRA_TITLE, "localtube_backup.json");
+            exportLauncher.launch(intent);
+        });
+
+        Button btnImportDb = findViewById(R.id.btn_import_db);
+        btnImportDb.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("application/json");
+            importLauncher.launch(intent);
         });
 
         // Interests views
@@ -237,7 +347,33 @@ public class SettingsActivity extends AppCompatActivity {
             db.setSetting("hide_shorts", isChecked ? "true" : "false");
             Toast.makeText(this, "Hide Shorts: " + isChecked, Toast.LENGTH_SHORT).show();
         });
+
+        // Setup Video Quality Spinner dropdown resource
+        qualityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerVideoQuality.setAdapter(qualityAdapter);
+
+        String currentQuality = db.getVideoQuality();
+        for (int i = 0; i < qualityAdapter.getCount(); i++) {
+            if (qualityAdapter.getItem(i).startsWith(currentQuality)) {
+                spinnerVideoQuality.setSelection(i);
+                break;
+            }
+        }
+
+        spinnerVideoQuality.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selected = (String) parent.getItemAtPosition(position);
+                String quality = selected.split(" ")[0]; // "1440p (2K)" -> "1440p"
+                db.setSetting("video_quality", quality);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
     }
+
 
     // ==========================================
     // INTERESTS LOGIC

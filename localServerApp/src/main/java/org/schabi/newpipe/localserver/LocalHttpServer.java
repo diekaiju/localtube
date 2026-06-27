@@ -16,6 +16,8 @@ import org.schabi.newpipe.extractor.stream.StreamExtractor;
 import org.schabi.newpipe.extractor.stream.StreamInfo;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 import org.schabi.newpipe.extractor.stream.VideoStream;
+import org.schabi.newpipe.extractor.stream.SubtitlesStream;
+import org.schabi.newpipe.extractor.MediaFormat;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -42,6 +44,7 @@ public class LocalHttpServer {
     private ServerSocket serverSocket;
     private boolean isRunning = false;
     private final ExecutorService threadPool = Executors.newCachedThreadPool();
+    private static final Map<String, String> streamUrlCache = new java.util.concurrent.ConcurrentHashMap<>();
     private static final okhttp3.OkHttpClient httpClient = new okhttp3.OkHttpClient.Builder()
             .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
@@ -151,6 +154,54 @@ public class LocalHttpServer {
                     }
                 }
 
+                if ("OPTIONS".equalsIgnoreCase(method)) {
+                    String sb = "HTTP/1.1 204 No Content\r\n" +
+                            "Access-Control-Allow-Origin: *\r\n" +
+                            "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n" +
+                            "Access-Control-Allow-Headers: *\r\n" +
+                            "Access-Control-Expose-Headers: *\r\n" +
+                            "Access-Control-Max-Age: 86400\r\n" +
+                            "\r\n";
+                    os.write(sb.getBytes("UTF-8"));
+                    os.flush();
+                    return;
+                }
+
+                // Read POST body if Content-Length is present
+                String postBody = "";
+                if ("POST".equalsIgnoreCase(method)) {
+                    String contentLengthHeader = requestHeaders.get("content-length");
+                    if (contentLengthHeader != null) {
+                        try {
+                            int contentLength = Integer.parseInt(contentLengthHeader);
+                            char[] buffer = new char[contentLength];
+                            int totalRead = 0;
+                            while (totalRead < contentLength) {
+                                int read = reader.read(buffer, totalRead, contentLength - totalRead);
+                                if (read == -1) break;
+                                totalRead += read;
+                            }
+                            postBody = new String(buffer, 0, totalRead);
+                        } catch (Exception e) {
+                            log("Error reading POST body: " + e.getMessage());
+                        }
+                    }
+                }
+
+                // Handle CORS preflight (OPTIONS)
+                if ("OPTIONS".equalsIgnoreCase(method)) {
+                    String corsResponse = "HTTP/1.1 200 OK\r\n" +
+                            "Access-Control-Allow-Origin: *\r\n" +
+                            "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n" +
+                            "Access-Control-Allow-Headers: Content-Type, Range, Authorization\r\n" +
+                            "Access-Control-Max-Age: 86400\r\n" +
+                            "Content-Length: 0\r\n" +
+                            "Connection: close\r\n\r\n";
+                    os.write(corsResponse.getBytes("UTF-8"));
+                    os.flush();
+                    return;
+                }
+
                 // Detect device class (TV vs Phone)
                 String ua = requestHeaders.get("user-agent");
                 boolean isTv = false;
@@ -162,6 +213,10 @@ public class LocalHttpServer {
                 try {
                     if (path.equals("/")) {
                         handleHome(os, params, isTv);
+                    } else if (path.equals("/db/export")) {
+                        handleDbExport(os);
+                    } else if (path.equals("/db/import")) {
+                        handleDbImport(os, postBody);
                     } else if (path.equals("/search")) {
                         handleSearch(os, params, isTv);
                     } else if (path.equals("/watch")) {
@@ -174,6 +229,21 @@ public class LocalHttpServer {
                         handlePlaylist(os, params, isTv);
                     } else if (path.equals("/stream")) {
                         handleStreamProxy(os, params, requestHeaders);
+                    } else if (path.equals("/manifest")) {
+                        handleManifestProxy(os, params);
+                    } else if (path.equals("/log_client_capabilities")) {
+                        String supported = params.get("supported");
+                        String error = params.get("error");
+                        String playingQuality = params.get("playing_quality");
+                        String userAgent = requestHeaders.get("user-agent");
+                        if (error != null) {
+                            log("Client player error: " + error + " | User-Agent: " + userAgent);
+                        } else if (playingQuality != null) {
+                            log("Client is playing quality: " + playingQuality + " | User-Agent: " + userAgent);
+                        } else {
+                            log("Client connection capability check: DASH supported = " + supported + " | User-Agent: " + userAgent);
+                        }
+                        sendResponse(os, 200, "OK", "text/plain; charset=UTF-8");
                     } else if (path.equals("/cache")) {
                         handleCache(os, params, isTv);
                     } else if (path.equals("/subscriptions")) {
@@ -184,6 +254,10 @@ public class LocalHttpServer {
                         handlePlaylistBookmarkAction(os, params);
                     } else if (path.equals("/thumbnail")) {
                         handleThumbnail(os, params);
+                    } else if (path.equals("/subtitles")) {
+                        handleSubtitlesProxy(os, params);
+                    } else if (path.equals("/settings")) {
+                        handleSettings(os, params, isTv);
                     } else {
                         sendResponse(os, 404, "Page Not Found", "text/plain; charset=UTF-8");
                     }
@@ -382,7 +456,10 @@ public class LocalHttpServer {
                 dbHelper.saveToHistory(info.getName(), info.getUrl(), info.getUploaderName(), thumbUrl);
 
                 boolean isSubscribed = dbHelper.isSubscribed(info.getUploaderUrl());
-                String html = HtmlRenderer.renderWatch(serviceId, info, cachedVideo, isSubscribed, isTv);
+                String targetQuality = dbHelper.getVideoQuality();
+                
+                long duration = info.getDuration();
+                String html = HtmlRenderer.renderWatch(serviceId, info, cachedVideo, isSubscribed, isTv, targetQuality, duration);
                 sendResponse(os, 200, html, "text/html; charset=UTF-8");
             } catch (Exception e) {
                 if (cachedVideo != null) {
@@ -407,6 +484,17 @@ public class LocalHttpServer {
         private void handleStreamProxy(OutputStream os, Map<String, String> params, Map<String, String> requestHeaders) throws Exception {
             int serviceId = getServiceId(params);
             String mediaUrl = params.get("id");
+            String itagParam = params.get("itag");
+            
+            String rangeHeader = null;
+            for (String key : requestHeaders.keySet()) {
+                if ("range".equalsIgnoreCase(key)) {
+                    rangeHeader = requestHeaders.get(key);
+                    break;
+                }
+            }
+
+            log("STREAM REQUEST itag=" + itagParam + " range=" + rangeHeader + " id=" + mediaUrl);
 
             CachedVideo cachedVideo = dbHelper.getCachedVideo(mediaUrl);
             if (cachedVideo != null && "COMPLETED".equals(cachedVideo.getStatus())) {
@@ -418,74 +506,258 @@ public class LocalHttpServer {
                 }
             }
 
-            StreamingService service = NewPipe.getService(serviceId);
-            StreamExtractor extractor = service.getStreamExtractor(mediaUrl);
-            extractor.fetchPage();
-
-            String directUrl = null;
-            
-            List<VideoStream> progressiveStreams = extractor.getVideoStreams();
-            if (progressiveStreams != null && !progressiveStreams.isEmpty()) {
-                directUrl = progressiveStreams.get(0).getContent();
-            } else {
+            int requestedItag = -1;
+            if (itagParam != null) {
                 try {
-                    String hlsUrl = extractor.getHlsUrl();
-                    if (hlsUrl != null && !hlsUrl.isEmpty()) {
-                        directUrl = hlsUrl;
+                    requestedItag = Integer.parseInt(itagParam);
+                } catch (Exception e) {}
+            }
+
+            String cacheKey = serviceId + "_" + mediaUrl + "_" + requestedItag;
+            String directUrl = streamUrlCache.get(cacheKey);
+
+            if (directUrl == null) {
+                StreamingService service = NewPipe.getService(serviceId);
+                StreamExtractor extractor = service.getStreamExtractor(mediaUrl);
+                extractor.fetchPage();
+
+                if (requestedItag != -1) {
+                    for (VideoStream stream : extractor.getVideoStreams()) {
+                        if (stream.getItag() == requestedItag) {
+                            directUrl = stream.getContent();
+                            break;
+                        }
                     }
-                } catch (Exception e) {
-                    // ignore
+                    if (directUrl == null) {
+                        for (VideoStream stream : extractor.getVideoOnlyStreams()) {
+                            if (stream.getItag() == requestedItag) {
+                                directUrl = stream.getContent();
+                                break;
+                            }
+                        }
+                    }
+                    if (directUrl == null) {
+                        for (AudioStream stream : extractor.getAudioStreams()) {
+                            if (stream.getItag() == requestedItag) {
+                                directUrl = stream.getContent();
+                                break;
+                            }
+                        }
+                    }
                 }
+
                 if (directUrl == null) {
-                    List<AudioStream> audioStreams = extractor.getAudioStreams();
-                    if (audioStreams != null && !audioStreams.isEmpty()) {
-                        directUrl = audioStreams.get(0).getContent();
+                    String qualityParam = params.get("quality");
+                    String startTimeParam = params.get("start_time");
+                    double startTime = 0.0;
+                    if (startTimeParam != null) {
+                        try {
+                            startTime = Double.parseDouble(startTimeParam);
+                        } catch (Exception e) {}
                     }
+                    
+                    String targetQuality = qualityParam != null ? qualityParam : dbHelper.getVideoQuality();
+                    int targetHeight = getResolutionHeight(targetQuality);
+
+                    if (targetHeight > 360) {
+                        List<VideoStream> videoOnlyStreams = extractor.getVideoOnlyStreams();
+                        VideoStream selectedVideo = null;
+                        int bestVideoHeight = -1;
+                        if (videoOnlyStreams != null) {
+                            for (VideoStream stream : videoOnlyStreams) {
+                                int height = getResolutionHeight(stream.getResolution());
+                                if (height <= targetHeight) {
+                                    if (height > bestVideoHeight) {
+                                        bestVideoHeight = height;
+                                        selectedVideo = stream;
+                                    }
+                                }
+                            }
+                            if (selectedVideo == null && !videoOnlyStreams.isEmpty()) {
+                                selectedVideo = videoOnlyStreams.get(0);
+                            }
+                        }
+
+                        List<AudioStream> audioStreams = extractor.getAudioStreams();
+                        AudioStream selectedAudio = null;
+                        int bestAudioBitrate = -1;
+                        if (audioStreams != null) {
+                            for (AudioStream stream : audioStreams) {
+                                int bitrate = stream.getBitrate();
+                                if (bitrate > bestAudioBitrate) {
+                                    bestAudioBitrate = bitrate;
+                                    selectedAudio = stream;
+                                }
+                            }
+                        }
+
+                        if (selectedVideo != null && selectedAudio != null) {
+                            String videoUrl = selectedVideo.getContent();
+                            String audioUrl = selectedAudio.getContent();
+                            log("Remuxing on the fly: videoHeight=" + bestVideoHeight + " (" + selectedVideo.getResolution() + ") + audioBitrate=" + bestAudioBitrate + " start_time=" + startTime + " for id=" + mediaUrl);
+                            
+                            String pipePath = com.arthenica.ffmpegkit.FFmpegKitConfig.registerNewFFmpegPipe(context);
+                            String cmd;
+                            if (startTime > 0) {
+                                cmd = "-y -ss " + startTime + " -i \"" + videoUrl + "\" -ss " + startTime + " -i \"" + audioUrl + "\" -c:v copy -c:a copy -f mp4 -movflags frag_keyframe+empty_moov \"" + pipePath + "\"";
+                            } else {
+                                cmd = "-y -i \"" + videoUrl + "\" -i \"" + audioUrl + "\" -c:v copy -c:a copy -f mp4 -movflags frag_keyframe+empty_moov \"" + pipePath + "\"";
+                            }
+                            
+                            com.arthenica.ffmpegkit.FFmpegKit.executeAsync(cmd, session -> {});
+                            
+                            try (java.io.FileInputStream fis = new java.io.FileInputStream(pipePath)) {
+                                String headers = "HTTP/1.1 200 OK\r\n" +
+                                                 "Content-Type: video/mp4\r\n" +
+                                                 "Access-Control-Allow-Origin: *\r\n" +
+                                                 "Connection: close\r\n\r\n";
+                                os.write(headers.getBytes("UTF-8"));
+                                
+                                byte[] buffer = new byte[16384];
+                                int read;
+                                while ((read = fis.read(buffer)) != -1) {
+                                    os.write(buffer, 0, read);
+                                    os.flush();
+                                }
+                            } finally {
+                                com.arthenica.ffmpegkit.FFmpegKitConfig.closeFFmpegPipe(pipePath);
+                            }
+                            return;
+                        }
+                    }
+
+                    // Fallback to progressive stream
+                    List<VideoStream> progressiveStreams = extractor.getVideoStreams();
+                    if (progressiveStreams != null && !progressiveStreams.isEmpty()) {
+                        VideoStream selectedStream = null;
+                        int bestHeight = -1;
+                        for (VideoStream stream : progressiveStreams) {
+                            int height = getResolutionHeight(stream.getResolution());
+                            if (height <= targetHeight) {
+                                if (height > bestHeight) {
+                                    bestHeight = height;
+                                    selectedStream = stream;
+                                }
+                            }
+                        }
+                        if (selectedStream == null) {
+                            // If no stream is <= targetHeight, pick the highest quality one available
+                            for (VideoStream stream : progressiveStreams) {
+                                int height = getResolutionHeight(stream.getResolution());
+                                if (height > bestHeight) {
+                                    bestHeight = height;
+                                    selectedStream = stream;
+                                }
+                            }
+                        }
+                        if (selectedStream == null) {
+                            selectedStream = progressiveStreams.get(0);
+                        }
+                        directUrl = selectedStream.getContent();
+                    } else {
+                        try {
+                            String hlsUrl = extractor.getHlsUrl();
+                            if (hlsUrl != null && !hlsUrl.isEmpty()) {
+                                directUrl = hlsUrl;
+                            }
+                        } catch (Exception e) {
+                            // ignore
+                        }
+                        if (directUrl == null) {
+                            List<AudioStream> audioStreams = extractor.getAudioStreams();
+                            if (audioStreams != null && !audioStreams.isEmpty()) {
+                                // Sort to pick highest quality for fallback
+                                java.util.Collections.sort(audioStreams, (a, b) -> {
+                                    long brA = a.getAverageBitrate() > 0 ? a.getAverageBitrate() : a.getBitrate();
+                                    long brB = b.getAverageBitrate() > 0 ? b.getAverageBitrate() : b.getBitrate();
+                                    return Long.compare(brB, brA);
+                                });
+                                directUrl = audioStreams.get(0).getContent();
+                            }
+                        }
+                    }
+                }
+
+                if (directUrl != null) {
+                    streamUrlCache.put(cacheKey, directUrl);
                 }
             }
 
             if (directUrl != null) {
                 log("Proxying stream from: " + directUrl);
                 
+                // Use matching User-Agent for YouTube streams depending on the client (c) parameter to avoid 403 Forbidden
+                String ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+                if (directUrl.contains("googlevideo.com")) {
+                    try {
+                        if (directUrl.contains("c=IOS") || directUrl.contains("c=ios")) {
+                            ua = org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getIosUserAgent(null);
+                        } else if (directUrl.contains("c=VISIONOS") || directUrl.contains("c=visionos")) {
+                            ua = org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getVisionOsUserAgent(null);
+                        } else {
+                            ua = org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getAndroidUserAgent(null);
+                        }
+                    } catch (Exception e) {}
+                }
+
                 // Build remote request
                 okhttp3.Request.Builder reqBuilder = new okhttp3.Request.Builder()
                         .url(directUrl)
-                        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                        .header("User-Agent", ua);
 
                 // Forward Range header if client sent it
-                String rangeHeader = requestHeaders.get("range");
                 if (rangeHeader != null) {
-                    reqBuilder.header("Range", rangeHeader);
+                    reqBuilder.removeHeader("Range");
+                    reqBuilder.addHeader("Range", rangeHeader);
+                    log("Forwarding Range to CDN: " + rangeHeader);
                 }
 
                 try (okhttp3.Response response = httpClient.newCall(reqBuilder.build()).execute()) {
                     int code = response.code();
+                    log("Incoming Range = " + rangeHeader + " CDN status=" + code + " itag=" + requestedItag);
                     
-                    // Convert headers to browser response
-                    String contentType = response.header("Content-Type", "video/mp4");
-                    String contentRange = response.header("Content-Range");
-                    String contentLength = response.header("Content-Length");
-                    String acceptRanges = response.header("Accept-Ranges");
+                    if (rangeHeader != null && code != 206) {
+                        log("WARNING: Range requested (" + rangeHeader + ") but CDN returned " + code);
+                    }
 
-                    // Write HTTP status line
-                    String status = code == 206 ? "Partial Content" : (code == 200 ? "OK" : "OK");
                     StringBuilder headBuilder = new StringBuilder();
-                    headBuilder.append("HTTP/1.1 ").append(code).append(" ").append(status).append("\r\n");
-                    headBuilder.append("Content-Type: ").append(contentType).append("\r\n");
-                    if (contentLength != null) {
-                        headBuilder.append("Content-Length: ").append(contentLength).append("\r\n");
+                    String statusText = (code == 206) ? "Partial Content" : "OK";
+                    headBuilder.append("HTTP/1.1 ").append(code).append(" ").append(statusText).append("\r\n");
+
+                    String[] headersToForward = {
+                            "Content-Type",
+                            "Content-Length",
+                            "Content-Range",
+                            "Accept-Ranges"
+                    };
+
+                    for (String h : headersToForward) {
+                        String val = response.header(h);
+                        if (val != null) {
+                            headBuilder.append(h).append(": ").append(val).append("\r\n");
+                        }
                     }
-                    if (contentRange != null) {
-                        headBuilder.append("Content-Range: ").append(contentRange).append("\r\n");
+
+                    // Ensure Content-Type is set if missing
+                    if (response.header("Content-Type") == null) {
+                        String defaultType = requestedItag == 140 ? "audio/mp4" : "video/mp4";
+                        if (requestedItag == -1) defaultType = "application/octet-stream";
+                        headBuilder.append("Content-Type: ").append(defaultType).append("\r\n");
                     }
-                    if (acceptRanges != null) {
-                        headBuilder.append("Accept-Ranges: ").append(acceptRanges).append("\r\n");
-                    } else {
+                    
+                    // Ensure Accept-Ranges is set for DASH
+                    if (response.header("Accept-Ranges") == null) {
                         headBuilder.append("Accept-Ranges: bytes\r\n");
                     }
-                    headBuilder.append("Connection: close\r\n\r\n");
 
-                    os.write(headBuilder.toString().getBytes("UTF-8"));
+                    headBuilder.append("Access-Control-Allow-Origin: *\r\n");
+                    headBuilder.append("Access-Control-Allow-Headers: *\r\n");
+                    headBuilder.append("Access-Control-Expose-Headers: *\r\n");
+                    headBuilder.append("\r\n");
+                    
+                    if (code == 206) log("Successfully returning 206 Partial Content to client");
+
+                    os.write(headBuilder.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
                     os.flush();
 
                     // Pipe body bytes
@@ -506,6 +778,267 @@ public class LocalHttpServer {
             } else {
                 sendResponse(os, 404, "Stream URL not found.", "text/plain; charset=UTF-8");
             }
+        }
+
+        private void handleManifestProxy(OutputStream os, Map<String, String> params) throws Exception {
+            int serviceId = getServiceId(params);
+            String mediaUrl = params.get("id");
+
+            StreamingService service = NewPipe.getService(serviceId);
+            StreamExtractor extractor = service.getStreamExtractor(mediaUrl);
+            extractor.fetchPage();
+
+            // Construct standard DASH manifest (MPD) locally using extracted stream lists
+            double durationSec = extractor.getLength();
+            if (durationSec <= 0) {
+                durationSec = 1800.0; // fallback 30 mins if length not available
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+            sb.append("<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\" profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\" type=\"static\" mediaPresentationDuration=\"PT").append(durationSec).append("S\" minBufferTime=\"PT1.5S\">\n");
+            sb.append("  <Period duration=\"PT").append(durationSec).append("S\">\n");
+
+            // Video AdaptationSet (Adaptive / Video-Only streams)
+            List<VideoStream> videoStreams = extractor.getVideoOnlyStreams();
+
+            if (videoStreams != null && !videoStreams.isEmpty()) {
+                sb.append("    <AdaptationSet id=\"0\" mimeType=\"video/mp4\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\">\n");
+                java.util.Set<Integer> seenVideoItags = new java.util.HashSet<>();
+                for (VideoStream vs : videoStreams) {
+                    int itag = vs.getItag();
+                    if (seenVideoItags.contains(itag)) {
+                        continue;
+                    }
+                    seenVideoItags.add(itag);
+                    
+                    long bitrate = vs.getBitrate();
+                    if (bitrate <= 0) {
+                        bitrate = 1000000;
+                    }
+                    // Extractors usually return bps. If it's suspiciously low, we might scale, 
+                    // but the previous scaling (bitrate < 100000) was causing 360p (83kbps) 
+                    // to be scaled to 83Mbps while 1080p (495kbps) was left at 0.5Mbps.
+                    // Let's use a much lower threshold or just trust the extractor.
+                    if (bitrate < 5000) { 
+                        bitrate *= 1000;
+                    }
+                    String codec = vs.getCodec();
+                    int width = vs.getWidth();
+                    int height = vs.getHeight();
+                    int fps = vs.getFps();
+
+                    int initStart = vs.getInitStart();
+                    int initEnd = vs.getInitEnd();
+                    int indexStart = vs.getIndexStart();
+                    int indexEnd = vs.getIndexEnd();
+
+                    if (initStart < 0 || initEnd < 0 || indexStart < 0 || indexEnd < 0) {
+                        continue; // Skip streams without correct index range markers
+                    }
+
+                    String proxyUrl = "/stream?serviceId=" + serviceId + "&amp;id=" + java.net.URLEncoder.encode(mediaUrl, "UTF-8") + "&amp;itag=" + itag;
+                    sb.append("      <Representation id=\"").append(itag).append("\" bandwidth=\"").append(bitrate).append("\" codecs=\"").append(codec).append("\" width=\"").append(width).append("\" height=\"").append(height).append("\" frameRate=\"").append(fps).append("\" sar=\"1:1\">\n");
+                    sb.append("        <BaseURL>").append(proxyUrl).append("</BaseURL>\n");
+                    sb.append("        <SegmentBase indexRange=\"").append(indexStart).append("-").append(indexEnd).append("\" indexRangeExact=\"true\">\n");
+                    sb.append("          <Initialization range=\"").append(initStart).append("-").append(initEnd).append("\"/>\n");
+                    sb.append("        </SegmentBase>\n");
+                    sb.append("      </Representation>\n");
+                }
+                sb.append("    </AdaptationSet>\n");
+            }
+
+            // Audio AdaptationSet
+            List<AudioStream> audioStreams = extractor.getAudioStreams();
+            if (audioStreams != null && !audioStreams.isEmpty()) {
+                // Sort by bitrate descending to put "original" highest quality first
+                java.util.Collections.sort(audioStreams, (a, b) -> {
+                    long brA = a.getAverageBitrate() > 0 ? a.getAverageBitrate() : a.getBitrate();
+                    long brB = b.getAverageBitrate() > 0 ? b.getAverageBitrate() : b.getBitrate();
+                    return Long.compare(brB, brA);
+                });
+
+                sb.append("    <AdaptationSet id=\"1\" mimeType=\"audio/mp4\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\">\n");
+                java.util.Set<Integer> seenAudioItags = new java.util.HashSet<>();
+                for (AudioStream as : audioStreams) {
+                    int itag = as.getItag();
+                    if (seenAudioItags.contains(itag)) {
+                        continue;
+                    }
+                    seenAudioItags.add(itag);
+
+                    long bitrate = as.getAverageBitrate();
+                    if (bitrate <= 0) {
+                        bitrate = as.getBitrate();
+                    }
+                    if (bitrate <= 0) {
+                        bitrate = 128000;
+                    }
+                    if (bitrate < 1000) {
+                        bitrate *= 1000;
+                    }
+                    String codec = as.getCodec();
+
+                    int initStart = as.getInitStart();
+                    int initEnd = as.getInitEnd();
+                    int indexStart = as.getIndexStart();
+                    int indexEnd = as.getIndexEnd();
+
+                    if (initStart < 0 || initEnd < 0 || indexStart < 0 || indexEnd < 0) {
+                        continue; // Skip streams without index range markers
+                    }
+
+                    String proxyUrl = "/stream?serviceId=" + serviceId + "&amp;id=" + java.net.URLEncoder.encode(mediaUrl, "UTF-8") + "&amp;itag=" + itag;
+                    sb.append("      <Representation id=\"").append(itag).append("\" bandwidth=\"").append(bitrate).append("\" codecs=\"").append(codec).append("\" audioSamplingRate=\"44100\">\n");
+                    sb.append("        <AudioChannelConfiguration schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\" value=\"2\"/>\n");
+                    sb.append("        <BaseURL>").append(proxyUrl).append("</BaseURL>\n");
+                    sb.append("        <SegmentBase indexRange=\"").append(indexStart).append("-").append(indexEnd).append("\" indexRangeExact=\"true\">\n");
+                    sb.append("          <Initialization range=\"").append(initStart).append("-").append(initEnd).append("\"/>\n");
+                    sb.append("        </SegmentBase>\n");
+                    sb.append("      </Representation>\n");
+                }
+                sb.append("    </AdaptationSet>\n");
+            }
+
+            sb.append("  </Period>\n");
+            sb.append("</MPD>\n");
+
+            String manifestXml = sb.toString();
+            log("Generated local DASH manifest:\n" + manifestXml);
+
+            byte[] bodyBytes = manifestXml.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+            String responseHeaders = "HTTP/1.1 200 OK\r\n" +
+                    "Content-Type: application/dash+xml; charset=UTF-8\r\n" +
+                    "Content-Length: " + bodyBytes.length + "\r\n" +
+                    "Access-Control-Allow-Origin: *\r\n" +
+                    "Connection: close\r\n\r\n";
+            os.write(responseHeaders.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            os.write(bodyBytes);
+            os.flush();
+        }
+
+        private void handleSubtitlesProxy(OutputStream os, Map<String, String> params) throws Exception {
+            int serviceId = getServiceId(params);
+            String mediaUrl = params.get("id");
+            String lang = params.get("lang");
+            boolean isAuto = "true".equals(params.get("auto"));
+
+            StreamingService service = NewPipe.getService(serviceId);
+            StreamExtractor extractor = service.getStreamExtractor(mediaUrl);
+            extractor.fetchPage();
+
+            SubtitlesStream targetStream = null;
+            List<SubtitlesStream> subs = null;
+            try {
+                subs = extractor.getSubtitlesDefault();
+            } catch (Exception e) {}
+
+            if (subs != null) {
+                for (SubtitlesStream sub : subs) {
+                    if (sub.getLanguageTag().equals(lang) && sub.isAutoGenerated() == isAuto) {
+                        targetStream = sub;
+                        break;
+                    }
+                }
+                if (targetStream == null) {
+                    for (SubtitlesStream sub : subs) {
+                        if (sub.getLanguageTag().equals(lang)) {
+                            targetStream = sub;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (targetStream != null) {
+                String subUrl = targetStream.getContent();
+                okhttp3.Request req = new okhttp3.Request.Builder()
+                        .url(subUrl)
+                        .header("User-Agent", "Mozilla/5.0")
+                        .build();
+                try (okhttp3.Response response = httpClient.newCall(req).execute()) {
+                    byte[] bodyBytes = response.body() != null ? response.body().bytes() : new byte[0];
+                    String contentType = response.header("Content-Type");
+                    if (contentType == null) {
+                        if (targetStream.getFormat() == MediaFormat.VTT) {
+                            contentType = "text/vtt";
+                        } else if (targetStream.getFormat() == MediaFormat.TTML) {
+                            contentType = "application/ttml+xml";
+                        } else {
+                            contentType = "text/plain";
+                        }
+                    }
+                    String headers = "HTTP/1.1 200 OK\r\n" +
+                            "Content-Type: " + contentType + "; charset=UTF-8\r\n" +
+                            "Content-Length: " + bodyBytes.length + "\r\n" +
+                            "Access-Control-Allow-Origin: *\r\n" +
+                            "Connection: close\r\n\r\n";
+                    os.write(headers.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    os.write(bodyBytes);
+                    os.flush();
+                }
+            } else {
+                sendResponse(os, 404, "Subtitles not found", "text/plain; charset=UTF-8");
+            }
+        }
+
+        private void handleDbExport(OutputStream os) throws Exception {
+            String json = dbHelper.exportToJson();
+            byte[] bodyBytes = json.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+            String responseHeaders = "HTTP/1.1 200 OK\r\n" +
+                    "Content-Type: application/json; charset=UTF-8\r\n" +
+                    "Content-Length: " + bodyBytes.length + "\r\n" +
+                    "Content-Disposition: attachment; filename=\"localtube_backup.json\"\r\n" +
+                    "Access-Control-Allow-Origin: *\r\n" +
+                    "Connection: close\r\n\r\n";
+            os.write(responseHeaders.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            os.write(bodyBytes);
+            os.flush();
+        }
+
+        private void handleDbImport(OutputStream os, String postBody) throws Exception {
+            boolean success = dbHelper.importFromJson(postBody);
+            String responseText = success ? "SUCCESS" : "FAIL";
+            byte[] bodyBytes = responseText.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+            String responseHeaders = "HTTP/1.1 200 OK\r\n" +
+                    "Content-Type: text/plain; charset=UTF-8\r\n" +
+                    "Content-Length: " + bodyBytes.length + "\r\n" +
+                    "Access-Control-Allow-Origin: *\r\n" +
+                    "Connection: close\r\n\r\n";
+            os.write(responseHeaders.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            os.write(bodyBytes);
+            os.flush();
+        }
+
+        private void handleSettings(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
+            String action = params.get("action");
+            if ("save".equals(action)) {
+                String quality = params.get("video_quality");
+                String hideWatched = params.get("hide_watched");
+                String hideShorts = params.get("hide_shorts");
+
+                dbHelper.setSetting("video_quality", quality != null ? quality : "360p");
+                dbHelper.setSetting("hide_watched", "on".equals(hideWatched) ? "true" : "false");
+                dbHelper.setSetting("hide_shorts", "on".equals(hideShorts) ? "true" : "false");
+
+                String redirectHeader = "HTTP/1.1 303 See Other\r\n" +
+                        "Location: /settings?saved=true\r\n" +
+                        "Connection: close\r\n\r\n";
+                os.write(redirectHeader.getBytes("UTF-8"));
+                os.flush();
+                return;
+            }
+
+            String currentQuality = dbHelper.getVideoQuality();
+            boolean hideWatched = dbHelper.getHideWatched();
+            boolean hideShorts = dbHelper.getHideShorts();
+            boolean saved = "true".equals(params.get("saved"));
+
+            String html = HtmlRenderer.renderSettings(0, currentQuality, hideWatched, hideShorts, saved, isTv);
+            sendResponse(os, 200, html, "text/html; charset=UTF-8");
         }
 
         private void handleChannel(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
@@ -719,7 +1252,14 @@ public class LocalHttpServer {
             long end = fileSize - 1;
             boolean isRange = false;
 
-            String rangeHeader = requestHeaders.get("range");
+            String rangeHeader = null;
+            for (String key : requestHeaders.keySet()) {
+                if ("range".equalsIgnoreCase(key)) {
+                    rangeHeader = requestHeaders.get(key);
+                    break;
+                }
+            }
+
             if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
                 String rangeValue = rangeHeader.substring(6);
                 int minusIdx = rangeValue.indexOf('-');
@@ -758,7 +1298,7 @@ public class LocalHttpServer {
             if (isRange) {
                 headBuilder.append("Content-Range: bytes ").append(start).append("-").append(end).append("/").append(fileSize).append("\r\n");
             }
-            headBuilder.append("Connection: close\r\n\r\n");
+            headBuilder.append("\r\n");
 
             os.write(headBuilder.toString().getBytes("UTF-8"));
             os.flush();
@@ -834,6 +1374,21 @@ public class LocalHttpServer {
                 filtered.add(item);
             }
             return filtered;
+        }
+
+        private int getResolutionHeight(String resolution) {
+            if (resolution == null || resolution.isEmpty()) return 0;
+            try {
+                // Split by 'p' (e.g. "720p60" -> "720") to ignore frame rate
+                String[] parts = resolution.split("(?i)p");
+                if (parts.length > 0) {
+                    String numeric = parts[0].replaceAll("[^0-9]", "");
+                    return numeric.isEmpty() ? 0 : Integer.parseInt(numeric);
+                }
+            } catch (Exception e) {
+                // fallback
+            }
+            return 0;
         }
     }
 }

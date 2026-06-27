@@ -38,6 +38,8 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
     private Button btnSettings;
     private com.google.android.material.card.MaterialCardView cardStatus;
     private TextView statusIndicator;
+    private TextView textLogsTitle;
+    private View cardLogs;
 
     private ServerService serverService;
     private boolean isBound = false;
@@ -115,6 +117,23 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
         btnSettings = findViewById(R.id.btn_settings);
         cardStatus = findViewById(R.id.card_status);
         statusIndicator = findViewById(R.id.status_indicator);
+        textLogsTitle = findViewById(R.id.text_logs_title);
+        cardLogs = findViewById(R.id.card_logs);
+
+        if (textLogsTitle != null && cardLogs != null) {
+            textLogsTitle.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (cardLogs.getVisibility() == View.VISIBLE) {
+                        cardLogs.setVisibility(View.GONE);
+                        textLogsTitle.setText("Console logs (tap to expand)");
+                    } else {
+                        cardLogs.setVisibility(View.VISIBLE);
+                        textLogsTitle.setText("Console logs (tap to collapse)");
+                    }
+                }
+            });
+        }
 
         // Fix scrolling inside nested ScrollView
         if (scrollLogs != null) {
@@ -224,11 +243,27 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
     }
 
     private String formatLogToHtml(String time, String message) {
-        String escapedMessage = escapeHtml(message);
+        String displayMessage = message;
+        boolean isTruncated = false;
+        if (message.length() > 200 || message.contains("\n")) {
+            int newlineIdx = message.indexOf("\n");
+            if (newlineIdx > 0 && newlineIdx < 120) {
+                displayMessage = message.substring(0, newlineIdx);
+            } else {
+                displayMessage = message.substring(0, Math.min(message.length(), 120));
+            }
+            isTruncated = true;
+        }
+
+        String escapedMessage = escapeHtml(displayMessage);
+        if (isTruncated) {
+            escapedMessage += " <font color='#64748B'><b>[Truncated: " + message.length() + " chars]</b></font>";
+        }
+
         String colorTime = "#64748B"; // Slate-400
         String colorMessage = "#E2E8F0"; // Slate-200 (default)
 
-        String lowerMsg = message.toLowerCase(Locale.US);
+        String lowerMsg = displayMessage.toLowerCase(Locale.US);
         if (lowerMsg.contains("error") || lowerMsg.contains("exception") || lowerMsg.contains("failed")) {
             colorMessage = "#F87171"; // Red-400
         } else if (lowerMsg.contains("started") || lowerMsg.contains("completed")) {

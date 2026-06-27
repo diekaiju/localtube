@@ -13,6 +13,7 @@ import org.schabi.newpipe.extractor.stream.AudioStream;
 import org.schabi.newpipe.extractor.stream.StreamInfo;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 import org.schabi.newpipe.extractor.stream.VideoStream;
+import org.schabi.newpipe.extractor.stream.SubtitlesStream;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -344,11 +345,13 @@ public class HtmlRenderer {
         String histActive = "history".equals(activeTab) ? "active" : "";
         String cachedActive = "cached".equals(activeTab) ? "active" : "";
         String subsActive = "subscriptions".equals(activeTab) ? "active" : "";
+        String settingsActive = "settings".equals(activeTab) ? "active" : "";
 
         sb.append("    <a href=\"/\" class=\"service-tab ").append(ytActive).append("\">YouTube</a>\n")
           .append("    <a href=\"/subscriptions\" class=\"service-tab ").append(subsActive).append("\">🔔 Subscriptions</a>\n")
           .append("    <a href=\"/history\" class=\"service-tab ").append(histActive).append("\">📜 History</a>\n")
-          .append("    <a href=\"/cache\" class=\"service-tab ").append(cachedActive).append("\">📥 Cached</a>\n");
+          .append("    <a href=\"/cache\" class=\"service-tab ").append(cachedActive).append("\">📥 Cached</a>\n")
+          .append("    <a href=\"/settings\" class=\"service-tab ").append(settingsActive).append("\">⚙️ Settings</a>\n");
 
         sb.append("  </div>\n")
           .append("</header>\n");
@@ -370,6 +373,10 @@ public class HtmlRenderer {
           .append("    <span class=\"bottom-nav-icon\">📥</span>\n")
           .append("    <span>Cached</span>\n")
           .append("  </a>\n")
+          .append("  <a href=\"/settings\" class=\"bottom-nav-item ").append(settingsActive).append("\">\n")
+          .append("    <span class=\"bottom-nav-icon\">⚙️</span>\n")
+          .append("    <span>Settings</span>\n")
+          .append("  </a>\n")
           .append("</div>\n");
 
         return sb.toString();
@@ -377,13 +384,16 @@ public class HtmlRenderer {
 
     private static String wrapInTemplate(String title, String bodyContent, boolean isTv) {
         String bodyClass = isTv ? "is-tv" : "is-phone";
+        // Base64 encoded red play button icon to avoid external asset load issues
+        String favicon = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0ZGMDAwMCI+PHBhdGggZD0iTTIzLjQ5OCA2LjE2M2EzLjAwMyAzLjAwMyAwIDAgMC0yLjExLTIuMTFDMTkuNTE4IDMuNTQ1IDEyIDMuNTQ1IDEyIDMuNTQ1cy03LjUxOCAwLTkuMzg4LjUwOGEzLjAwMyAzLjAwMyAwIDAgMC0yLjExIDIuMTFDMCA4LjAzMyAwIDEyIDAgMTJzMCAzLjk2Ny41MDIgNS44MzdhMy4wMDMgMy4wMDMgMCAwIDAgMi4xMSAyLjExYzEuODcuNTA4IDkuMzg4LjUwOCA5LjM4OC41MDhzNy41MTggMCA5LjM4OC0uNTA4YTMuMDAzIDMuMDAzIDAgMCAwIDIuMTEtMi4xMUMyNCAxNS45NjcgMjQgMTIgMjQgMTJzMC0zLjk2Ny0uNTAyLTUuODM3ek05LjU0NSAxNS41NjhWOC40MzJMMTUuODE4IDEybC02LjI3MyAzLjU2OHoiLz48L3N2Zz4=";
+        
         return "<!DOCTYPE html>\n" +
                 "<html>\n" +
                 "<head>\n" +
                 "    <meta charset=\"UTF-8\">\n" +
                 "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
                 "    <title>" + title + "</title>\n" +
-                "    <link rel=\"icon\" type=\"image/svg+xml\" href=\"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23FF0000%22><path d=%22M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.545 12 3.545 12 3.545s-7.518 0-9.388.508a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.87.508 9.388.508 9.388.508s7.518 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z%22/></svg>\">\n" +
+                "    <link rel=\"icon\" type=\"image/svg+xml\" href=\"" + favicon + "\">\n" +
                 "    <style>\n" + CSS + "\n    </style>\n" +
                 "    <script>\n" +
                 "        (function() {\n" +
@@ -473,7 +483,7 @@ public class HtmlRenderer {
         return wrapInTemplate("Search: " + query, sb.toString(), isTv);
     }
 
-    public static String renderWatch(int serviceId, StreamInfo info, CachedVideo cachedVideo, boolean isSubscribed, boolean isTv) {
+    public static String renderWatch(int serviceId, StreamInfo info, CachedVideo cachedVideo, boolean isSubscribed, boolean isTv, String targetQuality, long duration) {
         StringBuilder sb = new StringBuilder();
         sb.append(getHeaderHtml(serviceId, ""));
         sb.append("<div class=\"container\">\n")
@@ -483,19 +493,182 @@ public class HtmlRenderer {
 
         boolean hasVideo = !info.getVideoStreams().isEmpty() || !info.getVideoOnlyStreams().isEmpty() || (info.getHlsUrl() != null && !info.getHlsUrl().isEmpty());
         if (hasVideo) {
-            String videoMime = "video/mp4";
-            if (!info.getVideoStreams().isEmpty()) {
-                VideoStream stream = info.getVideoStreams().get(0);
-                if (stream.getFormat() != null) {
-                    videoMime = stream.getFormat().mimeType;
+            boolean isCached = cachedVideo != null && "COMPLETED".equals(cachedVideo.getStatus());
+            
+            if (isCached) {
+                sb.append("        <video id=\"player\" controls autoplay class=\"native-player\" poster=\"/thumbnail?id=").append(encodeUrl(info.getUrl())).append("\">\n")
+                  .append("          <source src=\"/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" type=\"video/mp4\">\n")
+                  .append("        </video>\n");
+            } else {
+                // Serve combined/remuxed video stream directly via custom HTML player controls
+                String defaultQuality = targetQuality != null ? targetQuality : "720p";
+                sb.append("        <style>\n")
+                  .append("          @keyframes spin {\n")
+                  .append("            0% { transform: translate(-50%, -50%) rotate(0deg); }\n")
+                  .append("            100% { transform: translate(-50%, -50%) rotate(360deg); }\n")
+                  .append("          }\n")
+                  .append("        </style>\n");
+                sb.append("        <div id=\"video-container\" style=\"position:relative; width:100%; border-radius:12px; overflow:hidden; background:#000;\">\n")
+                  .append("          <video id=\"player\" autoplay class=\"native-player\" poster=\"").append(getThumbnailUrl(info.getThumbnails())).append("\" style=\"width:100%; display:block;\">\n")
+                  .append("            <source id=\"video-source\" src=\"/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("&quality=").append(defaultQuality).append("\" type=\"video/mp4\">\n")
+                  .append("            Your browser does not support the HTML5 video tag.\n")
+                  .append("          </video>\n")
+                  .append("          <div id=\"video-loader\" style=\"position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:50px; height:50px; border:4px solid rgba(255,255,255,0.25); border-top:4px solid #ff4b5c; border-radius:50%; animation:spin 1s linear infinite; display:none; z-index:11; pointer-events:none;\"></div>\n")
+                  .append("          <div id=\"video-controls\" style=\"position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.85)); padding:15px; display:flex; flex-direction:column; gap:8px; opacity:0; transition:opacity 0.25s; z-index:10;\">\n")
+                  .append("            <input type=\"range\" id=\"seek-bar\" min=\"0\" max=\"").append(duration).append("\" value=\"0\" step=\"0.1\" style=\"width:100%; height:5px; border-radius:3px; outline:none; background:rgba(255,255,255,0.35); cursor:pointer; margin:0; accent-color:#ff4b5c;\">\n")
+                  .append("            <div style=\"display:flex; align-items:center; justify-content:space-between; color:#fff; font-family:inherit; font-size:13px;\">\n")
+                  .append("              <div style=\"display:flex; align-items:center; gap:15px;\">\n")
+                  .append("                <button id=\"play-pause\" style=\"background:none; border:none; color:#fff; cursor:pointer; font-size:16px; padding:0; outline:none; transition:transform 0.1s;\">▮▮</button>\n")
+                  .append("                <span id=\"time-display\">00:00 / 00:00</span>\n")
+                  .append("              </div>\n")
+                  .append("              <div style=\"display:flex; align-items:center; gap:15px;\">\n")
+                  .append("                <button id=\"fullscreen-btn\" style=\"background:none; border:none; color:#fff; cursor:pointer; font-size:16px; padding:0; outline:none;\">⛶</button>\n")
+                  .append("              </div>\n")
+                  .append("            </div>\n")
+                  .append("          </div>\n")
+                  .append("        </div>\n");
+
+                // Generate quality selector HTML options
+                sb.append("        <div class=\"player-controls-row\" style=\"display: flex; gap: 15px; margin-top: 10px; margin-bottom: 15px; align-items: center; justify-content: flex-start; flex-wrap: wrap;\">\n")
+                  .append("          <div style=\"display: flex; align-items: center; gap: 8px;\">\n")
+                  .append("            <label for=\"quality-select\" style=\"font-size: 13px; font-weight: 500; color: var(--text-color); opacity: 0.8;\">Quality:</label>\n")
+                  .append("            <select id=\"quality-select\" style=\"padding: 6px 12px; border-radius: 6px; border: 1px solid var(--search-input-border); background-color: var(--card-bg); color: var(--text-color); font-family: inherit; font-size: 13px; outline: none; cursor: pointer;\">\n");
+
+                // List available qualities
+                java.util.Set<String> addedQualities = new java.util.HashSet<>();
+                // Check video-only streams (HD)
+                if (info.getVideoOnlyStreams() != null) {
+                    for (VideoStream vs : info.getVideoOnlyStreams()) {
+                        String res = vs.getResolution();
+                        if (res != null && !addedQualities.contains(res)) {
+                            addedQualities.add(res);
+                            sb.append("              <option value=\"").append(res).append("\"").append(res.equals(defaultQuality) ? " selected" : "").append(">").append(res).append("</option>\n");
+                        }
+                    }
                 }
-            } else if (info.getHlsUrl() != null && !info.getHlsUrl().isEmpty()) {
-                videoMime = "application/x-mpegURL";
+                // Check progressive streams (SD)
+                if (info.getVideoStreams() != null) {
+                    for (VideoStream vs : info.getVideoStreams()) {
+                        String res = vs.getResolution();
+                        if (res != null && !addedQualities.contains(res)) {
+                            addedQualities.add(res);
+                            sb.append("              <option value=\"").append(res).append("\"").append(res.equals(defaultQuality) ? " selected" : "").append(">").append(res).append("</option>\n");
+                        }
+                    }
+                }
+                sb.append("            </select>\n")
+                  .append("          </div>\n")
+                  .append("        </div>\n");
+
+                // Script for custom player controls and quality switching on the fly
+                sb.append("        <script>\n")
+                  .append("            document.addEventListener('DOMContentLoaded', () => {\n")
+                  .append("                const container = document.getElementById('video-container');\n")
+                  .append("                const video = document.getElementById('player');\n")
+                  .append("                const controls = document.getElementById('video-controls');\n")
+                  .append("                const seekBar = document.getElementById('seek-bar');\n")
+                  .append("                const playPauseBtn = document.getElementById('play-pause');\n")
+                  .append("                const timeDisplay = document.getElementById('time-display');\n")
+                  .append("                const fullscreenBtn = document.getElementById('fullscreen-btn');\n")
+                  .append("                const selector = document.getElementById('quality-select');\n")
+                  .append("                const loader = document.getElementById('video-loader');\n")
+                  .append("                const streamDuration = ").append(duration).append(";\n")
+                  .append("                let seekOffset = 0;\n")
+                  .append("                \n")
+                  .append("                const showLoader = () => loader.style.display = 'block';\n")
+                  .append("                const hideLoader = () => loader.style.display = 'none';\n")
+                  .append("                \n")
+                  .append("                video.addEventListener('waiting', showLoader);\n")
+                  .append("                video.addEventListener('seeking', showLoader);\n")
+                  .append("                video.addEventListener('seeked', hideLoader);\n")
+                  .append("                video.addEventListener('playing', hideLoader);\n")
+                  .append("                video.addEventListener('canplay', hideLoader);\n")
+                  .append("                \n")
+                  .append("                // Show/hide controls on hover\n")
+                  .append("                container.addEventListener('mouseenter', () => controls.style.opacity = '1');\n")
+                  .append("                container.addEventListener('mouseleave', () => controls.style.opacity = '0');\n")
+                  .append("                \n")
+                  .append("                // Play / Pause toggling\n")
+                  .append("                const togglePlay = () => {\n")
+                  .append("                    if (video.paused) {\n")
+                  .append("                        video.play();\n")
+                  .append("                        playPauseBtn.innerText = '▮▮';\n")
+                  .append("                    } else {\n")
+                  .append("                        video.pause();\n")
+                  .append("                        playPauseBtn.innerText = '▶';\n")
+                  .append("                    }\n")
+                  .append("                };\n")
+                  .append("                playPauseBtn.addEventListener('click', togglePlay);\n")
+                  .append("                video.addEventListener('click', togglePlay);\n")
+                  .append("                \n")
+                  .append("                // Format time format: MM:SS\n")
+                  .append("                const formatTime = (secs) => {\n")
+                  .append("                    const m = Math.floor(secs / 60).toString().padStart(2, '0');\n")
+                  .append("                    const s = Math.floor(secs % 60).toString().padStart(2, '0');\n")
+                  .append("                    return m + ':' + s;\n")
+                  .append("                };\n")
+                  .append("                \n")
+                  .append("                const totalTimeStr = formatTime(streamDuration);\n")
+                  .append("                timeDisplay.innerText = '00:00 / ' + totalTimeStr;\n")
+                  .append("                \n")
+                  .append("                // Track updates on playhead\n")
+                  .append("                let isDragging = false;\n")
+                  .append("                video.addEventListener('timeupdate', () => {\n")
+                  .append("                    if (!isDragging) {\n")
+                  .append("                        const displayTime = seekOffset + video.currentTime;\n")
+                  .append("                        seekBar.value = displayTime;\n")
+                  .append("                        timeDisplay.innerText = formatTime(displayTime) + ' / ' + totalTimeStr;\n")
+                  .append("                    }\n")
+                  .append("                });\n")
+                  .append("                \n")
+                  .append("                // Seek bar listeners\n")
+                  .append("                seekBar.addEventListener('input', () => {\n")
+                  .append("                    isDragging = true;\n")
+                  .append("                    timeDisplay.innerText = formatTime(seekBar.value) + ' / ' + totalTimeStr;\n")
+                  .append("                });\n")
+                  .append("                seekBar.addEventListener('change', () => {\n")
+                  .append("                    const targetTime = parseFloat(seekBar.value);\n")
+                  .append("                    seekOffset = targetTime;\n")
+                  .append("                    video.pause();\n")
+                  .append("                    const quality = selector ? selector.value : '720p';\n")
+                  .append("                    video.src = '/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("&quality=' + quality + '&start_time=' + targetTime;\n")
+                  .append("                    video.load();\n")
+                  .append("                    video.addEventListener('canplay', () => {\n")
+                  .append("                        video.play().then(() => {\n")
+                  .append("                            playPauseBtn.innerText = '▮▮';\n")
+                  .append("                        }).catch(err => console.error(err));\n")
+                  .append("                    }, { once: true });\n")
+                  .append("                    isDragging = false;\n")
+                  .append("                });\n")
+                  .append("                \n")
+                  .append("                // Fullscreen toggle\n")
+                  .append("                fullscreenBtn.addEventListener('click', () => {\n")
+                  .append("                    if (!document.fullscreenElement) {\n")
+                  .append("                        container.requestFullscreen().catch(err => console.error(err));\n")
+                  .append("                    } else {\n")
+                  .append("                        document.exitFullscreen();\n")
+                  .append("                    }\n")
+                  .append("                });\n")
+                  .append("                \n")
+                  .append("                // Quality selector switching\n")
+                  .append("                if (selector) {\n")
+                  .append("                    selector.addEventListener('change', () => {\n")
+                  .append("                        const quality = selector.value;\n")
+                  .append("                        const targetTime = seekOffset + video.currentTime;\n")
+                  .append("                        seekOffset = targetTime;\n")
+                  .append("                        video.pause();\n")
+                  .append("                        video.src = '/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("&quality=' + quality + '&start_time=' + targetTime;\n")
+                  .append("                        video.load();\n")
+                  .append("                        video.addEventListener('canplay', () => {\n")
+                  .append("                            video.play().then(() => {\n")
+                  .append("                                playPauseBtn.innerText = '▮▮';\n")
+                  .append("                            }).catch(err => console.error(err));\n")
+                  .append("                        }, { once: true });\n")
+                  .append("                    });\n")
+                  .append("                }\n")
+                  .append("            });\n")
+                  .append("        </script>\n");
             }
-            sb.append("        <video controls autoplay class=\"native-player\" poster=\"").append(getThumbnailUrl(info.getThumbnails())).append("\">\n")
-              .append("          <source src=\"/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" type=\"").append(videoMime).append("\">\n")
-              .append("          Your browser does not support the HTML5 video tag.\n")
-              .append("        </video>\n");
         } else {
             String audioMime = "audio/mpeg";
             if (!info.getAudioStreams().isEmpty()) {
@@ -507,10 +680,28 @@ public class HtmlRenderer {
             sb.append("        <div class=\"media-info\">\n")
               .append("          <img src=\"").append(getThumbnailUrl(info.getThumbnails())).append("\" style=\"width:100%; max-height:300px; object-fit:contain; border-radius:8px; background:#000;\">\n")
               .append("        </div>\n")
-              .append("        <audio controls autoplay class=\"native-audio\">\n")
+              .append("        <audio id=\"audio-player\" controls autoplay class=\"native-audio\">\n")
               .append("          <source src=\"/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" type=\"").append(audioMime).append("\">\n")
               .append("          Your browser does not support the HTML5 audio tag.\n")
-              .append("        </audio>\n");
+              .append("        </audio>\n")
+              .append("        <script>\n")
+              .append("            document.addEventListener('DOMContentLoaded', () => {\n")
+              .append("                const audio = document.getElementById('audio-player');\n")
+              .append("                const streamDuration = ").append(duration).append(";\n")
+              .append("                if (audio && streamDuration > 0) {\n")
+              .append("                    const setDuration = () => {\n")
+              .append("                        if (Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'duration')) {\n")
+              .append("                           try {\n")
+              .append("                               Object.defineProperty(audio, 'duration', { value: streamDuration, configurable: true });\n")
+              .append("                               audio.dispatchEvent(new Event('durationchange'));\n")
+              .append("                           } catch(e) { console.error('Failed to override audio duration:', e); }\n")
+              .append("                        }\n")
+              .append("                    };\n")
+              .append("                    audio.addEventListener('loadedmetadata', setDuration);\n")
+              .append("                    if (audio.readyState >= 1) setDuration();\n")
+              .append("                }\n")
+              .append("            });\n")
+              .append("        </script>\n");
         }
 
         sb.append("        <div class=\"media-info\">\n")
@@ -935,5 +1126,111 @@ public class HtmlRenderer {
 
         sb.append("</div>\n");
         return wrapInTemplate("Offline Dashboard - LocalTube", sb.toString(), isTv);
+    }
+
+    public static String renderSettings(int serviceId, String currentQuality, boolean hideWatched, boolean hideShorts, boolean saved, boolean isTv) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getHeaderHtml(serviceId, "", "settings"));
+        sb.append("<div class=\"container\">\n")
+          .append("  <div class=\"settings-card\">\n")
+          .append("    <h1 class=\"settings-title\">⚙️ Preferences &amp; Backup</h1>\n");
+
+        if (saved) {
+            sb.append("    <div class=\"alert-banner\">✓ Settings saved successfully!</div>\n");
+        }
+
+        sb.append("    <form action=\"/settings\" method=\"GET\">\n")
+          .append("      <input type=\"hidden\" name=\"action\" value=\"save\">\n")
+          .append("      <div class=\"settings-section\">\n")
+          .append("        <h3 class=\"settings-section-title\">Filter Settings</h3>\n")
+          .append("        <div class=\"setting-row\">\n")
+          .append("          <div class=\"setting-label-group\">\n")
+          .append("            <span class=\"setting-label\">Preferred Video Quality</span>\n")
+          .append("            <span class=\"setting-desc\">Default playback resolution for streams.</span>\n")
+          .append("          </div>\n")
+          .append("          <select name=\"video_quality\" style=\"padding: 8px 16px; border-radius: 8px; border: 1px solid var(--search-input-border); background-color: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; outline: none; cursor: pointer;\">\n");
+
+        String[] qualities = {"144p", "240p", "360p", "480p", "720p", "1080p", "1440p", "2160p"};
+        for (String q : qualities) {
+            String selected = q.equals(currentQuality) ? "selected" : "";
+            sb.append("            <option value=\"").append(q).append("\" ").append(selected).append(">").append(q).append("</option>\n");
+        }
+
+        sb.append("          </select>\n")
+          .append("        </div>\n")
+          .append("        <div class=\"setting-row\">\n")
+          .append("          <div class=\"setting-label-group\">\n")
+          .append("            <span class=\"setting-label\">Hide Watched Videos</span>\n")
+          .append("            <span class=\"setting-desc\">Hide videos you have already watched from lists.</span>\n")
+          .append("          </div>\n")
+          .append("          <label class=\"switch\">\n")
+          .append("            <input type=\"checkbox\" name=\"hide_watched\" value=\"on\" ").append(hideWatched ? "checked" : "").append(">\n")
+          .append("            <span class=\"slider\"></span>\n")
+          .append("          </label>\n")
+          .append("        </div>\n")
+          .append("        <div class=\"setting-row\">\n")
+          .append("          <div class=\"setting-label-group\">\n")
+          .append("            <span class=\"setting-label\">Hide Shorts</span>\n")
+          .append("            <span class=\"setting-desc\">Hide vertical videos shorter than 2 minutes.</span>\n")
+          .append("          </div>\n")
+          .append("          <label class=\"switch\">\n")
+          .append("            <input type=\"checkbox\" name=\"hide_shorts\" value=\"on\" ").append(hideShorts ? "checked" : "").append(">\n")
+          .append("            <span class=\"slider\"></span>\n")
+          .append("          </label>\n")
+          .append("        </div>\n")
+          .append("      </div>\n")
+          .append("      <button type=\"submit\" class=\"btn-save btn-save-primary\" style=\"margin-bottom: 24px;\">Save Settings</button>\n")
+          .append("    </form>\n")
+          .append("    <div class=\"settings-section\">\n")
+          .append("      <h3 class=\"settings-section-title\">Backup &amp; Restore Database</h3>\n")
+          .append("      <p class=\"setting-desc\" style=\"margin-bottom: 16px;\">Export your local history, subscriptions, and bookmarks to a JSON file, or restore them from a previous backup.</p>\n")
+          .append("      <div style=\"display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;\">\n")
+          .append("        <a href=\"/db/export\" class=\"subscribe-btn\" style=\"background-color: #007acc; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; height: 38px; padding: 0 16px;\">💾 Export JSON</a>\n")
+          .append("        <button type=\"button\" id=\"btn-import-web\" class=\"subscribe-btn\" style=\"background-color: #2e7d32; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; height: 38px; padding: 0 16px; color: white;\">📤 Import JSON</button>\n")
+          .append("        <input type=\"file\" id=\"file-import-web\" accept=\".json\" style=\"display: none;\">\n")
+          .append("      </div>\n")
+          .append("    </div>\n")
+          .append("  </div>\n")
+          .append("</div>\n")
+          .append("<script>\n")
+          .append("    document.addEventListener('DOMContentLoaded', () => {\n")
+          .append("        const btnImport = document.getElementById('btn-import-web');\n")
+          .append("        const fileInput = document.getElementById('file-import-web');\n")
+          .append("        if (btnImport && fileInput) {\n")
+          .append("            btnImport.addEventListener('click', () => fileInput.click());\n")
+          .append("            fileInput.addEventListener('change', () => {\n")
+          .append("                const file = fileInput.files[0];\n")
+          .append("                if (!file) return;\n")
+          .append("                const reader = new FileReader();\n")
+          .append("                reader.onload = (e) => {\n")
+          .append("                    const content = e.target.result;\n")
+          .append("                    fetch('/db/import', {\n")
+          .append("                        method: 'POST',\n")
+          .append("                        body: content,\n")
+          .append("                        headers: { 'Content-Type': 'application/json' }\n")
+          .append("                    })\n")
+          .append("                    .then(res => res.text())\n")
+          .append("                    .then(text => {\n")
+          .append("                        if (text === 'SUCCESS') {\n")
+          .append("                            alert('Database successfully imported! Page will reload.');\n")
+          .append("                            window.location.reload();\n")
+          .append("                        } else {\n")
+          .append("                            alert('Import failed: Check file format');\n")
+          .append("                        }\n")
+          .append("                    })\n")
+          .append("                    .catch(err => alert('Import error: ' + err));\n")
+          .append("                };\n")
+          .append("                reader.readAsText(file);\n")
+          .append("            });\n")
+          .append("        }\n")
+          .append("    });\n")
+          .append("</script>\n");
+
+        return wrapInTemplate("Settings - LocalTube", sb.toString(), isTv);
+    }
+
+    private static String escapeJs(String str) {
+        if (str == null) return "";
+        return str.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

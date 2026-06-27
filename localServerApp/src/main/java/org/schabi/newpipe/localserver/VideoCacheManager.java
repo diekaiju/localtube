@@ -86,9 +86,35 @@ public class VideoCacheManager {
                     }
 
                     String directUrl = null;
+                    String targetQuality = dbHelper.getVideoQuality();
+                    int targetHeight = getResolutionHeight(targetQuality);
                     List<VideoStream> progressiveStreams = extractor.getVideoStreams();
                     if (progressiveStreams != null && !progressiveStreams.isEmpty()) {
-                        directUrl = progressiveStreams.get(0).getContent();
+                        VideoStream selectedStream = null;
+                        int bestHeight = -1;
+                        for (VideoStream stream : progressiveStreams) {
+                            int height = getResolutionHeight(stream.getResolution());
+                            if (height <= targetHeight) {
+                                if (height > bestHeight) {
+                                    bestHeight = height;
+                                    selectedStream = stream;
+                                }
+                            }
+                        }
+                        if (selectedStream == null) {
+                            // If no stream is <= targetHeight, pick the highest quality one available
+                            for (VideoStream stream : progressiveStreams) {
+                                int height = getResolutionHeight(stream.getResolution());
+                                if (height > bestHeight) {
+                                    bestHeight = height;
+                                    selectedStream = stream;
+                                }
+                            }
+                        }
+                        if (selectedStream == null) {
+                            selectedStream = progressiveStreams.get(0);
+                        }
+                        directUrl = selectedStream.getContent();
                     } else {
                         String hlsUrl = extractor.getHlsUrl();
                         if (hlsUrl != null && !hlsUrl.isEmpty()) {
@@ -178,5 +204,20 @@ public class VideoCacheManager {
                 fos.flush();
             }
         }
+    }
+
+    private int getResolutionHeight(String resolution) {
+        if (resolution == null || resolution.isEmpty()) return 0;
+        try {
+            // Split by 'p' (e.g. "720p60" -> "720") to ignore frame rate
+            String[] parts = resolution.split("(?i)p");
+            if (parts.length > 0) {
+                String numeric = parts[0].replaceAll("[^0-9]", "");
+                return numeric.isEmpty() ? 0 : Integer.parseInt(numeric);
+            }
+        } catch (Exception e) {
+            // fallback
+        }
+        return 0;
     }
 }

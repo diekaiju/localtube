@@ -500,6 +500,23 @@
                         android:orientation="vertical"
                         android:padding="16dp">
 
+                        <!-- Video Quality Selector -->
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Preferred Video Quality"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp"
+                            android:layout_marginBottom="8dp"/>
+
+                        <Spinner
+                            android:id="@+id/spinner_video_quality"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:backgroundTint="#FFFFFF"
+                            android:layout_marginBottom="16dp"/>
+
+
                         <!-- Hide Watched -->
                         <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/sw_hide_watched"
@@ -522,6 +539,88 @@
                             android:theme="@style/Theme.LocalMediaServer"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+            <!-- ============================================== -->
+            <!-- BACKUP TAB CONTENT                             -->
+            <!-- ============================================== -->
+            <LinearLayout
+                android:id="@+id/layout_backup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- Backup Info Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="#13232D"
+                    app:strokeColor="#2E6B7D"
+                    app:strokeWidth="1dp"
+                    app:cardCornerRadius="12dp"
+                    android:layout_marginBottom="24dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="💾"
+                            android:textSize="28sp"
+                            android:layout_marginEnd="16dp"/>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Backup &amp; Restore"
+                                android:textColor="#FFFFFF"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                android:layout_marginBottom="2dp"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Export your watch history, subscriptions, bookmarked playlists, and settings to a JSON file, or import them back to restore your data."
+                                android:textColor="#BBBBBB"
+                                android:textSize="12sp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Export Button -->
+                <Button
+                    android:id="@+id/btn_export_db"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Export Database (JSON)"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#007ACC"
+                    android:layout_marginBottom="16dp"
+                    android:padding="12dp"/>
+
+                <!-- Import Button -->
+                <Button
+                    android:id="@+id/btn_import_db"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Import Database (JSON)"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#2E7D32"
+                    android:padding="12dp"/>
 
             </LinearLayout>
 

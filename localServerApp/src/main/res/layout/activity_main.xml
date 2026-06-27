@@ -180,16 +180,20 @@
 
             <!-- Logs Card -->
             <TextView
+                android:id="@+id/text_logs_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Console logs"
+                android:text="Console logs (tap to collapse)"
                 android:textColor="#888888"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="6dp"
-                android:layout_marginStart="4dp"/>
+                android:layout_marginStart="4dp"
+                android:clickable="true"
+                android:focusable="true"/>
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_logs"
                 android:layout_width="match_parent"
                 android:layout_height="250dp"
                 app:cardBackgroundColor="#0F172A"
