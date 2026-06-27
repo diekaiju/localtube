@@ -147,6 +147,165 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Play Lock Status Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_play_lock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="#1E1E1E"
+                app:cardCornerRadius="12dp"
+                app:strokeColor="#2C2C2C"
+                app:strokeWidth="1dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Casting &amp; Concurrency Lock"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:id="@+id/text_lock_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Status: Unlocked"
+                        android:textColor="#888888"
+                        android:textSize="13sp"
+                        android:layout_marginBottom="12dp"/>
+
+                    <Button
+                        android:id="@+id/btn_force_release"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="🔓 Force Release Lock"
+                        android:textColor="#E53935"
+                        app:strokeColor="#E53935"
+                        android:enabled="false"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Wireless Remote Controller Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_server_remote"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="#1E1E1E"
+                app:cardCornerRadius="12dp"
+                app:strokeColor="#2C2C2C"
+                app:strokeWidth="1dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Wireless Remote Controller"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp"/>
+
+                    <!-- Horizontal Navigation Controls -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:weightSum="4"
+                        android:layout_marginBottom="16dp">
+                        <Button
+                            android:id="@+id/remote_back"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="⤶ BACK"
+                            android:backgroundTint="#2C2C2C"
+                            android:textColor="#FFFFFF"
+                            android:layout_marginEnd="4dp"
+                            android:padding="0dp"/>
+                        <Button
+                            android:id="@+id/remote_left"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="◀ PREV"
+                            android:backgroundTint="#2C2C2C"
+                            android:textColor="#FFFFFF"
+                            android:layout_marginEnd="4dp"
+                            android:padding="0dp"/>
+                        <Button
+                            android:id="@+id/remote_enter"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="OK"
+                            android:backgroundTint="#7C3AED"
+                            android:textColor="#FFFFFF"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="4dp"
+                            android:padding="0dp"/>
+                        <Button
+                            android:id="@+id/remote_right"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="NEXT ▶"
+                            android:backgroundTint="#2C2C2C"
+                            android:textColor="#FFFFFF"
+                            android:padding="0dp"/>
+                    </LinearLayout>
+
+                    <!-- Media controls -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:weightSum="3">
+                        <Button
+                            android:id="@+id/remote_rewind"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="⏪"
+                            android:backgroundTint="#2C2C2C"
+                            android:layout_marginEnd="4dp"/>
+                        <Button
+                            android:id="@+id/remote_play_pause"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="▶▮▮"
+                            android:backgroundTint="#2C2C2C"
+                            android:layout_marginEnd="4dp"
+                            android:layout_marginStart="4dp"/>
+                        <Button
+                            android:id="@+id/remote_forward"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="⏩"
+                            android:backgroundTint="#2C2C2C"
+                            android:layout_marginStart="4dp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Endpoints Card -->
             <TextView
                 android:layout_width="wrap_content"

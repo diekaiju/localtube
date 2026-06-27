@@ -40,6 +40,13 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
     private TextView statusIndicator;
     private TextView textLogsTitle;
     private View cardLogs;
+    private TextView textLockStatus;
+    private Button btnForceRelease;
+    private com.google.android.material.card.MaterialCardView cardPlayLock;
+
+    private View cardServerRemote;
+    private Button remoteLeft, remoteRight, remoteEnter, remoteBack;
+    private Button remoteRewind, remotePlayPause, remoteForward;
 
     private ServerService serverService;
     private boolean isBound = false;
@@ -119,6 +126,49 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
         statusIndicator = findViewById(R.id.status_indicator);
         textLogsTitle = findViewById(R.id.text_logs_title);
         cardLogs = findViewById(R.id.card_logs);
+        textLockStatus = findViewById(R.id.text_lock_status);
+        btnForceRelease = findViewById(R.id.btn_force_release);
+        cardPlayLock = findViewById(R.id.card_play_lock);
+
+        cardServerRemote = findViewById(R.id.card_server_remote);
+        remoteLeft = findViewById(R.id.remote_left);
+        remoteRight = findViewById(R.id.remote_right);
+        remoteEnter = findViewById(R.id.remote_enter);
+        remoteBack = findViewById(R.id.remote_back);
+        remoteRewind = findViewById(R.id.remote_rewind);
+        remotePlayPause = findViewById(R.id.remote_play_pause);
+        remoteForward = findViewById(R.id.remote_forward);
+
+        setupRemoteButton(remoteLeft, "left");
+        setupRemoteButton(remoteRight, "right");
+        setupRemoteButton(remoteEnter, "enter");
+        setupRemoteButton(remoteBack, "back");
+        setupRemoteButton(remoteRewind, "rewind");
+        setupRemoteButton(remotePlayPause, "play_pause");
+        setupRemoteButton(remoteForward, "forward");
+
+        if (btnForceRelease != null) {
+            btnForceRelease.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    LocalHttpServer.releaseLock();
+                    Toast.makeText(MainActivity.this, "Play lock forcefully released", Toast.LENGTH_SHORT).show();
+                    updateLockUi();
+                }
+            });
+        }
+
+        LocalHttpServer.setLockStatusListener(new LocalHttpServer.LockStatusListener() {
+            @Override
+            public void onLockStatusChanged() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateLockUi();
+                    }
+                });
+            }
+        });
 
         if (textLogsTitle != null && cardLogs != null) {
             textLogsTitle.setOnClickListener(new View.OnClickListener() {
@@ -231,6 +281,107 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
             textIpAddress.setText("IP Address: Not Available");
             textUrls.setText("Server is not running.");
         }
+        updateLockUi();
+    }
+
+    private void updateLockUi() {
+        if (textLockStatus == null || btnForceRelease == null || cardPlayLock == null) return;
+        
+        boolean locked = LocalHttpServer.isLocked();
+        if (locked) {
+            cardPlayLock.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#2D1E13"))); // Dark orange/amber
+            cardPlayLock.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#E67E22")));
+            
+            String status = "Locked by: " + LocalHttpServer.getActiveClientIp();
+            if (LocalHttpServer.getActiveVideoTitle() != null) {
+                status += "\nPlaying: " + LocalHttpServer.getActiveVideoTitle();
+            }
+            textLockStatus.setText(status);
+            textLockStatus.setTextColor(Color.parseColor("#E67E22"));
+            btnForceRelease.setEnabled(true);
+        } else {
+            cardPlayLock.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#1E1E1E")));
+            cardPlayLock.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#2C2C2C")));
+            textLockStatus.setText("Status: Unlocked / Idle");
+            textLockStatus.setTextColor(Color.parseColor("#888888"));
+            btnForceRelease.setEnabled(false);
+        }
+
+        if (cardServerRemote != null) {
+            cardServerRemote.setAlpha(locked ? 1.0f : 0.5f);
+        }
+        setButtonEnabled(remoteLeft, locked);
+        setButtonEnabled(remoteRight, locked);
+        setButtonEnabled(remoteEnter, locked);
+        setButtonEnabled(remoteBack, locked);
+        setButtonEnabled(remoteRewind, locked);
+        setButtonEnabled(remotePlayPause, locked);
+        setButtonEnabled(remoteForward, locked);
+    }
+
+    private void setButtonEnabled(Button btn, boolean enabled) {
+        if (btn != null) {
+            btn.setEnabled(enabled);
+            btn.setClickable(enabled);
+        }
+    }
+
+    private void setupRemoteButton(Button btn, final String command) {
+        if (btn != null) {
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (LocalHttpServer.isLocked()) {
+                        LocalHttpServer.addPendingCommand(command);
+                        Toast.makeText(MainActivity.this, "Sent: " + command, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
+        if (LocalHttpServer.isLocked()) {
+            String command = null;
+            switch (keyCode) {
+                case android.view.KeyEvent.KEYCODE_DPAD_UP:
+                    command = "up";
+                    break;
+                case android.view.KeyEvent.KEYCODE_DPAD_DOWN:
+                    command = "down";
+                    break;
+                case android.view.KeyEvent.KEYCODE_DPAD_LEFT:
+                    command = "left";
+                    break;
+                case android.view.KeyEvent.KEYCODE_DPAD_RIGHT:
+                    command = "right";
+                    break;
+                case android.view.KeyEvent.KEYCODE_DPAD_CENTER:
+                case android.view.KeyEvent.KEYCODE_ENTER:
+                    command = "enter";
+                    break;
+                case android.view.KeyEvent.KEYCODE_BACK:
+                    command = "back";
+                    break;
+                case android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                case android.view.KeyEvent.KEYCODE_HEADSETHOOK:
+                    command = "play_pause";
+                    break;
+                case android.view.KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+                    command = "forward";
+                    break;
+                case android.view.KeyEvent.KEYCODE_MEDIA_REWIND:
+                    command = "rewind";
+                    break;
+            }
+            if (command != null) {
+                LocalHttpServer.addPendingCommand(command);
+                Toast.makeText(this, "Remote Key: " + command, Toast.LENGTH_SHORT).show();
+                return true;
+            }
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     private String escapeHtml(String text) {
@@ -345,6 +496,7 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
             isBound = false;
         }
         LocalHttpServer.setLogListener(null);
+        LocalHttpServer.setLockStatusListener(null);
         super.onDestroy();
     }
 

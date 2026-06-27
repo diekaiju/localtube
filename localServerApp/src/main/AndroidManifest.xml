@@ -28,6 +28,13 @@
             android:label="Settings"
             android:theme="@style/Theme.LocalMediaServer.Settings" />
 
+        <activity
+            android:name=".WebPlayerActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.LocalMediaServer"
+            android:exported="false" />
+
         <service
             android:name=".ServerService"
             android:enabled="true"

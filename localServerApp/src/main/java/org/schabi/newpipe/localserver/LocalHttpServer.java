@@ -39,6 +39,74 @@ public class LocalHttpServer {
         void onLog(String message);
     }
 
+    public interface LockStatusListener {
+        void onLockStatusChanged();
+    }
+
+    private static String activeLockCode = null;
+    private static String activeClientIp = null;
+    private static String activeVideoTitle = null;
+    private static LockStatusListener lockStatusListener;
+    private static final List<String> pendingCommands = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    public static List<String> getAndClearPendingCommands() {
+        List<String> copy = new ArrayList<>(pendingCommands);
+        pendingCommands.clear();
+        return copy;
+    }
+
+    public static void addPendingCommand(String cmd) {
+        pendingCommands.add(cmd);
+    }
+
+    public static void setLockStatusListener(LockStatusListener listener) {
+        lockStatusListener = listener;
+    }
+
+    public static boolean isLocked() {
+        return activeLockCode != null;
+    }
+
+    public static String getActiveClientIp() {
+        return activeClientIp;
+    }
+
+    public static String getActiveVideoTitle() {
+        return activeVideoTitle;
+    }
+
+    public static String getActiveLockCode() {
+        return activeLockCode;
+    }
+
+    public static void releaseLock() {
+        activeLockCode = null;
+        activeClientIp = null;
+        activeVideoTitle = null;
+        if (lockStatusListener != null) {
+            lockStatusListener.onLockStatusChanged();
+        }
+    }
+
+    public static boolean tryLock(String code, String clientIp, String title) {
+        if (activeLockCode == null) {
+            activeLockCode = code;
+            activeClientIp = clientIp;
+            activeVideoTitle = title;
+            if (lockStatusListener != null) {
+                lockStatusListener.onLockStatusChanged();
+            }
+            return true;
+        } else if (activeLockCode.equals(code)) {
+            activeVideoTitle = title;
+            if (lockStatusListener != null) {
+                lockStatusListener.onLockStatusChanged();
+            }
+            return true;
+        }
+        return false;
+    }
+
     private static LogListener logListener;
     private final int port;
     private ServerSocket serverSocket;
@@ -221,6 +289,14 @@ public class LocalHttpServer {
                         handleSearch(os, params, isTv);
                     } else if (path.equals("/watch")) {
                         handleWatch(os, params, isTv);
+                    } else if (path.equals("/send-link") || path.equals("/play")) {
+                        handleSendLink(os, params, socket.getInetAddress().getHostAddress());
+                    } else if (path.equals("/send-command")) {
+                        handleSendCommand(os, params);
+                    } else if (path.equals("/poll-commands")) {
+                        handlePollCommands(os);
+                    } else if (path.equals("/release-lock")) {
+                        handleReleaseLock(os, params);
                     } else if (path.equals("/history")) {
                         handleHistory(os, params, isTv);
                     } else if (path.equals("/channel")) {
@@ -1389,6 +1465,103 @@ public class LocalHttpServer {
                 // fallback
             }
             return 0;
+        }
+
+        private void handleSendLink(OutputStream os, Map<String, String> params, String clientIp) throws Exception {
+            String videoUrl = params.get("id");
+            String clientReleaseCode = params.get("release_code");
+            String videoTitle = params.get("title");
+            if (videoTitle == null || videoTitle.isEmpty()) {
+                videoTitle = "Video";
+            }
+
+            if (videoUrl == null || videoUrl.isEmpty()) {
+                sendResponse(os, 400, "{\"status\":\"error\",\"message\":\"Missing 'id' parameter\"}", "application/json; charset=UTF-8");
+                return;
+            }
+
+            synchronized (LocalHttpServer.class) {
+                boolean hasLock = false;
+                String currentLockCode = LocalHttpServer.getActiveLockCode();
+                
+                if (currentLockCode == null) {
+                    String newLockCode = java.util.UUID.randomUUID().toString();
+                    LocalHttpServer.tryLock(newLockCode, clientIp, videoTitle);
+                    currentLockCode = newLockCode;
+                    hasLock = true;
+                } else if (currentLockCode.equals(clientReleaseCode)) {
+                    LocalHttpServer.tryLock(currentLockCode, clientIp, videoTitle);
+                    hasLock = true;
+                }
+
+                if (hasLock) {
+                    log("Casting link: " + videoUrl + " from client IP " + clientIp);
+                    
+                    addPendingCommand("play_video:" + videoUrl);
+
+                    String json = "{\"status\":\"success\",\"release_code\":\"" + currentLockCode + "\"}";
+                    sendResponse(os, 200, json, "application/json; charset=UTF-8");
+                } else {
+                    String busyMsg = "Server is currently controlled by device at IP " + LocalHttpServer.getActiveClientIp();
+                    if (LocalHttpServer.getActiveVideoTitle() != null) {
+                        busyMsg += " playing: " + LocalHttpServer.getActiveVideoTitle();
+                    }
+                    String json = "{\"status\":\"busy\",\"message\":\"" + busyMsg.replace("\"", "\\\"") + "\"}";
+                    sendResponse(os, 200, json, "application/json; charset=UTF-8");
+                }
+            }
+        }
+
+        private void handleReleaseLock(OutputStream os, Map<String, String> params) throws Exception {
+            String clientReleaseCode = params.get("release_code");
+            if (clientReleaseCode == null || clientReleaseCode.isEmpty()) {
+                sendResponse(os, 400, "{\"status\":\"error\",\"message\":\"Missing 'release_code' parameter\"}", "application/json; charset=UTF-8");
+                return;
+            }
+
+            synchronized (LocalHttpServer.class) {
+                String currentLockCode = LocalHttpServer.getActiveLockCode();
+                if (currentLockCode != null && currentLockCode.equals(clientReleaseCode)) {
+                    LocalHttpServer.releaseLock();
+                    log("Lock released by client.");
+                    sendResponse(os, 200, "{\"status\":\"success\"}", "application/json; charset=UTF-8");
+                } else {
+                    sendResponse(os, 200, "{\"status\":\"error\",\"message\":\"Invalid or expired lock code\"}", "application/json; charset=UTF-8");
+                }
+            }
+        }
+
+        private void handleSendCommand(OutputStream os, Map<String, String> params) throws Exception {
+            String cmd = params.get("command");
+            String clientReleaseCode = params.get("release_code");
+            if (cmd == null || cmd.isEmpty()) {
+                sendResponse(os, 400, "{\"status\":\"error\",\"message\":\"Missing 'command' parameter\"}", "application/json; charset=UTF-8");
+                return;
+            }
+
+            synchronized (LocalHttpServer.class) {
+                String currentLockCode = LocalHttpServer.getActiveLockCode();
+                if (currentLockCode != null && currentLockCode.equals(clientReleaseCode)) {
+                    addPendingCommand(cmd);
+                    sendResponse(os, 200, "{\"status\":\"success\"}", "application/json; charset=UTF-8");
+                } else {
+                    sendResponse(os, 200, "{\"status\":\"error\",\"message\":\"Not authorized / lock expired\"}", "application/json; charset=UTF-8");
+                }
+            }
+        }
+
+        private void handlePollCommands(OutputStream os) throws Exception {
+            List<String> cmds = getAndClearPendingCommands();
+            StringBuilder sb = new StringBuilder();
+            sb.append("{\"commands\":[");
+            for (int i = 0; i < cmds.size(); i++) {
+                sb.append("\"").append(cmds.get(i).replace("\"", "\\\"")).append("\"");
+                if (i < cmds.size() - 1) {
+                    sb.append(",");
+                }
+            }
+            sb.append("]}");
+            sendResponse(os, 200, sb.toString(), "application/json; charset=UTF-8");
         }
     }
 }

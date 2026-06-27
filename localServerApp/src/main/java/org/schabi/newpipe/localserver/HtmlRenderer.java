@@ -263,6 +263,31 @@ public class HtmlRenderer {
             "  background-color: var(--service-tab-hover-bg);\n" +
             "  transform: scale(1.05);\n" +
             "}\n" +
+            "#connect-remote-btn {\n" +
+            "  background: rgba(124, 58, 237, 0.08);\n" +
+            "  border: 1px solid rgba(124, 58, 237, 0.25);\n" +
+            "  color: #7c3aed;\n" +
+            "  font-size: 12px;\n" +
+            "  font-weight: 700;\n" +
+            "  border-radius: 20px;\n" +
+            "  padding: 0 16px;\n" +
+            "  height: 40px;\n" +
+            "  display: inline-flex;\n" +
+            "  align-items: center;\n" +
+            "  gap: 6px;\n" +
+            "  cursor: pointer;\n" +
+            "  transition: all 0.3s ease;\n" +
+            "  outline: none;\n" +
+            "}\n" +
+            "#connect-remote-btn:hover {\n" +
+            "  background: rgba(124, 58, 237, 0.15);\n" +
+            "  transform: translateY(-1px);\n" +
+            "}\n" +
+            "[data-theme=\"dark\"] #connect-remote-btn {\n" +
+            "  color: #a78bfa;\n" +
+            "  border-color: rgba(167, 139, 250, 0.3);\n" +
+            "  background: rgba(167, 139, 250, 0.06);\n" +
+            "}\n" +
             "[data-theme=\"dark\"] .theme-icon-light { display: block; }\n" +
             "[data-theme=\"dark\"] .theme-icon-dark { display: none; }\n" +
             ".theme-icon-light { display: none; }\n" +
@@ -276,13 +301,14 @@ public class HtmlRenderer {
             "    body.is-phone .bottom-nav-item.active { color: var(--bottom-nav-item-active-color); }\n" +
             "    body.is-phone .bottom-nav-icon { font-size: 20px; }\n" +
             "}\n" +
-            "@media (max-width: 500px) {\n" +
-            "    body.is-phone .container { padding: 0; margin-top: 12px; }\n" +
-            "    body.is-phone .grid { grid-template-columns: 1fr; gap: 16px; }\n" +
-            "    body.is-phone .card { border-radius: 0; border: none; background: transparent; box-shadow: none; }\n" +
-            "    body.is-phone .card-thumbnail { border-radius: 0; border-bottom: none; }\n" +
-            "    body.is-phone .card-details { padding: 12px 16px; }\n" +
-            "    body.is-phone h2 { padding-left: 16px; }\n" +
+            "}\n" +
+            "body.is-tv *:focus {\n" +
+            "  outline: 4px solid #c084fc !important;\n" +
+            "  outline-offset: 2px !important;\n" +
+            "  box-shadow: 0 0 25px rgba(192, 132, 252, 0.7) !important;\n" +
+            "  transform: scale(1.03) !important;\n" +
+            "  z-index: 10 !important;\n" +
+            "  transition: transform 0.2s, box-shadow 0.2s, outline 0.2s !important;\n" +
             "}";
 
     // Supported platform details
@@ -334,10 +360,13 @@ public class HtmlRenderer {
           .append(query != null ? query.replace("\"", "&quot;") : "").append("\" required>\n")
           .append("      <button type=\"submit\" class=\"search-btn\">🔎</button>\n")
           .append("    </form>\n")
-          .append("    <button id=\"theme-toggle\" class=\"theme-toggle-btn\" aria-label=\"Toggle Theme\">\n")
-          .append("      <span class=\"theme-icon-light\">☀️</span>\n")
-          .append("      <span class=\"theme-icon-dark\">🌙</span>\n")
-          .append("    </button>\n")
+          .append("    <div style=\"display:flex; align-items:center; gap:10px;\">\n")
+          .append("      <button id=\"connect-remote-btn\" onclick=\"playOnTV(window.location.href, document.title)\">📺 Connect Remote</button>\n")
+          .append("      <button id=\"theme-toggle\" class=\"theme-toggle-btn\" aria-label=\"Toggle Theme\">\n")
+          .append("        <span class=\"theme-icon-light\">☀️</span>\n")
+          .append("        <span class=\"theme-icon-dark\">🌙</span>\n")
+          .append("      </button>\n")
+          .append("    </div>\n")
           .append("  </div>\n")
           .append("  <div class=\"service-selector\">\n");
 
@@ -394,7 +423,15 @@ public class HtmlRenderer {
                 "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
                 "    <title>" + title + "</title>\n" +
                 "    <link rel=\"icon\" type=\"image/svg+xml\" href=\"" + favicon + "\">\n" +
-                "    <style>\n" + CSS + "\n    </style>\n" +
+                "    <style>\n" + CSS + "\n" +
+                "        /* Glow border outline style for selected/focused interactive elements */\n" +
+                "        a:focus, button:focus, input:focus, select:focus, textarea:focus, [tabindex=\"0\"]:focus {\n" +
+                "            outline: none !important;\n" +
+                "            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.35), 0 0 15px rgba(219, 39, 119, 0.6) !important;\n" +
+                "            border-color: #7c3aed !important;\n" +
+                "            transition: all 0.2s ease-in-out !important;\n" +
+                "        }\n" +
+                "    </style>\n" +
                 "    <script>\n" +
                 "        (function() {\n" +
                 "            const theme = localStorage.getItem('theme') || 'light';\n" +
@@ -403,6 +440,33 @@ public class HtmlRenderer {
                 "    </script>\n" +
                 "</head>\n" +
                 "<body class=\"" + bodyClass + "\">\n" +
+                "    <div id=\"tv-lock-banner\" style=\"display:none; flex-direction:column; background: linear-gradient(135deg, #7c3aed, #db2777); color: white; padding: 12px 24px; position: sticky; top: 0; z-index: 10000; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);\">\n" +
+                "      <div style=\"display:flex; align-items:center; justify-content:space-between; width:100%; font-weight:500; font-size:14px;\">\n" +
+                "        <span>📺 Currently controlling TV playback</span>\n" +
+                "        <div style=\"display:flex; gap:10px;\">\n" +
+                "          <button id=\"toggle-remote-btn\" onclick=\"toggleTVRemote()\" style=\"background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 16px; border-radius: 20px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s;\">Show Remote</button>\n" +
+                "          <button onclick=\"releaseTVLock()\" style=\"background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 16px; border-radius: 20px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s;\">Disconnect / Stop</button>\n" +
+                "        </div>\n" +
+                "      </div>\n" +
+                "      \n" +
+                "      <!-- D-pad Remote Control Overlay Panel -->\n" +
+                "      <div id=\"tv-remote-control\" style=\"display:none; flex-direction:column; align-items:center; background: rgba(18, 17, 26, 0.95); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px; margin: 15px auto 5px auto; max-width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); gap: 12px; color: white;\">\n" +
+                "        <span style=\"font-size: 11px; font-weight: 600; opacity: 0.8; letter-spacing: 0.5px; text-transform: uppercase;\">TV Navigation</span>\n" +
+                "        <div style=\"display:flex; gap:8px; justify-content:center; width:100%;\">\n" +
+                "          <button onclick=\"sendRemoteCommand('back')\" style=\"flex:1; height:45px; border-radius:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:white; font-size:11px; font-weight:600; cursor:pointer; outline:none;\">⤶ BACK</button>\n" +
+                "          <button onclick=\"sendRemoteCommand('left')\" style=\"flex:1; height:45px; border-radius:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:white; font-size:14px; cursor:pointer; outline:none;\">◀ PREV</button>\n" +
+                "          <button onclick=\"sendRemoteCommand('enter')\" style=\"flex:1.2; height:45px; border-radius:10px; background:linear-gradient(135deg, #7c3aed, #db2777); border:none; color:white; font-weight:700; font-size:13px; cursor:pointer; box-shadow:0 4px 10px rgba(124,58,237,0.3); outline:none;\">OK</button>\n" +
+                "          <button onclick=\"sendRemoteCommand('right')\" style=\"flex:1; height:45px; border-radius:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:white; font-size:14px; cursor:pointer; outline:none;\">NEXT ▶</button>\n" +
+                "        </div>\n" +
+                "        \n" +
+                "        <span style=\"font-size: 11px; font-weight: 600; opacity: 0.8; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 5px;\">Playback controls</span>\n" +
+                "        <div style=\"display:flex; gap:10px; justify-content:center; width:100%;\">\n" +
+                "          <button onclick=\"sendRemoteCommand('rewind')\" style=\"flex:1; height:38px; border-radius:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:white; font-size:12px; cursor:pointer; outline:none;\">⏪ -10s</button>\n" +
+                "          <button onclick=\"sendRemoteCommand('play_pause')\" style=\"flex:1.2; height:38px; border-radius:8px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:white; font-size:13px; cursor:pointer; font-weight:bold; outline:none;\">▶▮▮</button>\n" +
+                "          <button onclick=\"sendRemoteCommand('forward')\" style=\"flex:1; height:38px; border-radius:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:white; font-size:12px; cursor:pointer; outline:none;\">+10s ⏩</button>\n" +
+                "        </div>\n" +
+                "      </div>\n" +
+                "    </div>\n" +
                 bodyContent + "\n" +
                 "    <script>\n" +
                 "        (function() {\n" +
@@ -416,6 +480,232 @@ public class HtmlRenderer {
                 "                });\n" +
                 "            }\n" +
                 "        })();\n" +
+                "        \n" +
+                "        function updateTVLockBanner() {\n" +
+                "            const banner = document.getElementById('tv-lock-banner');\n" +
+                "            if (!banner) return;\n" +
+                "            const code = localStorage.getItem('server_play_release_code');\n" +
+                "            if (code) {\n" +
+                "                banner.style.display = 'flex';\n" +
+                "            } else {\n" +
+                "                banner.style.display = 'none';\n" +
+                "                const remote = document.getElementById('tv-remote-control');\n" +
+                "                if (remote) remote.style.display = 'none';\n" +
+                "                const btn = document.getElementById('toggle-remote-btn');\n" +
+                "                if (btn) btn.innerText = 'Show Remote';\n" +
+                "            }\n" +
+                "        }\n" +
+                "        \n" +
+                "        function toggleTVRemote() {\n" +
+                "            const remote = document.getElementById('tv-remote-control');\n" +
+                "            const btn = document.getElementById('toggle-remote-btn');\n" +
+                "            if (remote.style.display === 'none') {\n" +
+                "                remote.style.display = 'flex';\n" +
+                "                btn.innerText = 'Hide Remote';\n" +
+                "            } else {\n" +
+                "                remote.style.display = 'none';\n" +
+                "                btn.innerText = 'Show Remote';\n" +
+                "            }\n" +
+                "        }\n" +
+                "        \n" +
+                "        function sendRemoteCommand(cmd) {\n" +
+                "            const code = localStorage.getItem('server_play_release_code');\n" +
+                "            if (!code) return;\n" +
+                "            fetch('/send-command?command=' + encodeURIComponent(cmd) + '&release_code=' + encodeURIComponent(code))\n" +
+                "                .then(res => res.json())\n" +
+                "                .then(data => {\n" +
+                "                    if (data.status !== 'success') {\n" +
+                "                        console.error('Failed to send command: ' + data.message);\n" +
+                "                    }\n" +
+                "                })\n" +
+                "                .catch(err => console.error(err));\n" +
+                "        }\n" +
+                "        \n" +
+                "        function playOnTV(videoUrl, title) {\n" +
+                "            const code = localStorage.getItem('server_play_release_code') || '';\n" +
+                "            const url = '/send-link?id=' + encodeURIComponent(videoUrl) + \n" +
+                "                        '&release_code=' + encodeURIComponent(code) +\n" +
+                "                        '&title=' + encodeURIComponent(title);\n" +
+                "            \n" +
+                "            fetch(url)\n" +
+                "                .then(res => res.json())\n" +
+                "                .then(data => {\n" +
+                "                    if (data.status === 'success') {\n" +
+                "                        localStorage.setItem('server_play_release_code', data.release_code);\n" +
+                "                        updateTVLockBanner();\n" +
+                "                        startCommandPolling();\n" +
+                "                        alert('Successfully connected remote!');\n" +
+                "                    } else if (data.status === 'busy') {\n" +
+                "                        alert('Server is busy: ' + data.message);\n" +
+                "                    } else {\n" +
+                "                        alert('Error casting video: ' + (data.message || 'Unknown error'));\n" +
+                "                    }\n" +
+                "                })\n" +
+                "                .catch(err => {\n" +
+                "                    alert('Connection error: ' + err);\n" +
+                "                });\n" +
+                "        }\n" +
+                "        \n" +
+                "        let pollingInterval = null;\n" +
+                "        function startCommandPolling() {\n" +
+                "            if (pollingInterval) return;\n" +
+                "            pollingInterval = setInterval(() => {\n" +
+                "                fetch('/poll-commands')\n" +
+                "                    .then(res => res.json())\n" +
+                "                    .then(data => {\n" +
+                "                        if (data.commands && data.commands.length > 0) {\n" +
+                "                            data.commands.forEach(cmd => {\n" +
+                "                                if (cmd.startsWith('play_video:')) {\n" +
+                "                                    const url = cmd.substring('play_video:'.length);\n" +
+                "                                    window.location.href = '/watch?serviceId=0&id=' + encodeURIComponent(url);\n" +
+                "                                } else if (cmd === 'left' || cmd === 'up') {\n" +
+                "                                    if (window.focusNext) window.focusNext(true);\n" +
+                "                                } else if (cmd === 'right' || cmd === 'down') {\n" +
+                "                                    if (window.focusNext) window.focusNext(false);\n" +
+                "                                } else if (cmd === 'enter') {\n" +
+                "                                    const active = document.activeElement;\n" +
+                "                                    if (active) {\n" +
+                "                                        active.click();\n" +
+                "                                        const anchor = active.tagName === 'A' ? active : active.querySelector('a');\n" +
+                "                                        if (anchor && anchor.href) {\n" +
+                "                                            window.location.href = anchor.href;\n" +
+                "                                        }\n" +
+                "                                    }\n" +
+                "                                } else if (cmd === 'back') {\n" +
+                "                                    if (window.history.length > 1) {\n" +
+                "                                        window.history.back();\n" +
+                "                                    }\n" +
+                "                                } else if (cmd === 'play_pause') {\n" +
+                "                                    const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
+                "                                    if (media) {\n" +
+                "                                        if (media.paused) media.play().catch(e => {});\n" +
+                "                                        else media.pause();\n" +
+                "                                    }\n" +
+                "                                } else if (cmd === 'forward') {\n" +
+                "                                    const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
+                "                                    if (media) media.currentTime += 10;\n" +
+                "                                } else if (cmd === 'rewind') {\n" +
+                "                                    const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
+                "                                    if (media) media.currentTime -= 10;\n" +
+                "                                }\n" +
+                "                            });\n" +
+                "                        }\n" +
+                "                    })\n" +
+                "                    .catch(err => console.error(err));\n" +
+                "            }, 700);\n" +
+                "        }\n" +
+                "        \n" +
+                "        function releaseTVLock() {\n" +
+                "            const code = localStorage.getItem('server_play_release_code');\n" +
+                "            if (!code) return;\n" +
+                "            \n" +
+                "            fetch('/release-lock?release_code=' + encodeURIComponent(code))\n" +
+                "                .then(res => res.json())\n" +
+                "                .then(data => {\n" +
+                "                    localStorage.removeItem('server_play_release_code');\n" +
+                "                    updateTVLockBanner();\n" +
+                "                    if (pollingInterval) {\n" +
+                "                        clearInterval(pollingInterval);\n" +
+                "                        pollingInterval = null;\n" +
+                "                    }\n" +
+                "                    if (data.status === 'success') {\n" +
+                "                        alert('Disconnected successfully.');\n" +
+                "                    } else {\n" +
+                "                        alert('Lock already released or expired.');\n" +
+                "                    }\n" +
+                "                })\n" +
+                "                .catch(err => {\n" +
+                "                    localStorage.removeItem('server_play_release_code');\n" +
+                "                    updateTVLockBanner();\n" +
+                "                    if (pollingInterval) {\n" +
+                "                        clearInterval(pollingInterval);\n" +
+                "                        pollingInterval = null;\n" +
+                "                    }\n" +
+                "                    alert('Connection error/released locally: ' + err);\n" +
+                "                });\n" +
+                "        }\n" +
+                "        \n" +
+                "        document.addEventListener('DOMContentLoaded', () => {\n" +
+                "            updateTVLockBanner();\n" +
+                "            \n" +
+                "            window.getFocusableElements = () => {\n" +
+                "                const selector = 'a, button, input, select, textarea, [tabindex=\"0\"]';\n" +
+                "                return Array.from(document.querySelectorAll(selector)).filter(el => {\n" +
+                "                    const rect = el.getBoundingClientRect();\n" +
+                "                    return rect.width > 0 && rect.height > 0 && \n" +
+                "                           window.getComputedStyle(el).display !== 'none' &&\n" +
+                "                           window.getComputedStyle(el).visibility !== 'hidden';\n" +
+                "                });\n" +
+                "            };\n" +
+                "            \n" +
+                "            window.focusNext = (reverse = false) => {\n" +
+                "                const els = window.getFocusableElements();\n" +
+                "                if (els.length === 0) return;\n" +
+                "                const active = document.activeElement;\n" +
+                "                let idx = els.indexOf(active);\n" +
+                "                if (idx === -1) {\n" +
+                "                    els[0].focus();\n" +
+                "                    return;\n" +
+                "                }\n" +
+                "                if (reverse) {\n" +
+                "                    idx = (idx - 1 + els.length) % els.length;\n" +
+                "                } else {\n" +
+                "                    idx = (idx + 1) % els.length;\n" +
+                "                }\n" +
+                "                els[idx].focus();\n" +
+                "                els[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });\n" +
+                "            };\n" +
+                "            \n" +
+                "            const initFocusable = () => {\n" +
+                "                document.querySelectorAll('.card').forEach(card => {\n" +
+                "                    if (!card.hasAttribute('tabindex')) {\n" +
+                "                        card.setAttribute('tabindex', '0');\n" +
+                "                    }\n" +
+                "                });\n" +
+                "            };\n" +
+                "            initFocusable();\n" +
+                "            \n" +
+                "            const defaultFocus = () => {\n" +
+                "                const els = window.getFocusableElements ? window.getFocusableElements() : [];\n" +
+                "                if (els.length > 0) {\n" +
+                "                    els[0].focus();\n" +
+                "                }\n" +
+                "            };\n" +
+                "            setTimeout(defaultFocus, 200);\n" +
+                "            \n" +
+                "            // Global keyboard keydown handler to replace Arrow keys with Tab / Shift-Tab linear focus cycle\n" +
+                "            document.addEventListener('keydown', (e) => {\n" +
+                "                const active = document.activeElement;\n" +
+                "                if (active && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {\n" +
+                "                    return; // Let native typing handle arrows inside inputs\n" +
+                "                }\n" +
+                "                if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {\n" +
+                "                    e.preventDefault();\n" +
+                "                    if (window.focusNext) window.focusNext(true);\n" +
+                "                } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {\n" +
+                "                    e.preventDefault();\n" +
+                "                    if (window.focusNext) window.focusNext(false);\n" +
+                "                } else if (e.key === 'Enter') {\n" +
+                "                    if (active) {\n" +
+                "                        active.click();\n" +
+                "                        const anchor = active.tagName === 'A' ? active : active.querySelector('a');\n" +
+                "                        if (anchor && anchor.href) {\n" +
+                "                            window.location.href = anchor.href;\n" +
+                "                        }\n" +
+                "                    }\n" +
+                "                } else if (e.key === 'Backspace' || e.key === 'Escape') {\n" +
+                "                    if (window.history.length > 1) {\n" +
+                "                        e.preventDefault();\n" +
+                "                        window.history.back();\n" +
+                "                    }\n" +
+                "                }\n" +
+                "            });\n" +
+                "            \n" +
+                "            // Resume command polling if we are currently connected/locked\n" +
+                "            if (localStorage.getItem('server_play_release_code')) {\n" +
+                "                startCommandPolling();\n" +
+                "            }\n" +
+                "        });\n" +
                 "    </script>\n" +
                 "</body>\n" +
                 "</html>";
@@ -981,6 +1271,7 @@ public class HtmlRenderer {
           .append("              <span class=\"uploader-name\">").append(video.getUploader()).append("</span>\n")
           .append("            </div>\n")
           .append("            <a href=\"/cache?action=delete&id=").append(encodeUrl(video.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:#d9534f; text-decoration:none;\">🗑️ Delete Cache</a>\n")
+          .append("            <button onclick=\"playOnTV('").append(escapeJs(video.getUrl())).append("', '").append(escapeJs(video.getTitle())).append("')\" class=\"subscribe-btn\" style=\"background-color:#7c3aed; color:white; border:none; margin-left:8px; cursor:pointer;\">📺 Play on TV</button>\n")
           .append("          </div>\n");
 
         sb.append("          <div class=\"media-description\">")
