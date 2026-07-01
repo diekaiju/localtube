@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#121212">
+
+    <!-- Header Toolbar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="?android:attr/actionBarSize"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:background="#1E1E1E">
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_revert"
+            android:contentDescription="Back to main console"
+            android:tint="#FFFFFF"
+            android:layout_marginEnd="8dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wireless TV Remote"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Touchpad Surface Card (takes most vertical space) -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1.6"
+            app:cardBackgroundColor="#1A1827"
+            app:cardCornerRadius="16dp"
+            app:strokeColor="#7C3AED"
+            app:strokeWidth="1.5dp"
+            android:layout_marginBottom="16dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <View
+                    android:id="@+id/touchpad_surface"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/touchpad_background"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:text="📱 Touchpad\nDrag to move pointer • Tap to click"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:lineSpacingMultiplier="1.2" />
+            </RelativeLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Touchpad Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:weightSum="4"
+            android:layout_marginBottom="12dp">
+            <Button
+                android:id="@+id/remote_click"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1.5"
+                android:text="👆 Click"
+                android:backgroundTint="#7C3AED"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="6dp"
+                android:padding="0dp"/>
+            <Button
+                android:id="@+id/remote_scroll_up"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="0.8"
+                android:text="⇧"
+                android:backgroundTint="#2C2C2C"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:layout_marginEnd="6dp"
+                android:padding="0dp"/>
+            <Button
+                android:id="@+id/remote_scroll_down"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="0.8"
+                android:text="⇩"
+                android:backgroundTint="#2C2C2C"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:layout_marginEnd="6dp"
+                android:padding="0dp"/>
+            <Button
+                android:id="@+id/remote_back"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="0.9"
+                android:text="⤶"
+                android:backgroundTint="#2C2C2C"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:padding="0dp"/>
+        </LinearLayout>
+
+        <!-- Media Controls Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="#1E1E1E"
+            app:cardCornerRadius="12dp"
+            app:strokeColor="#2C2C2C"
+            app:strokeWidth="1dp"
+            android:layout_marginBottom="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Media Playback"
+                    android:textColor="#88FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp"
+                    android:layout_gravity="center_horizontal"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:weightSum="3">
+                    <Button
+                        android:id="@+id/remote_rewind"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:text="⏪ -10s"
+                        android:textSize="12sp"
+                        android:backgroundTint="#2C2C2C"
+                        android:layout_marginEnd="4dp"/>
+                    <Button
+                        android:id="@+id/remote_play_pause"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:text="▶▮▮"
+                        android:textSize="13sp"
+                        android:backgroundTint="#2C2C2C"
+                        android:layout_marginEnd="4dp"
+                        android:layout_marginStart="4dp"/>
+                    <Button
+                        android:id="@+id/remote_forward"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:text="⏩ +10s"
+                        android:textSize="12sp"
+                        android:backgroundTint="#2C2C2C"
+                        android:layout_marginStart="4dp"/>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</LinearLayout>

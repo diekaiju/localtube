@@ -47,16 +47,27 @@ public class LocalHttpServer {
     private static String activeClientIp = null;
     private static String activeVideoTitle = null;
     private static LockStatusListener lockStatusListener;
-    private static final List<String> pendingCommands = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private static RemoteWebSocketServer wsServer = null;
+    private static final java.util.Queue<String> pendingCommands = new java.util.concurrent.LinkedBlockingQueue<>();
 
     public static List<String> getAndClearPendingCommands() {
-        List<String> copy = new ArrayList<>(pendingCommands);
-        pendingCommands.clear();
+        List<String> copy = new ArrayList<>();
+        String cmd;
+        while ((cmd = pendingCommands.poll()) != null) {
+            copy.add(cmd);
+        }
         return copy;
     }
 
     public static void addPendingCommand(String cmd) {
-        pendingCommands.add(cmd);
+        if (pendingCommands.size() > 500) {
+            pendingCommands.poll(); // Prevent infinite growth if client disconnects
+        }
+        pendingCommands.offer(cmd);
+        
+        if (wsServer != null) {
+            wsServer.broadcastCommand(cmd);
+        }
     }
 
     public static void setLockStatusListener(LockStatusListener listener) {
@@ -142,6 +153,12 @@ public class LocalHttpServer {
         isRunning = true;
         log("Local server started on port " + port);
 
+        // Start WebSocket Server on port 8081
+        if (wsServer == null) {
+            wsServer = new RemoteWebSocketServer(8081);
+            wsServer.start();
+        }
+
         threadPool.execute(new Runnable() {
             @Override
             public void run() {
@@ -166,6 +183,14 @@ public class LocalHttpServer {
             }
         } catch (IOException e) {
             // ignore
+        }
+        if (wsServer != null) {
+            try {
+                wsServer.stop();
+            } catch (InterruptedException e) {
+                // ignore
+            }
+            wsServer = null;
         }
         threadPool.shutdownNow();
         log("Local server stopped.");
@@ -289,6 +314,8 @@ public class LocalHttpServer {
                         handleSearch(os, params, isTv);
                     } else if (path.equals("/watch")) {
                         handleWatch(os, params, isTv);
+                    } else if (path.equals("/watch-content")) {
+                        handleWatchContent(os, params, isTv);
                     } else if (path.equals("/send-link") || path.equals("/play")) {
                         handleSendLink(os, params, socket.getInetAddress().getHostAddress());
                     } else if (path.equals("/send-command")) {
@@ -521,6 +548,16 @@ public class LocalHttpServer {
                 return;
             }
 
+            // Immediately send the fast watch skeleton layout
+            String html = HtmlRenderer.renderWatchSkeleton(serviceId, mediaUrl, isTv);
+            sendResponse(os, 200, html, "text/html; charset=UTF-8");
+        }
+
+        private void handleWatchContent(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
+            int serviceId = getServiceId(params);
+            String mediaUrl = params.get("id");
+            CachedVideo cachedVideo = dbHelper.getCachedVideo(mediaUrl);
+
             try {
                 StreamingService service = NewPipe.getService(serviceId);
                 StreamInfo info = StreamInfo.getInfo(service, mediaUrl);
@@ -535,7 +572,7 @@ public class LocalHttpServer {
                 String targetQuality = dbHelper.getVideoQuality();
                 
                 long duration = info.getDuration();
-                String html = HtmlRenderer.renderWatch(serviceId, info, cachedVideo, isSubscribed, isTv, targetQuality, duration);
+                String html = HtmlRenderer.renderWatchContent(serviceId, info, cachedVideo, isSubscribed, isTv, targetQuality, duration);
                 sendResponse(os, 200, html, "text/html; charset=UTF-8");
             } catch (Exception e) {
                 if (cachedVideo != null) {
@@ -543,9 +580,7 @@ public class LocalHttpServer {
                     String html = HtmlRenderer.renderCachedWatch(serviceId, cachedVideo, otherCached, isTv);
                     sendResponse(os, 200, html, "text/html; charset=UTF-8");
                 } else {
-                    List<CachedVideo> cachedVideos = dbHelper.getCachedVideos();
-                    String html = HtmlRenderer.renderOfflineHome(serviceId, "Offline - " + e.getMessage(), cachedVideos, isTv);
-                    sendResponse(os, 200, html, "text/html; charset=UTF-8");
+                    sendResponse(os, 500, "Error: " + e.getMessage(), "text/plain; charset=UTF-8");
                 }
             }
         }

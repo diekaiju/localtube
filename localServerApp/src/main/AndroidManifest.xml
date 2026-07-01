@@ -35,6 +35,12 @@
             android:theme="@style/Theme.LocalMediaServer"
             android:exported="false" />
 
+        <activity
+            android:name=".RemoteActivity"
+            android:label="Remote Controller"
+            android:theme="@style/Theme.LocalMediaServer"
+            android:exported="false" />
+
         <service
             android:name=".ServerService"
             android:enabled="true"

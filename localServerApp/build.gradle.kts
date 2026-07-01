@@ -69,4 +69,5 @@ dependencies {
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("io.github.maitrungduc1410:ffmpeg-kit-https:6.0.1")
+    implementation("org.java-websocket:Java-WebSocket:1.5.3")
 }

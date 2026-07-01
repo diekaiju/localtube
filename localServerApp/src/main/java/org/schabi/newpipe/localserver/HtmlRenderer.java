@@ -301,7 +301,6 @@ public class HtmlRenderer {
             "    body.is-phone .bottom-nav-item.active { color: var(--bottom-nav-item-active-color); }\n" +
             "    body.is-phone .bottom-nav-icon { font-size: 20px; }\n" +
             "}\n" +
-            "}\n" +
             "body.is-tv *:focus {\n" +
             "  outline: 4px solid #c084fc !important;\n" +
             "  outline-offset: 2px !important;\n" +
@@ -440,30 +439,19 @@ public class HtmlRenderer {
                 "    </script>\n" +
                 "</head>\n" +
                 "<body class=\"" + bodyClass + "\">\n" +
+                "    <!-- Virtual Mouse Cursor -->\n" +
+                "    <div id=\"vptr\" style=\"position:fixed; width:22px; height:22px; border-radius:50%; pointer-events:none; z-index:2147483647; display:none; transform:translate(-50%,-50%); transition:left 0.04s linear, top 0.04s linear;\">\n" +
+                "      <svg width=\"22\" height=\"22\" viewBox=\"0 0 22 22\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n" +
+                "        <defs><radialGradient id=\"cg\" cx=\"40%\" cy=\"30%\" r=\"70%\"><stop offset=\"0%\" stop-color=\"#e879f9\"/><stop offset=\"100%\" stop-color=\"#7c3aed\"/></radialGradient></defs>\n" +
+                "        <circle cx=\"11\" cy=\"11\" r=\"9\" fill=\"url(#cg)\" stroke=\"white\" stroke-width=\"2\"/>\n" +
+                "        <circle cx=\"11\" cy=\"11\" r=\"3\" fill=\"white\" fill-opacity=\"0.8\"/>\n" +
+                "      </svg>\n" +
+                "    </div>\n" +
                 "    <div id=\"tv-lock-banner\" style=\"display:none; flex-direction:column; background: linear-gradient(135deg, #7c3aed, #db2777); color: white; padding: 12px 24px; position: sticky; top: 0; z-index: 10000; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);\">\n" +
                 "      <div style=\"display:flex; align-items:center; justify-content:space-between; width:100%; font-weight:500; font-size:14px;\">\n" +
                 "        <span>📺 Currently controlling TV playback</span>\n" +
                 "        <div style=\"display:flex; gap:10px;\">\n" +
-                "          <button id=\"toggle-remote-btn\" onclick=\"toggleTVRemote()\" style=\"background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 16px; border-radius: 20px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s;\">Show Remote</button>\n" +
                 "          <button onclick=\"releaseTVLock()\" style=\"background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 16px; border-radius: 20px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s;\">Disconnect / Stop</button>\n" +
-                "        </div>\n" +
-                "      </div>\n" +
-                "      \n" +
-                "      <!-- D-pad Remote Control Overlay Panel -->\n" +
-                "      <div id=\"tv-remote-control\" style=\"display:none; flex-direction:column; align-items:center; background: rgba(18, 17, 26, 0.95); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px; margin: 15px auto 5px auto; max-width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); gap: 12px; color: white;\">\n" +
-                "        <span style=\"font-size: 11px; font-weight: 600; opacity: 0.8; letter-spacing: 0.5px; text-transform: uppercase;\">TV Navigation</span>\n" +
-                "        <div style=\"display:flex; gap:8px; justify-content:center; width:100%;\">\n" +
-                "          <button onclick=\"sendRemoteCommand('back')\" style=\"flex:1; height:45px; border-radius:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:white; font-size:11px; font-weight:600; cursor:pointer; outline:none;\">⤶ BACK</button>\n" +
-                "          <button onclick=\"sendRemoteCommand('left')\" style=\"flex:1; height:45px; border-radius:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:white; font-size:14px; cursor:pointer; outline:none;\">◀ PREV</button>\n" +
-                "          <button onclick=\"sendRemoteCommand('enter')\" style=\"flex:1.2; height:45px; border-radius:10px; background:linear-gradient(135deg, #7c3aed, #db2777); border:none; color:white; font-weight:700; font-size:13px; cursor:pointer; box-shadow:0 4px 10px rgba(124,58,237,0.3); outline:none;\">OK</button>\n" +
-                "          <button onclick=\"sendRemoteCommand('right')\" style=\"flex:1; height:45px; border-radius:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:white; font-size:14px; cursor:pointer; outline:none;\">NEXT ▶</button>\n" +
-                "        </div>\n" +
-                "        \n" +
-                "        <span style=\"font-size: 11px; font-weight: 600; opacity: 0.8; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 5px;\">Playback controls</span>\n" +
-                "        <div style=\"display:flex; gap:10px; justify-content:center; width:100%;\">\n" +
-                "          <button onclick=\"sendRemoteCommand('rewind')\" style=\"flex:1; height:38px; border-radius:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:white; font-size:12px; cursor:pointer; outline:none;\">⏪ -10s</button>\n" +
-                "          <button onclick=\"sendRemoteCommand('play_pause')\" style=\"flex:1.2; height:38px; border-radius:8px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:white; font-size:13px; cursor:pointer; font-weight:bold; outline:none;\">▶▮▮</button>\n" +
-                "          <button onclick=\"sendRemoteCommand('forward')\" style=\"flex:1; height:38px; border-radius:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:white; font-size:12px; cursor:pointer; outline:none;\">+10s ⏩</button>\n" +
                 "        </div>\n" +
                 "      </div>\n" +
                 "    </div>\n" +
@@ -489,36 +477,7 @@ public class HtmlRenderer {
                 "                banner.style.display = 'flex';\n" +
                 "            } else {\n" +
                 "                banner.style.display = 'none';\n" +
-                "                const remote = document.getElementById('tv-remote-control');\n" +
-                "                if (remote) remote.style.display = 'none';\n" +
-                "                const btn = document.getElementById('toggle-remote-btn');\n" +
-                "                if (btn) btn.innerText = 'Show Remote';\n" +
                 "            }\n" +
-                "        }\n" +
-                "        \n" +
-                "        function toggleTVRemote() {\n" +
-                "            const remote = document.getElementById('tv-remote-control');\n" +
-                "            const btn = document.getElementById('toggle-remote-btn');\n" +
-                "            if (remote.style.display === 'none') {\n" +
-                "                remote.style.display = 'flex';\n" +
-                "                btn.innerText = 'Hide Remote';\n" +
-                "            } else {\n" +
-                "                remote.style.display = 'none';\n" +
-                "                btn.innerText = 'Show Remote';\n" +
-                "            }\n" +
-                "        }\n" +
-                "        \n" +
-                "        function sendRemoteCommand(cmd) {\n" +
-                "            const code = localStorage.getItem('server_play_release_code');\n" +
-                "            if (!code) return;\n" +
-                "            fetch('/send-command?command=' + encodeURIComponent(cmd) + '&release_code=' + encodeURIComponent(code))\n" +
-                "                .then(res => res.json())\n" +
-                "                .then(data => {\n" +
-                "                    if (data.status !== 'success') {\n" +
-                "                        console.error('Failed to send command: ' + data.message);\n" +
-                "                    }\n" +
-                "                })\n" +
-                "                .catch(err => console.error(err));\n" +
                 "        }\n" +
                 "        \n" +
                 "        function playOnTV(videoUrl, title) {\n" +
@@ -546,53 +505,83 @@ public class HtmlRenderer {
                 "                });\n" +
                 "        }\n" +
                 "        \n" +
-                "        let pollingInterval = null;\n" +
                 "        function startCommandPolling() {\n" +
-                "            if (pollingInterval) return;\n" +
-                "            pollingInterval = setInterval(() => {\n" +
-                "                fetch('/poll-commands')\n" +
-                "                    .then(res => res.json())\n" +
-                "                    .then(data => {\n" +
-                "                        if (data.commands && data.commands.length > 0) {\n" +
-                "                            data.commands.forEach(cmd => {\n" +
-                "                                if (cmd.startsWith('play_video:')) {\n" +
-                "                                    const url = cmd.substring('play_video:'.length);\n" +
-                "                                    window.location.href = '/watch?serviceId=0&id=' + encodeURIComponent(url);\n" +
-                "                                } else if (cmd === 'left' || cmd === 'up') {\n" +
-                "                                    if (window.focusNext) window.focusNext(true);\n" +
-                "                                } else if (cmd === 'right' || cmd === 'down') {\n" +
-                "                                    if (window.focusNext) window.focusNext(false);\n" +
-                "                                } else if (cmd === 'enter') {\n" +
-                "                                    const active = document.activeElement;\n" +
-                "                                    if (active) {\n" +
-                "                                        active.click();\n" +
-                "                                        const anchor = active.tagName === 'A' ? active : active.querySelector('a');\n" +
-                "                                        if (anchor && anchor.href) {\n" +
-                "                                            window.location.href = anchor.href;\n" +
-                "                                        }\n" +
-                "                                    }\n" +
-                "                                } else if (cmd === 'back') {\n" +
-                "                                    if (window.history.length > 1) {\n" +
-                "                                        window.history.back();\n" +
-                "                                    }\n" +
-                "                                } else if (cmd === 'play_pause') {\n" +
-                "                                    const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
-                "                                    if (media) {\n" +
-                "                                        if (media.paused) media.play().catch(e => {});\n" +
-                "                                        else media.pause();\n" +
-                "                                    }\n" +
-                "                                } else if (cmd === 'forward') {\n" +
-                "                                    const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
-                "                                    if (media) media.currentTime += 10;\n" +
-                "                                } else if (cmd === 'rewind') {\n" +
-                "                                    const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
-                "                                    if (media) media.currentTime -= 10;\n" +
-                "                                }\n" +
-                "                            });\n" +
+                "            if (window.wsConnection) return;\n" +
+                "            \n" +
+                "            // Virtual cursor state\n" +
+                "            let vptrX = window.innerWidth / 2, vptrY = window.innerHeight / 2;\n" +
+                "            const vptr = document.getElementById('vptr');\n" +
+                "            function showVptr() {\n" +
+                "                if (vptr) { vptr.style.display = 'block'; vptr.style.left = vptrX + 'px'; vptr.style.top = vptrY + 'px'; }\n" +
+                "            }\n" +
+                "            function moveVptr(dx, dy) {\n" +
+                "                vptrX = Math.max(0, Math.min(window.innerWidth, vptrX + dx));\n" +
+                "                vptrY = Math.max(0, Math.min(window.innerHeight, vptrY + dy));\n" +
+                "                if (vptr) { vptr.style.left = vptrX + 'px'; vptr.style.top = vptrY + 'px'; }\n" +
+                "            }\n" +
+                "            function clickVptr() {\n" +
+                "                if (vptr) vptr.style.transform = 'translate(-50%,-50%) scale(0.7)';\n" +
+                "                setTimeout(() => { if (vptr) vptr.style.transform = 'translate(-50%,-50%) scale(1)'; }, 150);\n" +
+                "                const el = document.elementFromPoint(vptrX, vptrY);\n" +
+                "                if (!el || el === vptr) return;\n" +
+                "                el.click();\n" +
+                "                const anchor = el.tagName === 'A' ? el : el.closest('a');\n" +
+                "                if (anchor && anchor.href && !anchor.href.startsWith('javascript')) {\n" +
+                "                    window.location.href = anchor.href;\n" +
+                "                }\n" +
+                "            }\n" +
+                "            \n" +
+                "            window.wsConnection = new WebSocket('ws://' + location.hostname + ':8081');\n" +
+                "            window.wsConnection.onmessage = function(event) {\n" +
+                "                const cmd = event.data;\n" +
+                "                if (cmd.startsWith('play_video:')) {\n" +
+                "                    const url = cmd.substring('play_video:'.length);\n" +
+                "                    if (window.location.pathname === '/watch' && typeof window.loadNewVideo === 'function') {\n" +
+                "                        window.loadNewVideo(url);\n" +
+                "                    } else {\n" +
+                "                        window.location.href = '/watch?serviceId=0&id=' + encodeURIComponent(url);\n" +
+                "                    }\n" +
+                "                } else if (cmd.startsWith('pointer_move:')) {\n" +
+                "                    const parts = cmd.substring('pointer_move:'.length).split(',');\n" +
+                "                    const dx = parseFloat(parts[0]) || 0;\n" +
+                "                    const dy = parseFloat(parts[1]) || 0;\n" +
+                "                    showVptr();\n" +
+                "                    moveVptr(dx, dy);\n" +
+                "                } else if (cmd === 'pointer_click') {\n" +
+                "                    showVptr();\n" +
+                "                    clickVptr();\n" +
+                "                } else if (cmd.startsWith('pointer_scroll:')) {\n" +
+                "                    const dy = parseFloat(cmd.substring('pointer_scroll:'.length)) || 0;\n" +
+                "                    window.scrollBy({ top: dy, behavior: 'smooth' });\n" +
+                "                } else if (cmd === 'back') {\n" +
+                "                    if (window.history.length > 1) window.history.back();\n" +
+                "                } else if (cmd === 'play_pause') {\n" +
+                "                    const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
+                "                    if (media) {\n" +
+                "                        if (media.readyState < 2) {\n" +
+                "                            const loader = document.getElementById('video-loader');\n" +
+                "                            if (loader) loader.style.display = 'block';\n" +
+                "                            media.play().catch(e => {});\n" +
+                "                        } else {\n" +
+                "                            if (media.paused) media.play().catch(e => {}); else media.pause();\n" +
                 "                        }\n" +
-                "                    })\n" +
-                "                    .catch(err => console.error(err));\n" +
-                "            }, 700);\n" +
+                "                    }\n" +
+                "                } else if (cmd === 'forward') {\n" +
+                "                    const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
+                "                    if (media) media.currentTime += 10;\n" +
+                "                } else if (cmd === 'rewind') {\n" +
+                "                    const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
+                "                    if (media) media.currentTime -= 10;\n" +
+                "                }\n" +
+                "            };\n" +
+                "            window.wsConnection.onclose = function() {\n" +
+                "                window.wsConnection = null;\n" +
+                "                setTimeout(() => {\n" +
+                "                    if (localStorage.getItem('server_play_release_code')) {\n" +
+                "                        startCommandPolling();\n" +
+                "                    }\n" +
+                "                }, 1000);\n" +
+                "            };\n" +
                 "        }\n" +
                 "        \n" +
                 "        function releaseTVLock() {\n" +
@@ -604,22 +593,17 @@ public class HtmlRenderer {
                 "                .then(data => {\n" +
                 "                    localStorage.removeItem('server_play_release_code');\n" +
                 "                    updateTVLockBanner();\n" +
-                "                    if (pollingInterval) {\n" +
-                "                        clearInterval(pollingInterval);\n" +
-                "                        pollingInterval = null;\n" +
-                "                    }\n" +
-                "                    if (data.status === 'success') {\n" +
-                "                        alert('Disconnected successfully.');\n" +
-                "                    } else {\n" +
-                "                        alert('Lock already released or expired.');\n" +
+                "                    if (window.wsConnection) {\n" +
+                "                        window.wsConnection.close();\n" +
+                "                        window.wsConnection = null;\n" +
                 "                    }\n" +
                 "                })\n" +
                 "                .catch(err => {\n" +
                 "                    localStorage.removeItem('server_play_release_code');\n" +
                 "                    updateTVLockBanner();\n" +
-                "                    if (pollingInterval) {\n" +
-                "                        clearInterval(pollingInterval);\n" +
-                "                        pollingInterval = null;\n" +
+                "                    if (window.wsConnection) {\n" +
+                "                        window.wsConnection.close();\n" +
+                "                        window.wsConnection = null;\n" +
                 "                    }\n" +
                 "                    alert('Connection error/released locally: ' + err);\n" +
                 "                });\n" +
@@ -656,6 +640,36 @@ public class HtmlRenderer {
                 "                els[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });\n" +
                 "            };\n" +
                 "            \n" +
+                "            window.focusVertical = (down = true) => {\n" +
+                "                const els = window.getFocusableElements();\n" +
+                "                if (els.length === 0) return;\n" +
+                "                const active = document.activeElement;\n" +
+                "                let idx = els.indexOf(active);\n" +
+                "                if (idx === -1) {\n" +
+                "                    els[0].focus();\n" +
+                "                    return;\n" +
+                "                }\n" +
+                "                \n" +
+                "                let cols = 1;\n" +
+                "                const firstRect = els[0].getBoundingClientRect();\n" +
+                "                for (let i = 1; i < els.length; i++) {\n" +
+                "                    const r = els[i].getBoundingClientRect();\n" +
+                "                    if (Math.abs(r.top - firstRect.top) < 15) {\n" +
+                "                        cols++;\n" +
+                "                    } else {\n" +
+                "                        break;\n" +
+                "                    }\n" +
+                "                }\n" +
+                "                \n" +
+                "                const step = down ? cols : -cols;\n" +
+                "                let newIdx = idx + step;\n" +
+                "                if (newIdx < 0) newIdx = 0;\n" +
+                "                if (newIdx >= els.length) newIdx = els.length - 1;\n" +
+                "                \n" +
+                "                els[newIdx].focus();\n" +
+                "                els[newIdx].scrollIntoView({ behavior: 'smooth', block: 'center' });\n" +
+                "            };\n" +
+                "            \n" +
                 "            const initFocusable = () => {\n" +
                 "                document.querySelectorAll('.card').forEach(card => {\n" +
                 "                    if (!card.hasAttribute('tabindex')) {\n" +
@@ -679,12 +693,30 @@ public class HtmlRenderer {
                 "                if (active && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {\n" +
                 "                    return; // Let native typing handle arrows inside inputs\n" +
                 "                }\n" +
-                "                if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {\n" +
+                "                if (e.key === 'ArrowLeft') {\n" +
                 "                    e.preventDefault();\n" +
-                "                    if (window.focusNext) window.focusNext(true);\n" +
-                "                } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {\n" +
+                "                    const player = document.getElementById('player') || document.getElementById('audio-player');\n" +
+                "                    if (player) {\n" +
+                "                        if (typeof window.seekVideo === 'function') window.seekVideo(-10);\n" +
+                "                        else player.currentTime = Math.max(0, player.currentTime - 10);\n" +
+                "                    } else {\n" +
+                "                        if (window.focusNext) window.focusNext(true);\n" +
+                "                    }\n" +
+                "                } else if (e.key === 'ArrowRight') {\n" +
                 "                    e.preventDefault();\n" +
-                "                    if (window.focusNext) window.focusNext(false);\n" +
+                "                    const player = document.getElementById('player') || document.getElementById('audio-player');\n" +
+                "                    if (player) {\n" +
+                "                        if (typeof window.seekVideo === 'function') window.seekVideo(10);\n" +
+                "                        else player.currentTime = Math.min(player.duration || 0, player.currentTime + 10);\n" +
+                "                    } else {\n" +
+                "                        if (window.focusNext) window.focusNext(false);\n" +
+                "                    }\n" +
+                "                } else if (e.key === 'ArrowUp') {\n" +
+                "                    e.preventDefault();\n" +
+                "                    if (window.focusVertical) window.focusVertical(false);\n" +
+                "                } else if (e.key === 'ArrowDown') {\n" +
+                "                    e.preventDefault();\n" +
+                "                    if (window.focusVertical) window.focusVertical(true);\n" +
                 "                } else if (e.key === 'Enter') {\n" +
                 "                    if (active) {\n" +
                 "                        active.click();\n" +
@@ -773,9 +805,74 @@ public class HtmlRenderer {
         return wrapInTemplate("Search: " + query, sb.toString(), isTv);
     }
 
-    public static String renderWatch(int serviceId, StreamInfo info, CachedVideo cachedVideo, boolean isSubscribed, boolean isTv, String targetQuality, long duration) {
+    public static String renderWatchSkeleton(int serviceId, String mediaUrl, boolean isTv) {
         StringBuilder sb = new StringBuilder();
         sb.append(getHeaderHtml(serviceId, ""));
+        sb.append("  <div id=\"watch-container-loader\" style=\"text-align: center; padding: 100px 0; font-family: inherit;\">\n")
+          .append("    <div style=\"display: inline-block; width: 60px; height: 60px; border: 4px solid rgba(124, 58, 237, 0.1); border-top: 4px solid #7c3aed; border-radius: 50%; animation: spin 1.5s linear infinite;\"></div>\n")
+          .append("    <div style=\"margin-top: 24px; font-size: 16px; font-weight: 500; color: var(--text-color);\">Loading video streams...</div>\n")
+          .append("  </div>\n")
+          .append("  <div id=\"watch-content\" style=\"display: none;\"></div>\n")
+          .append("<style>\n")
+          .append("  @keyframes spin {\n")
+          .append("    0% { transform: rotate(0deg); }\n")
+          .append("    100% { transform: rotate(360deg); }\n")
+          .append("  }\n")
+          .append("</style>\n")
+          .append("<script>\n")
+          .append("  function loadWatchContent(url) {\n")
+          .append("      const loader = document.getElementById('watch-container-loader');\n")
+          .append("      const content = document.getElementById('watch-content');\n")
+          .append("      if (loader) loader.style.display = 'block';\n")
+          .append("      if (content) content.style.display = 'none';\n")
+          .append("      \n")
+          .append("      fetch('/watch-content?id=' + encodeURIComponent(url))\n")
+          .append("          .then(res => {\n")
+          .append("              if (!res.ok) throw new Error('HTTP ' + res.status);\n")
+          .append("              return res.text();\n")
+          .append("          })\n")
+          .append("          .then(html => {\n")
+          .append("              if (loader) loader.style.display = 'none';\n")
+          .append("              if (content) {\n")
+          .append("                  content.style.display = 'block';\n")
+          .append("                  content.innerHTML = html;\n")
+          .append("                  \n")
+          .append("                  // Execute scripts inside the loaded content\n")
+          .append("                  content.querySelectorAll('script').forEach(oldScript => {\n")
+          .append("                      const newScript = document.createElement('script');\n")
+          .append("                      Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));\n")
+          .append("                      newScript.appendChild(document.createTextNode(oldScript.innerHTML));\n")
+          .append("                      oldScript.parentNode.replaceChild(newScript, oldScript);\n")
+          .append("                  });\n")
+          .append("              }\n")
+          .append("          })\n")
+          .append("          .catch(err => {\n")
+          .append("              if (loader) loader.style.display = 'none';\n")
+          .append("              if (content) {\n")
+          .append("                  content.style.display = 'block';\n")
+          .append("                  content.innerHTML = '<div class=\"loading-placeholder\" style=\"color: #ff4b5c; border-color: rgba(255, 75, 92, 0.2);\">Failed to load video: ' + err.message + '</div>';\n")
+          .append("              }\n")
+          .append("          });\n")
+          .append("  }\n")
+          .append("  \n")
+          .append("  window.loadNewVideo = function(url) {\n")
+          .append("      history.pushState(null, '', '/watch?serviceId=0&id=' + encodeURIComponent(url));\n")
+          .append("      loadWatchContent(url);\n")
+          .append("  };\n")
+          .append("  \n")
+          .append("  document.addEventListener('DOMContentLoaded', () => {\n")
+          .append("      const urlParams = new URLSearchParams(window.location.search);\n")
+          .append("      const id = urlParams.get('id');\n")
+          .append("      if (id) loadWatchContent(id);\n")
+          .append("  });\n")
+          .append("</script>\n");
+
+        return wrapInTemplate("Loading video...", sb.toString(), isTv);
+    }
+
+    public static String renderWatchContent(int serviceId, StreamInfo info, CachedVideo cachedVideo, boolean isSubscribed, boolean isTv, String targetQuality, long duration) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<script>document.title = \"").append(escapeJs(info.getName())).append(" - LocalTube\";</script>\n");
         sb.append("<div class=\"container\">\n")
           .append("  <div class=\"player-container\">\n")
           .append("    <div class=\"player-layout\">\n")
@@ -809,7 +906,9 @@ public class HtmlRenderer {
                   .append("            <input type=\"range\" id=\"seek-bar\" min=\"0\" max=\"").append(duration).append("\" value=\"0\" step=\"0.1\" style=\"width:100%; height:5px; border-radius:3px; outline:none; background:rgba(255,255,255,0.35); cursor:pointer; margin:0; accent-color:#ff4b5c;\">\n")
                   .append("            <div style=\"display:flex; align-items:center; justify-content:space-between; color:#fff; font-family:inherit; font-size:13px;\">\n")
                   .append("              <div style=\"display:flex; align-items:center; gap:15px;\">\n")
+                  .append("                <button id=\"rewind-btn\" style=\"background:none; border:none; color:#fff; cursor:pointer; font-size:16px; padding:0; outline:none; transition:transform 0.1s;\">⏪</button>\n")
                   .append("                <button id=\"play-pause\" style=\"background:none; border:none; color:#fff; cursor:pointer; font-size:16px; padding:0; outline:none; transition:transform 0.1s;\">▮▮</button>\n")
+                  .append("                <button id=\"forward-btn\" style=\"background:none; border:none; color:#fff; cursor:pointer; font-size:16px; padding:0; outline:none; transition:transform 0.1s;\">⏩</button>\n")
                   .append("                <span id=\"time-display\">00:00 / 00:00</span>\n")
                   .append("              </div>\n")
                   .append("              <div style=\"display:flex; align-items:center; gap:15px;\">\n")
@@ -853,12 +952,14 @@ public class HtmlRenderer {
 
                 // Script for custom player controls and quality switching on the fly
                 sb.append("        <script>\n")
-                  .append("            document.addEventListener('DOMContentLoaded', () => {\n")
+                  .append("            (function() {\n")
                   .append("                const container = document.getElementById('video-container');\n")
                   .append("                const video = document.getElementById('player');\n")
                   .append("                const controls = document.getElementById('video-controls');\n")
                   .append("                const seekBar = document.getElementById('seek-bar');\n")
                   .append("                const playPauseBtn = document.getElementById('play-pause');\n")
+                  .append("                const rewindBtn = document.getElementById('rewind-btn');\n")
+                  .append("                const forwardBtn = document.getElementById('forward-btn');\n")
                   .append("                const bigPlayBtn = document.getElementById('big-play-btn');\n")
                   .append("                const timeDisplay = document.getElementById('time-display');\n")
                   .append("                const fullscreenBtn = document.getElementById('fullscreen-btn');\n")
@@ -867,14 +968,38 @@ public class HtmlRenderer {
                   .append("                const streamDuration = ").append(duration).append(";\n")
                   .append("                let seekOffset = 0;\n")
                   .append("                \n")
+                  .append("                window.seekVideo = (delta) => {\n")
+                  .append("                    const targetTime = Math.max(0, Math.min(streamDuration, seekOffset + video.currentTime + delta));\n")
+                  .append("                    seekOffset = targetTime;\n")
+                  .append("                    video.pause();\n")
+                  .append("                    const quality = selector ? selector.value : '720p';\n")
+                  .append("                    video.src = '/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("&quality=' + quality + '&start_time=' + targetTime;\n")
+                  .append("                    video.load();\n")
+                  .append("                    video.addEventListener('canplay', () => {\n")
+                  .append("                        video.play().then(() => {\n")
+                  .append("                            playPauseBtn.innerText = '▮▮';\n")
+                  .append("                        }).catch(err => console.error(err));\n")
+                  .append("                    }, { once: true });\n")
+                  .append("                };\n")
+                  .append("                \n")
+                  .append("                if (rewindBtn) rewindBtn.addEventListener('click', () => window.seekVideo(-10));\n")
+                  .append("                if (forwardBtn) forwardBtn.addEventListener('click', () => window.seekVideo(10));\n")
+                  .append("                \n")
                   .append("                const showLoader = () => loader.style.display = 'block';\n")
                   .append("                const hideLoader = () => loader.style.display = 'none';\n")
                   .append("                \n")
+                  .append("                video.addEventListener('loadstart', showLoader);\n")
                   .append("                video.addEventListener('waiting', showLoader);\n")
                   .append("                video.addEventListener('seeking', showLoader);\n")
                   .append("                video.addEventListener('seeked', hideLoader);\n")
                   .append("                video.addEventListener('playing', hideLoader);\n")
-                  .append("                video.addEventListener('canplay', hideLoader);\n")
+                  .append("                video.addEventListener('canplay', () => {\n")
+                  .append("                    hideLoader();\n")
+                  .append("                    video.play().then(() => {\n")
+                  .append("                        playPauseBtn.innerText = '▮▮';\n")
+                  .append("                        bigPlayBtn.style.display = 'none';\n")
+                  .append("                    }).catch(e => console.error('Autoplay prevented:', e));\n")
+                  .append("                });\n")
                   .append("                \n")
                   .append("                // Show/hide controls on hover\n")
                   .append("                container.addEventListener('mouseenter', () => controls.style.opacity = '1');\n")
@@ -975,7 +1100,7 @@ public class HtmlRenderer {
                   .append("                        }, { once: true });\n")
                   .append("                    });\n")
                   .append("                }\n")
-                  .append("            });\n")
+                  .append("            })();\n")
                   .append("        </script>\n");
             }
         } else {
@@ -994,7 +1119,7 @@ public class HtmlRenderer {
               .append("          Your browser does not support the HTML5 audio tag.\n")
               .append("        </audio>\n")
               .append("        <script>\n")
-              .append("            document.addEventListener('DOMContentLoaded', () => {\n")
+              .append("            (function() {\n")
               .append("                const audio = document.getElementById('audio-player');\n")
               .append("                const streamDuration = ").append(duration).append(";\n")
               .append("                if (audio && streamDuration > 0) {\n")
@@ -1009,7 +1134,7 @@ public class HtmlRenderer {
               .append("                    audio.addEventListener('loadedmetadata', setDuration);\n")
               .append("                    if (audio.readyState >= 1) setDuration();\n")
               .append("                }\n")
-              .append("            });\n")
+              .append("            })();\n")
               .append("        </script>\n");
         }
 
@@ -1075,7 +1200,7 @@ public class HtmlRenderer {
           .append("  </div>\n")
           .append("</div>\n");
 
-        return wrapInTemplate(info.getName(), sb.toString(), isTv);
+        return sb.toString();
     }
 
     public static String renderChannel(int serviceId, ChannelExtractor channel, String activeTab, List<InfoItem> items, Page nextPage, boolean isSubscribed, boolean isTv) throws Exception {

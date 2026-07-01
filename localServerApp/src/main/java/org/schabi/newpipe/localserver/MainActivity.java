@@ -44,9 +44,19 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
     private Button btnForceRelease;
     private com.google.android.material.card.MaterialCardView cardPlayLock;
 
-    private View cardServerRemote;
-    private Button remoteLeft, remoteRight, remoteEnter, remoteBack;
-    private Button remoteRewind, remotePlayPause, remoteForward;
+    private Button btnLaunchRemote;
+
+    private final LocalHttpServer.LockStatusListener lockStatusListener = new LocalHttpServer.LockStatusListener() {
+        @Override
+        public void onLockStatusChanged() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    updateLockUi();
+                }
+            });
+        }
+    };
 
     private ServerService serverService;
     private boolean isBound = false;
@@ -130,22 +140,16 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
         btnForceRelease = findViewById(R.id.btn_force_release);
         cardPlayLock = findViewById(R.id.card_play_lock);
 
-        cardServerRemote = findViewById(R.id.card_server_remote);
-        remoteLeft = findViewById(R.id.remote_left);
-        remoteRight = findViewById(R.id.remote_right);
-        remoteEnter = findViewById(R.id.remote_enter);
-        remoteBack = findViewById(R.id.remote_back);
-        remoteRewind = findViewById(R.id.remote_rewind);
-        remotePlayPause = findViewById(R.id.remote_play_pause);
-        remoteForward = findViewById(R.id.remote_forward);
-
-        setupRemoteButton(remoteLeft, "left");
-        setupRemoteButton(remoteRight, "right");
-        setupRemoteButton(remoteEnter, "enter");
-        setupRemoteButton(remoteBack, "back");
-        setupRemoteButton(remoteRewind, "rewind");
-        setupRemoteButton(remotePlayPause, "play_pause");
-        setupRemoteButton(remoteForward, "forward");
+        btnLaunchRemote = findViewById(R.id.btn_launch_remote);
+        if (btnLaunchRemote != null) {
+            btnLaunchRemote.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(MainActivity.this, RemoteActivity.class);
+                    startActivity(intent);
+                }
+            });
+        }
 
         if (btnForceRelease != null) {
             btnForceRelease.setOnClickListener(new View.OnClickListener() {
@@ -158,17 +162,7 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
             });
         }
 
-        LocalHttpServer.setLockStatusListener(new LocalHttpServer.LockStatusListener() {
-            @Override
-            public void onLockStatusChanged() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateLockUi();
-                    }
-                });
-            }
-        });
+
 
         if (textLogsTitle != null && cardLogs != null) {
             textLogsTitle.setOnClickListener(new View.OnClickListener() {
@@ -307,36 +301,8 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
             btnForceRelease.setEnabled(false);
         }
 
-        if (cardServerRemote != null) {
-            cardServerRemote.setAlpha(locked ? 1.0f : 0.5f);
-        }
-        setButtonEnabled(remoteLeft, locked);
-        setButtonEnabled(remoteRight, locked);
-        setButtonEnabled(remoteEnter, locked);
-        setButtonEnabled(remoteBack, locked);
-        setButtonEnabled(remoteRewind, locked);
-        setButtonEnabled(remotePlayPause, locked);
-        setButtonEnabled(remoteForward, locked);
-    }
-
-    private void setButtonEnabled(Button btn, boolean enabled) {
-        if (btn != null) {
-            btn.setEnabled(enabled);
-            btn.setClickable(enabled);
-        }
-    }
-
-    private void setupRemoteButton(Button btn, final String command) {
-        if (btn != null) {
-            btn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (LocalHttpServer.isLocked()) {
-                        LocalHttpServer.addPendingCommand(command);
-                        Toast.makeText(MainActivity.this, "Sent: " + command, Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
+        if (btnLaunchRemote != null) {
+            btnLaunchRemote.setEnabled(true);
         }
     }
 
@@ -346,20 +312,20 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
             String command = null;
             switch (keyCode) {
                 case android.view.KeyEvent.KEYCODE_DPAD_UP:
-                    command = "up";
+                    command = "pointer_move:0,-40";
                     break;
                 case android.view.KeyEvent.KEYCODE_DPAD_DOWN:
-                    command = "down";
+                    command = "pointer_move:0,40";
                     break;
                 case android.view.KeyEvent.KEYCODE_DPAD_LEFT:
-                    command = "left";
+                    command = "pointer_move:-40,0";
                     break;
                 case android.view.KeyEvent.KEYCODE_DPAD_RIGHT:
-                    command = "right";
+                    command = "pointer_move:40,0";
                     break;
                 case android.view.KeyEvent.KEYCODE_DPAD_CENTER:
                 case android.view.KeyEvent.KEYCODE_ENTER:
-                    command = "enter";
+                    command = "pointer_click";
                     break;
                 case android.view.KeyEvent.KEYCODE_BACK:
                     command = "back";
@@ -483,7 +449,14 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
     @Override
     protected void onResume() {
         super.onResume();
+        LocalHttpServer.setLockStatusListener(lockStatusListener);
         updateUi();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalHttpServer.setLockStatusListener(null);
     }
 
     @Override
@@ -496,7 +469,6 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
             isBound = false;
         }
         LocalHttpServer.setLogListener(null);
-        LocalHttpServer.setLockStatusListener(null);
         super.onDestroy();
     }
 
