@@ -518,6 +518,15 @@ public class HtmlRenderer {
                 "                vptrX = Math.max(0, Math.min(window.innerWidth, vptrX + dx));\n" +
                 "                vptrY = Math.max(0, Math.min(window.innerHeight, vptrY + dy));\n" +
                 "                if (vptr) { vptr.style.left = vptrX + 'px'; vptr.style.top = vptrY + 'px'; }\n" +
+                "                const el = document.elementFromPoint(vptrX, vptrY);\n" +
+                "                if (el) {\n" +
+                "                    const isOverPlayer = el.closest('#video-container') !== null;\n" +
+                "                    const controls = document.getElementById('video-controls');\n" +
+                "                    if (controls) {\n" +
+                "                        controls.style.opacity = isOverPlayer ? '1' : '0';\n" +
+                "                        controls.style.pointerEvents = isOverPlayer ? 'auto' : 'none';\n" +
+                "                    }\n" +
+                "                }\n" +
                 "            }\n" +
                 "            function clickVptr() {\n" +
                 "                if (vptr) vptr.style.transform = 'translate(-50%,-50%) scale(0.7)';\n" +
@@ -531,16 +540,65 @@ public class HtmlRenderer {
                 "                }\n" +
                 "            }\n" +
                 "            \n" +
+                "            window.playVideoSPA = function(url) {\n" +
+                "                history.pushState(null, '', '/watch?serviceId=0&id=' + encodeURIComponent(url));\n" +
+                "                let container = document.querySelector('.container');\n" +
+                "                if (container) {\n" +
+                "                    container.outerHTML = '<div id=\"watch-container-loader\" style=\"text-align: center; padding: 100px 0; font-family: inherit;\">' +\n" +
+                "                      '  <div style=\"display: inline-block; width: 60px; height: 60px; border: 4px solid rgba(124, 58, 237, 0.1); border-top: 4px solid #7c3aed; border-radius: 50%; animation: spin 1.5s linear infinite;\"></div>' +\n" +
+                "                      '  <div style=\"margin-top: 24px; font-size: 16px; font-weight: 500; color: var(--text-color);\">Loading video streams...</div>' +\n" +
+                "                      '</div>' +\n" +
+                "                      '<div id=\"watch-content\" style=\"display: none;\"></div>';\n" +
+                "                } else {\n" +
+                "                    window.location.href = '/watch?serviceId=0&id=' + encodeURIComponent(url);\n" +
+                "                    return;\n" +
+                "                }\n" +
+                "                if (!document.getElementById('spa-spin-style')) {\n" +
+                "                    const style = document.createElement('style');\n" +
+                "                    style.id = 'spa-spin-style';\n" +
+                "                    style.innerHTML = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';\n" +
+                "                    document.head.appendChild(style);\n" +
+                "                }\n" +
+                "                const loader = document.getElementById('watch-container-loader');\n" +
+                "                const content = document.getElementById('watch-content');\n" +
+                "                fetch('/watch-content?id=' + encodeURIComponent(url))\n" +
+                "                    .then(res => {\n" +
+                "                        if (!res.ok) throw new Error('HTTP ' + res.status);\n" +
+                "                        return res.text();\n" +
+                "                    })\n" +
+                "                    .then(html => {\n" +
+                "                        if (loader) loader.remove();\n" +
+                "                        if (content) {\n" +
+                "                            content.style.display = 'block';\n" +
+                "                            content.outerHTML = html;\n" +
+                "                            const newContainer = document.querySelector('.container');\n" +
+                "                            if (newContainer) {\n" +
+                "                                newContainer.querySelectorAll('script').forEach(oldScript => {\n" +
+                "                                    const newScript = document.createElement('script');\n" +
+                "                                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));\n" +
+                "                                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));\n" +
+                "                                    oldScript.parentNode.replaceChild(newScript, oldScript);\n" +
+                "                                });\n" +
+                "                            }\n" +
+                "                        }\n" +
+                "                    })\n" +
+                "                    .catch(err => {\n" +
+                "                        if (loader) loader.remove();\n" +
+                "                        const errDiv = document.createElement('div');\n" +
+                "                        errDiv.className = 'loading-placeholder';\n" +
+                "                        errDiv.style.color = '#ff4b5c';\n" +
+                "                        errDiv.style.borderColor = 'rgba(255, 75, 92, 0.2)';\n" +
+                "                        errDiv.innerText = 'Failed to load video: ' + err.message;\n" +
+                "                        document.body.appendChild(errDiv);\n" +
+                "                    });\n" +
+                "            };\n" +
+                "            \n" +
                 "            window.wsConnection = new WebSocket('ws://' + location.hostname + ':8081');\n" +
                 "            window.wsConnection.onmessage = function(event) {\n" +
                 "                const cmd = event.data;\n" +
                 "                if (cmd.startsWith('play_video:')) {\n" +
                 "                    const url = cmd.substring('play_video:'.length);\n" +
-                "                    if (window.location.pathname === '/watch' && typeof window.loadNewVideo === 'function') {\n" +
-                "                        window.loadNewVideo(url);\n" +
-                "                    } else {\n" +
-                "                        window.location.href = '/watch?serviceId=0&id=' + encodeURIComponent(url);\n" +
-                "                    }\n" +
+                "                    window.playVideoSPA(url);\n" +
                 "                } else if (cmd.startsWith('pointer_move:')) {\n" +
                 "                    const parts = cmd.substring('pointer_move:'.length).split(',');\n" +
                 "                    const dx = parseFloat(parts[0]) || 0;\n" +
@@ -902,7 +960,7 @@ public class HtmlRenderer {
                   .append("          </video>\n")
                   .append("          <div id=\"video-loader\" style=\"position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:50px; height:50px; border:4px solid rgba(255,255,255,0.25); border-top:4px solid #ff4b5c; border-radius:50%; animation:spin 1s linear infinite; display:block; z-index:11; pointer-events:none;\"></div>\n")
                   .append("          <div id=\"big-play-btn\" style=\"position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:60px; height:60px; background:rgba(0,0,0,0.6); border-radius:50%; display:none; align-items:center; justify-content:center; font-size:24px; color:#fff; cursor:pointer; z-index:12; border: 2px solid rgba(255,255,255,0.25); transition: background-color 0.2s;\">▶</div>\n")
-                  .append("          <div id=\"video-controls\" style=\"position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.85)); padding:15px; display:flex; flex-direction:column; gap:8px; opacity:0; transition:opacity 0.25s; z-index:10;\">\n")
+                  .append("          <div id=\"video-controls\" style=\"position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.85)); padding:15px; display:flex; flex-direction:column; gap:8px; opacity:0; pointer-events:none; transition:opacity 0.25s; z-index:10;\">\n")
                   .append("            <input type=\"range\" id=\"seek-bar\" min=\"0\" max=\"").append(duration).append("\" value=\"0\" step=\"0.1\" style=\"width:100%; height:5px; border-radius:3px; outline:none; background:rgba(255,255,255,0.35); cursor:pointer; margin:0; accent-color:#ff4b5c;\">\n")
                   .append("            <div style=\"display:flex; align-items:center; justify-content:space-between; color:#fff; font-family:inherit; font-size:13px;\">\n")
                   .append("              <div style=\"display:flex; align-items:center; gap:15px;\">\n")
@@ -1002,8 +1060,16 @@ public class HtmlRenderer {
                   .append("                });\n")
                   .append("                \n")
                   .append("                // Show/hide controls on hover\n")
-                  .append("                container.addEventListener('mouseenter', () => controls.style.opacity = '1');\n")
-                  .append("                container.addEventListener('mouseleave', () => controls.style.opacity = '0');\n")
+                  .append("                const showControls = () => {\n")
+                  .append("                    controls.style.opacity = '1';\n")
+                  .append("                    controls.style.pointerEvents = 'auto';\n")
+                  .append("                };\n")
+                  .append("                const hideControls = () => {\n")
+                  .append("                    controls.style.opacity = '0';\n")
+                  .append("                    controls.style.pointerEvents = 'none';\n")
+                  .append("                };\n")
+                  .append("                container.addEventListener('mouseenter', showControls);\n")
+                  .append("                container.addEventListener('mouseleave', hideControls);\n")
                   .append("                \n")
                   .append("                // Play / Pause toggling\n")
                   .append("                const togglePlay = () => {\n")
