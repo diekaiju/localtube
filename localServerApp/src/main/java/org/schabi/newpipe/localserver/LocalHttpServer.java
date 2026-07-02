@@ -670,72 +670,7 @@ public class LocalHttpServer {
                     String targetQuality = qualityParam != null ? qualityParam : dbHelper.getVideoQuality();
                     int targetHeight = getResolutionHeight(targetQuality);
 
-                    if (targetHeight > 360) {
-                        List<VideoStream> videoOnlyStreams = extractor.getVideoOnlyStreams();
-                        VideoStream selectedVideo = null;
-                        int bestVideoHeight = -1;
-                        if (videoOnlyStreams != null) {
-                            for (VideoStream stream : videoOnlyStreams) {
-                                int height = getResolutionHeight(stream.getResolution());
-                                if (height <= targetHeight) {
-                                    if (height > bestVideoHeight) {
-                                        bestVideoHeight = height;
-                                        selectedVideo = stream;
-                                    }
-                                }
-                            }
-                            if (selectedVideo == null && !videoOnlyStreams.isEmpty()) {
-                                selectedVideo = videoOnlyStreams.get(0);
-                            }
-                        }
 
-                        List<AudioStream> audioStreams = extractor.getAudioStreams();
-                        AudioStream selectedAudio = null;
-                        int bestAudioBitrate = -1;
-                        if (audioStreams != null) {
-                            for (AudioStream stream : audioStreams) {
-                                int bitrate = stream.getBitrate();
-                                if (bitrate > bestAudioBitrate) {
-                                    bestAudioBitrate = bitrate;
-                                    selectedAudio = stream;
-                                }
-                            }
-                        }
-
-                        if (selectedVideo != null && selectedAudio != null) {
-                            String videoUrl = selectedVideo.getContent();
-                            String audioUrl = selectedAudio.getContent();
-                            log("Remuxing on the fly: videoHeight=" + bestVideoHeight + " (" + selectedVideo.getResolution() + ") + audioBitrate=" + bestAudioBitrate + " start_time=" + startTime + " for id=" + mediaUrl);
-                            
-                            String pipePath = com.arthenica.ffmpegkit.FFmpegKitConfig.registerNewFFmpegPipe(context);
-                            String cmd;
-                            if (startTime > 0) {
-                                cmd = "-y -ss " + startTime + " -i \"" + videoUrl + "\" -ss " + startTime + " -i \"" + audioUrl + "\" -c:v copy -c:a copy -f mp4 -movflags frag_keyframe+empty_moov \"" + pipePath + "\"";
-                            } else {
-                                cmd = "-y -i \"" + videoUrl + "\" -i \"" + audioUrl + "\" -c:v copy -c:a copy -f mp4 -movflags frag_keyframe+empty_moov \"" + pipePath + "\"";
-                            }
-                            
-                            com.arthenica.ffmpegkit.FFmpegKit.executeAsync(cmd, session -> {});
-                            
-                            try (java.io.FileInputStream fis = new java.io.FileInputStream(pipePath)) {
-                                String headers = "HTTP/1.1 200 OK\r\n" +
-                                                 "Content-Type: video/mp4\r\n" +
-                                                 "Access-Control-Allow-Origin: *\r\n" +
-                                                 "Connection: close\r\n\r\n";
-                                os.write(headers.getBytes("UTF-8"));
-                                
-                                byte[] buffer = new byte[16384];
-                                int read;
-                                while ((read = fis.read(buffer)) != -1) {
-                                    os.write(buffer, 0, read);
-                                    os.flush();
-                                }
-                            } finally {
-                                com.arthenica.ffmpegkit.FFmpegKitConfig.closeFFmpegPipe(pipePath);
-                            }
-                            return;
-                        }
-                    }
 
                     // Fallback to progressive stream
                     List<VideoStream> progressiveStreams = extractor.getVideoStreams();

@@ -422,6 +422,8 @@ public class HtmlRenderer {
                 "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
                 "    <title>" + title + "</title>\n" +
                 "    <link rel=\"icon\" type=\"image/svg+xml\" href=\"" + favicon + "\">\n" +
+                "    <link href=\"https://vjs.zencdn.net/8.10.0/video-js.css\" rel=\"stylesheet\" />\n" +
+                "    <script src=\"https://vjs.zencdn.net/8.10.0/video.min.js\"></script>\n" +
                 "    <style>\n" + CSS + "\n" +
                 "        /* Glow border outline style for selected/focused interactive elements */\n" +
                 "        a:focus, button:focus, input:focus, select:focus, textarea:focus, [tabindex=\"0\"]:focus {\n" +
@@ -614,22 +616,36 @@ public class HtmlRenderer {
                 "                } else if (cmd === 'back') {\n" +
                 "                    if (window.history.length > 1) window.history.back();\n" +
                 "                } else if (cmd === 'play_pause') {\n" +
-                "                    const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
-                "                    if (media) {\n" +
-                "                        if (media.readyState < 2) {\n" +
-                "                            const loader = document.getElementById('video-loader');\n" +
-                "                            if (loader) loader.style.display = 'block';\n" +
-                "                            media.play().catch(e => {});\n" +
+                "                    if (window.videoPlayer) {\n" +
+                "                        if (window.videoPlayer.paused()) {\n" +
+                "                            window.videoPlayer.play().catch(e => {});\n" +
                 "                        } else {\n" +
-                "                            if (media.paused) media.play().catch(e => {}); else media.pause();\n" +
+                "                            window.videoPlayer.pause();\n" +
+                "                        }\n" +
+                "                    } else {\n" +
+                "                        const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
+                "                        if (media) {\n" +
+                "                            if (media.readyState < 2) {\n" +
+                "                                const loader = document.getElementById('video-loader');\n" +
+                "                                if (loader) loader.style.display = 'block';\n" +
+                "                                media.play().catch(e => {});\n" +
+                "                            } else {\n" +
+                "                                if (media.paused) media.play().catch(e => {}); else media.pause();\n" +
+                "                            }\n" +
                 "                        }\n" +
                 "                    }\n" +
                 "                } else if (cmd === 'forward') {\n" +
-                "                    const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
-                "                    if (media) media.currentTime += 10;\n" +
+                "                    if (typeof window.seekVideo === 'function') window.seekVideo(10);\n" +
+                "                    else {\n" +
+                "                        const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
+                "                        if (media) media.currentTime += 10;\n" +
+                "                    }\n" +
                 "                } else if (cmd === 'rewind') {\n" +
-                "                    const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
-                "                    if (media) media.currentTime -= 10;\n" +
+                "                    if (typeof window.seekVideo === 'function') window.seekVideo(-10);\n" +
+                "                    else {\n" +
+                "                        const media = document.getElementById('player') || document.getElementById('audio-player');\n" +
+                "                        if (media) media.currentTime -= 10;\n" +
+                "                    }\n" +
                 "                }\n" +
                 "            };\n" +
                 "            window.wsConnection.onclose = function() {\n" +
@@ -939,41 +955,35 @@ public class HtmlRenderer {
         boolean hasVideo = !info.getVideoStreams().isEmpty() || !info.getVideoOnlyStreams().isEmpty() || (info.getHlsUrl() != null && !info.getHlsUrl().isEmpty());
         if (hasVideo) {
             boolean isCached = cachedVideo != null && "COMPLETED".equals(cachedVideo.getStatus());
+            String defaultQuality = targetQuality != null ? targetQuality : "720p";
             
             if (isCached) {
-                sb.append("        <video id=\"player\" controls autoplay class=\"native-player\" poster=\"/thumbnail?id=").append(encodeUrl(info.getUrl())).append("\">\n")
-                  .append("          <source src=\"/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" type=\"video/mp4\">\n")
-                  .append("        </video>\n");
-            } else {
-                // Serve combined/remuxed video stream directly via custom HTML player controls
-                String defaultQuality = targetQuality != null ? targetQuality : "720p";
-                sb.append("        <style>\n")
-                  .append("          @keyframes spin {\n")
-                  .append("            0% { transform: translate(-50%, -50%) rotate(0deg); }\n")
-                  .append("            100% { transform: translate(-50%, -50%) rotate(360deg); }\n")
-                  .append("          }\n")
-                  .append("        </style>\n");
-                sb.append("        <div id=\"video-container\" style=\"position:relative; width:100%; border-radius:12px; overflow:hidden; background:#000;\">\n")
-                  .append("          <video id=\"player\" autoplay class=\"native-player\" style=\"width:100%; display:block;\">\n")
-                  .append("            <source id=\"video-source\" src=\"/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("&quality=").append(defaultQuality).append("\" type=\"video/mp4\">\n")
-                  .append("            Your browser does not support the HTML5 video tag.\n")
+                sb.append("        <div style=\"width:100%; border-radius:12px; overflow:hidden; background:#000;\">\n")
+                  .append("          <video id=\"player\" class=\"video-js vjs-default-skin vjs-big-play-centered\" controls autoplay preload=\"auto\" style=\"width:100%; height:auto; aspect-ratio:16/9; display:block;\" poster=\"/thumbnail?id=").append(encodeUrl(info.getUrl())).append("\">\n")
+                  .append("            <source src=\"/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" type=\"video/mp4\">\n")
                   .append("          </video>\n")
-                  .append("          <div id=\"video-loader\" style=\"position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:50px; height:50px; border:4px solid rgba(255,255,255,0.25); border-top:4px solid #ff4b5c; border-radius:50%; animation:spin 1s linear infinite; display:block; z-index:11; pointer-events:none;\"></div>\n")
-                  .append("          <div id=\"big-play-btn\" style=\"position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:60px; height:60px; background:rgba(0,0,0,0.6); border-radius:50%; display:none; align-items:center; justify-content:center; font-size:24px; color:#fff; cursor:pointer; z-index:12; border: 2px solid rgba(255,255,255,0.25); transition: background-color 0.2s;\">▶</div>\n")
-                  .append("          <div id=\"video-controls\" style=\"position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.85)); padding:15px; display:flex; flex-direction:column; gap:8px; opacity:0; pointer-events:none; transition:opacity 0.25s; z-index:10;\">\n")
-                  .append("            <input type=\"range\" id=\"seek-bar\" min=\"0\" max=\"").append(duration).append("\" value=\"0\" step=\"0.1\" style=\"width:100%; height:5px; border-radius:3px; outline:none; background:rgba(255,255,255,0.35); cursor:pointer; margin:0; accent-color:#ff4b5c;\">\n")
-                  .append("            <div style=\"display:flex; align-items:center; justify-content:space-between; color:#fff; font-family:inherit; font-size:13px;\">\n")
-                  .append("              <div style=\"display:flex; align-items:center; gap:15px;\">\n")
-                  .append("                <button id=\"rewind-btn\" style=\"background:none; border:none; color:#fff; cursor:pointer; font-size:16px; padding:0; outline:none; transition:transform 0.1s;\">⏪</button>\n")
-                  .append("                <button id=\"play-pause\" style=\"background:none; border:none; color:#fff; cursor:pointer; font-size:16px; padding:0; outline:none; transition:transform 0.1s;\">▮▮</button>\n")
-                  .append("                <button id=\"forward-btn\" style=\"background:none; border:none; color:#fff; cursor:pointer; font-size:16px; padding:0; outline:none; transition:transform 0.1s;\">⏩</button>\n")
-                  .append("                <span id=\"time-display\">00:00 / 00:00</span>\n")
-                  .append("              </div>\n")
-                  .append("              <div style=\"display:flex; align-items:center; gap:15px;\">\n")
-                  .append("                <button id=\"fullscreen-btn\" style=\"background:none; border:none; color:#fff; cursor:pointer; font-size:16px; padding:0; outline:none;\">⛶</button>\n")
-                  .append("              </div>\n")
-                  .append("            </div>\n")
-                  .append("          </div>\n")
+                  .append("        </div>\n");
+
+                sb.append("        <script>\n")
+                  .append("            (function() {\n")
+                  .append("                const player = videojs('player', {\n")
+                  .append("                    playbackRates: [0.5, 1, 1.25, 1.5, 2]\n")
+                  .append("                });\n")
+                  .append("                window.videoPlayer = player;\n")
+                  .append("                player.ready(() => {\n")
+                  .append("                    player.play().catch(err => console.error(err));\n")
+                  .append("                });\n")
+                  .append("                window.seekVideo = (delta) => {\n")
+                  .append("                    player.currentTime(Math.max(0, Math.min(player.duration() || 0, player.currentTime() + delta)));\n")
+                  .append("                };\n")
+                  .append("            })();\n")
+                  .append("        </script>\n");
+            } else {
+                sb.append("        <div style=\"width:100%; border-radius:12px; overflow:hidden; background:#000;\">\n")
+                  .append("          <video id=\"player\" class=\"video-js vjs-default-skin vjs-big-play-centered\" controls autoplay preload=\"auto\" style=\"width:100%; height:auto; aspect-ratio:16/9; display:block;\">\n")
+                  .append("            <source src=\"/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("&quality=").append(defaultQuality).append("\" type=\"video/mp4\">\n")
+                  .append("            Your browser does not support HTML5 video.\n")
+                  .append("          </video>\n")
                   .append("        </div>\n");
 
                 // Generate quality selector HTML options
@@ -1008,162 +1018,47 @@ public class HtmlRenderer {
                   .append("          </div>\n")
                   .append("        </div>\n");
 
-                // Script for custom player controls and quality switching on the fly
+                // Script for player quality switching and remote commands
                 sb.append("        <script>\n")
                   .append("            (function() {\n")
-                  .append("                const container = document.getElementById('video-container');\n")
-                  .append("                const video = document.getElementById('player');\n")
-                  .append("                const controls = document.getElementById('video-controls');\n")
-                  .append("                const seekBar = document.getElementById('seek-bar');\n")
-                  .append("                const playPauseBtn = document.getElementById('play-pause');\n")
-                  .append("                const rewindBtn = document.getElementById('rewind-btn');\n")
-                  .append("                const forwardBtn = document.getElementById('forward-btn');\n")
-                  .append("                const bigPlayBtn = document.getElementById('big-play-btn');\n")
-                  .append("                const timeDisplay = document.getElementById('time-display');\n")
-                  .append("                const fullscreenBtn = document.getElementById('fullscreen-btn');\n")
+                  .append("                const player = videojs('player', {\n")
+                  .append("                    playbackRates: [0.5, 1, 1.25, 1.5, 2]\n")
+                  .append("                });\n")
+                  .append("                window.videoPlayer = player;\n")
+                  .append("                player.ready(() => {\n")
+                  .append("                    player.play().catch(err => console.error(err));\n")
+                  .append("                });\n")
+                  .append("                \n")
                   .append("                const selector = document.getElementById('quality-select');\n")
-                  .append("                const loader = document.getElementById('video-loader');\n")
                   .append("                const streamDuration = ").append(duration).append(";\n")
-                  .append("                let seekOffset = 0;\n")
                   .append("                \n")
-                  .append("                window.seekVideo = (delta) => {\n")
-                  .append("                    const targetTime = Math.max(0, Math.min(streamDuration, seekOffset + video.currentTime + delta));\n")
-                  .append("                    seekOffset = targetTime;\n")
-                  .append("                    video.pause();\n")
-                  .append("                    const quality = selector ? selector.value : '720p';\n")
-                  .append("                    video.src = '/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("&quality=' + quality + '&start_time=' + targetTime;\n")
-                  .append("                    video.load();\n")
-                  .append("                    video.addEventListener('canplay', () => {\n")
-                  .append("                        video.play().then(() => {\n")
-                  .append("                            playPauseBtn.innerText = '▮▮';\n")
-                  .append("                        }).catch(err => console.error(err));\n")
-                  .append("                    }, { once: true });\n")
-                  .append("                };\n")
-                  .append("                \n")
-                  .append("                if (rewindBtn) rewindBtn.addEventListener('click', () => window.seekVideo(-10));\n")
-                  .append("                if (forwardBtn) forwardBtn.addEventListener('click', () => window.seekVideo(10));\n")
-                  .append("                \n")
-                  .append("                const showLoader = () => loader.style.display = 'block';\n")
-                  .append("                const hideLoader = () => loader.style.display = 'none';\n")
-                  .append("                \n")
-                  .append("                video.addEventListener('loadstart', showLoader);\n")
-                  .append("                video.addEventListener('waiting', showLoader);\n")
-                  .append("                video.addEventListener('seeking', showLoader);\n")
-                  .append("                video.addEventListener('seeked', hideLoader);\n")
-                  .append("                video.addEventListener('playing', hideLoader);\n")
-                  .append("                video.addEventListener('canplay', () => {\n")
-                  .append("                    hideLoader();\n")
-                  .append("                    video.play().then(() => {\n")
-                  .append("                        playPauseBtn.innerText = '▮▮';\n")
-                  .append("                        bigPlayBtn.style.display = 'none';\n")
-                  .append("                    }).catch(e => console.error('Autoplay prevented:', e));\n")
-                  .append("                });\n")
-                  .append("                \n")
-                  .append("                // Show/hide controls on hover\n")
-                  .append("                const showControls = () => {\n")
-                  .append("                    controls.style.opacity = '1';\n")
-                  .append("                    controls.style.pointerEvents = 'auto';\n")
-                  .append("                };\n")
-                  .append("                const hideControls = () => {\n")
-                  .append("                    controls.style.opacity = '0';\n")
-                  .append("                    controls.style.pointerEvents = 'none';\n")
-                  .append("                };\n")
-                  .append("                container.addEventListener('mouseenter', showControls);\n")
-                  .append("                container.addEventListener('mouseleave', hideControls);\n")
-                  .append("                \n")
-                  .append("                // Play / Pause toggling\n")
-                  .append("                const togglePlay = () => {\n")
-                  .append("                    if (video.paused) {\n")
-                  .append("                        video.play().catch(err => console.error(err));\n")
-                  .append("                    } else {\n")
-                  .append("                        video.pause();\n")
-                  .append("                    }\n")
-                  .append("                };\n")
-                  .append("                playPauseBtn.addEventListener('click', togglePlay);\n")
-                  .append("                bigPlayBtn.addEventListener('click', togglePlay);\n")
-                  .append("                video.addEventListener('click', togglePlay);\n")
-                  .append("                \n")
-                  .append("                video.addEventListener('play', () => {\n")
-                  .append("                    bigPlayBtn.style.display = 'none';\n")
-                  .append("                    playPauseBtn.innerText = '▮▮';\n")
-                  .append("                });\n")
-                  .append("                video.addEventListener('pause', () => {\n")
-                  .append("                    bigPlayBtn.style.display = 'flex';\n")
-                  .append("                    playPauseBtn.innerText = '▶';\n")
-                  .append("                });\n")
-                  .append("                \n")
-                  .append("                // Initialize play/pause state\n")
-                  .append("                if (video.paused) {\n")
-                  .append("                    bigPlayBtn.style.display = 'flex';\n")
-                  .append("                    playPauseBtn.innerText = '▶';\n")
-                  .append("                } else {\n")
-                  .append("                    bigPlayBtn.style.display = 'none';\n")
-                  .append("                    playPauseBtn.innerText = '▮▮';\n")
+                  .append("                // Extract initial start time if available\n")
+                  .append("                const urlParams = new URLSearchParams(window.location.search);\n")
+                  .append("                let initialStartTime = parseFloat(urlParams.get('start_time')) || 0;\n")
+                  .append("                if (initialStartTime > 0) {\n")
+                  .append("                    player.ready(() => {\n")
+                  .append("                        player.currentTime(initialStartTime);\n")
+                  .append("                    });\n")
                   .append("                }\n")
                   .append("                \n")
-                  .append("                // Format time format: MM:SS\n")
-                  .append("                const formatTime = (secs) => {\n")
-                  .append("                    const m = Math.floor(secs / 60).toString().padStart(2, '0');\n")
-                  .append("                    const s = Math.floor(secs % 60).toString().padStart(2, '0');\n")
-                  .append("                    return m + ':' + s;\n")
-                  .append("                };\n")
+                  .append("                window.seekVideo = (delta) => {\n")
+                  .append("                    const targetTime = Math.max(0, Math.min(streamDuration || player.duration() || 0, player.currentTime() + delta));\n")
+                  .append("                    player.currentTime(targetTime);\n");
+                sb.append("                };\n")
                   .append("                \n")
-                  .append("                const totalTimeStr = formatTime(streamDuration);\n")
-                  .append("                timeDisplay.innerText = '00:00 / ' + totalTimeStr;\n")
-                  .append("                \n")
-                  .append("                // Track updates on playhead\n")
-                  .append("                let isDragging = false;\n")
-                  .append("                video.addEventListener('timeupdate', () => {\n")
-                  .append("                    if (!isDragging) {\n")
-                  .append("                        const displayTime = seekOffset + video.currentTime;\n")
-                  .append("                        seekBar.value = displayTime;\n")
-                  .append("                        timeDisplay.innerText = formatTime(displayTime) + ' / ' + totalTimeStr;\n")
-                  .append("                    }\n")
-                  .append("                });\n")
-                  .append("                \n")
-                  .append("                // Seek bar listeners\n")
-                  .append("                seekBar.addEventListener('input', () => {\n")
-                  .append("                    isDragging = true;\n")
-                  .append("                    timeDisplay.innerText = formatTime(seekBar.value) + ' / ' + totalTimeStr;\n")
-                  .append("                });\n")
-                  .append("                seekBar.addEventListener('change', () => {\n")
-                  .append("                    const targetTime = parseFloat(seekBar.value);\n")
-                  .append("                    seekOffset = targetTime;\n")
-                  .append("                    video.pause();\n")
-                  .append("                    const quality = selector ? selector.value : '720p';\n")
-                  .append("                    video.src = '/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("&quality=' + quality + '&start_time=' + targetTime;\n")
-                  .append("                    video.load();\n")
-                  .append("                    video.addEventListener('canplay', () => {\n")
-                  .append("                        video.play().then(() => {\n")
-                  .append("                            playPauseBtn.innerText = '▮▮';\n")
-                  .append("                        }).catch(err => console.error(err));\n")
-                  .append("                    }, { once: true });\n")
-                  .append("                    isDragging = false;\n")
-                  .append("                });\n")
-                  .append("                \n")
-                  .append("                // Fullscreen toggle\n")
-                  .append("                fullscreenBtn.addEventListener('click', () => {\n")
-                  .append("                    if (!document.fullscreenElement) {\n")
-                  .append("                        container.requestFullscreen().catch(err => console.error(err));\n")
-                  .append("                    } else {\n")
-                  .append("                        document.exitFullscreen();\n")
-                  .append("                    }\n")
-                  .append("                });\n")
-                  .append("                \n")
-                  .append("                // Quality selector switching\n")
                   .append("                if (selector) {\n")
                   .append("                    selector.addEventListener('change', () => {\n")
                   .append("                        const quality = selector.value;\n")
-                  .append("                        const targetTime = seekOffset + video.currentTime;\n")
-                  .append("                        seekOffset = targetTime;\n")
-                  .append("                        video.pause();\n")
-                  .append("                        video.src = '/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("&quality=' + quality + '&start_time=' + targetTime;\n")
-                  .append("                        video.load();\n")
-                  .append("                        video.addEventListener('canplay', () => {\n")
-                  .append("                            video.play().then(() => {\n")
-                  .append("                                playPauseBtn.innerText = '▮▮';\n")
-                  .append("                            }).catch(err => console.error(err));\n")
-                  .append("                        }, { once: true });\n")
+                  .append("                        const targetTime = player.currentTime();\n")
+                  .append("                        player.pause();\n")
+                  .append("                        player.src({\n")
+                  .append("                            src: '/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("&quality=' + quality + '&start_time=' + targetTime,\n")
+                  .append("                            type: 'video/mp4'\n")
+                  .append("                        });\n")
+                  .append("                        player.load();\n")
+                  .append("                        player.ready(() => {\n")
+                  .append("                            player.play().catch(err => console.error(err));\n")
+                  .append("                        });\n")
                   .append("                    });\n")
                   .append("                }\n")
                   .append("            })();\n")
