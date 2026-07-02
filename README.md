@@ -16,9 +16,12 @@ LocalTube transforms the stateless library core of NewPipe Extractor into a priv
 ### 🌟 Key Features
 - **Decentralized Local Server:** Runs a lightweight, concurrent Java HTTP server directly on your Android device (default port `8080`), serving a modern, responsive web interface.
 - **Cross-Device Playback:** Connect seamlessly to the server from any device on your local network (PC, laptop, smart TV, tablet) by visiting your device's local IP (e.g., `http://192.168.1.100:8080`).
+- **Video.js Media Player Integration:** High-performance, customizable HTML5 media player using Video.js for responsive playback controls, adjustable speeds, and fluid quality switching.
+- **Cross-Device Remote Control:** Remotely control active playback clients on your local network (play, pause, rewind, fast-forward) directly from the server interface.
+- **Database Backup (Import/Export):** Export and restore your SQL database settings and local watch history as simple JSON backups.
+- **Quality & Setting Preferences:** Custom settings tab inside the client and server to manage preferred video resolutions (e.g., 360p, 720p).
 - **Theme Customization:** Toggle between modern Dark and clean Light themes instantly, with preferences preserved locally in browser storage.
 - **Private Watch History:** Tracks your watched videos locally on the host device using a secure SQLite database (`HistoryDbHelper`), maintaining privacy with zero external telemetry or tracking.
-- **HTML5 Player & Stream Proxying:** Proxies stream traffic through the local server to bypass client-side signature and throttling restrictions, fully supporting Range HTTP headers (seeking/fast-forwarding) within native browser elements.
 - **Multi-Service Ready:** Ready to stream content across YouTube, SoundCloud, PeerTube, Bandcamp, and media.ccc.de.
 
 ---

@@ -1,0 +1,4 @@
+Integrated Video.js player for fluid native streaming (deprecating buggy FFmpeg remuxing)
+Introduced cross-device remote control playback actions (play, pause, seek)
+Refreshed Server Web UI with a premium modern design
+Added quality preference settings, client-side settings, and database backup import/export
