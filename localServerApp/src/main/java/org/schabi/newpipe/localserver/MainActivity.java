@@ -306,49 +306,7 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
         }
     }
 
-    @Override
-    public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
-        if (LocalHttpServer.isLocked()) {
-            String command = null;
-            switch (keyCode) {
-                case android.view.KeyEvent.KEYCODE_DPAD_UP:
-                    command = "pointer_move:0,-40";
-                    break;
-                case android.view.KeyEvent.KEYCODE_DPAD_DOWN:
-                    command = "pointer_move:0,40";
-                    break;
-                case android.view.KeyEvent.KEYCODE_DPAD_LEFT:
-                    command = "pointer_move:-40,0";
-                    break;
-                case android.view.KeyEvent.KEYCODE_DPAD_RIGHT:
-                    command = "pointer_move:40,0";
-                    break;
-                case android.view.KeyEvent.KEYCODE_DPAD_CENTER:
-                case android.view.KeyEvent.KEYCODE_ENTER:
-                    command = "pointer_click";
-                    break;
-                case android.view.KeyEvent.KEYCODE_BACK:
-                    command = "back";
-                    break;
-                case android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-                case android.view.KeyEvent.KEYCODE_HEADSETHOOK:
-                    command = "play_pause";
-                    break;
-                case android.view.KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
-                    command = "forward";
-                    break;
-                case android.view.KeyEvent.KEYCODE_MEDIA_REWIND:
-                    command = "rewind";
-                    break;
-            }
-            if (command != null) {
-                LocalHttpServer.addPendingCommand(command);
-                Toast.makeText(this, "Remote Key: " + command, Toast.LENGTH_SHORT).show();
-                return true;
-            }
-        }
-        return super.onKeyDown(keyCode, event);
-    }
+
 
     private String escapeHtml(String text) {
         if (text == null) return "";

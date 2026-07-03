@@ -847,6 +847,11 @@ public class LocalHttpServer {
 
             // Video AdaptationSet (Adaptive / Video-Only streams)
             List<VideoStream> videoStreams = extractor.getVideoOnlyStreams();
+            if (videoStreams != null) {
+                videoStreams = videoStreams.stream()
+                        .filter(vs -> vs.getFormat() == org.schabi.newpipe.extractor.MediaFormat.MPEG_4)
+                        .collect(java.util.stream.Collectors.toList());
+            }
 
             if (videoStreams != null && !videoStreams.isEmpty()) {
                 sb.append("    <AdaptationSet id=\"0\" mimeType=\"video/mp4\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\">\n");
@@ -896,6 +901,11 @@ public class LocalHttpServer {
 
             // Audio AdaptationSet
             List<AudioStream> audioStreams = extractor.getAudioStreams();
+            if (audioStreams != null) {
+                audioStreams = audioStreams.stream()
+                        .filter(as -> as.getFormat() == org.schabi.newpipe.extractor.MediaFormat.M4A)
+                        .collect(java.util.stream.Collectors.toList());
+            }
             if (audioStreams != null && !audioStreams.isEmpty()) {
                 // Sort by bitrate descending to put "original" highest quality first
                 java.util.Collections.sort(audioStreams, (a, b) -> {

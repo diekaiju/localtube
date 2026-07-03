@@ -424,6 +424,7 @@ public class HtmlRenderer {
                 "    <link rel=\"icon\" type=\"image/svg+xml\" href=\"" + favicon + "\">\n" +
                 "    <link href=\"https://vjs.zencdn.net/8.10.0/video-js.css\" rel=\"stylesheet\" />\n" +
                 "    <script src=\"https://vjs.zencdn.net/8.10.0/video.min.js\"></script>\n" +
+                "    <script src=\"https://unpkg.com/videojs-contrib-quality-levels@4.1.0/dist/videojs-contrib-quality-levels.min.js\"></script>\n" +
                 "    <style>\n" + CSS + "\n" +
                 "        /* Glow border outline style for selected/focused interactive elements */\n" +
                 "        a:focus, button:focus, input:focus, select:focus, textarea:focus, [tabindex=\"0\"]:focus {\n" +
@@ -981,7 +982,7 @@ public class HtmlRenderer {
             } else {
                 sb.append("        <div style=\"width:100%; border-radius:12px; overflow:hidden; background:#000;\">\n")
                   .append("          <video id=\"player\" class=\"video-js vjs-default-skin vjs-big-play-centered\" controls autoplay preload=\"auto\" style=\"width:100%; height:auto; aspect-ratio:16/9; display:block;\">\n")
-                  .append("            <source src=\"/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("&quality=").append(defaultQuality).append("\" type=\"video/mp4\">\n")
+                  .append("            <source src=\"/manifest?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" type=\"application/dash+xml\">\n")
                   .append("            Your browser does not support HTML5 video.\n")
                   .append("          </video>\n")
                   .append("        </div>\n");
@@ -990,7 +991,8 @@ public class HtmlRenderer {
                 sb.append("        <div class=\"player-controls-row\" style=\"display: flex; gap: 15px; margin-top: 10px; margin-bottom: 15px; align-items: center; justify-content: flex-start; flex-wrap: wrap;\">\n")
                   .append("          <div style=\"display: flex; align-items: center; gap: 8px;\">\n")
                   .append("            <label for=\"quality-select\" style=\"font-size: 13px; font-weight: 500; color: var(--text-color); opacity: 0.8;\">Quality:</label>\n")
-                  .append("            <select id=\"quality-select\" style=\"padding: 6px 12px; border-radius: 6px; border: 1px solid var(--search-input-border); background-color: var(--card-bg); color: var(--text-color); font-family: inherit; font-size: 13px; outline: none; cursor: pointer;\">\n");
+                  .append("            <select id=\"quality-select\" style=\"padding: 6px 12px; border-radius: 6px; border: 1px solid var(--search-input-border); background-color: var(--card-bg); color: var(--text-color); font-family: inherit; font-size: 13px; outline: none; cursor: pointer;\">\n")
+                  .append("              <option value=\"auto\" selected>Auto</option>\n");
 
                 // List available qualities
                 java.util.Set<String> addedQualities = new java.util.HashSet<>();
@@ -1000,7 +1002,7 @@ public class HtmlRenderer {
                         String res = vs.getResolution();
                         if (res != null && !addedQualities.contains(res)) {
                             addedQualities.add(res);
-                            sb.append("              <option value=\"").append(res).append("\"").append(res.equals(defaultQuality) ? " selected" : "").append(">").append(res).append("</option>\n");
+                            sb.append("              <option value=\"").append(res).append("\">").append(res).append("</option>\n");
                         }
                     }
                 }
@@ -1010,7 +1012,7 @@ public class HtmlRenderer {
                         String res = vs.getResolution();
                         if (res != null && !addedQualities.contains(res)) {
                             addedQualities.add(res);
-                            sb.append("              <option value=\"").append(res).append("\"").append(res.equals(defaultQuality) ? " selected" : "").append(">").append(res).append("</option>\n");
+                            sb.append("              <option value=\"").append(res).append("\">").append(res).append("</option>\n");
                         }
                     }
                 }
@@ -1043,22 +1045,30 @@ public class HtmlRenderer {
                   .append("                \n")
                   .append("                window.seekVideo = (delta) => {\n")
                   .append("                    const targetTime = Math.max(0, Math.min(streamDuration || player.duration() || 0, player.currentTime() + delta));\n")
-                  .append("                    player.currentTime(targetTime);\n");
-                sb.append("                };\n")
+                  .append("                    player.currentTime(targetTime);\n")
+                  .append("                };\n")
                   .append("                \n")
                   .append("                if (selector) {\n")
                   .append("                    selector.addEventListener('change', () => {\n")
-                  .append("                        const quality = selector.value;\n")
-                  .append("                        const targetTime = player.currentTime();\n")
-                  .append("                        player.pause();\n")
-                  .append("                        player.src({\n")
-                  .append("                            src: '/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("&quality=' + quality + '&start_time=' + targetTime,\n")
-                  .append("                            type: 'video/mp4'\n")
-                  .append("                        });\n")
-                  .append("                        player.load();\n")
-                  .append("                        player.ready(() => {\n")
-                  .append("                            player.play().catch(err => console.error(err));\n")
-                  .append("                        });\n")
+                  .append("                        const targetQuality = selector.value;\n")
+                  .append("                        const qualityLevels = player.qualityLevels();\n")
+                  .append("                        if (!qualityLevels) return;\n")
+                  .append("                        \n")
+                  .append("                        if (targetQuality === 'auto') {\n")
+                  .append("                            for (let i = 0; i < qualityLevels.length; i++) {\n")
+                  .append("                                qualityLevels[i].enabled = true;\n")
+                  .append("                            }\n")
+                  .append("                        } else {\n")
+                  .append("                            const targetHeight = parseInt(targetQuality);\n")
+                  .append("                            for (let i = 0; i < qualityLevels.length; i++) {\n")
+                  .append("                                const level = qualityLevels[i];\n")
+                  .append("                                if (level.height === targetHeight) {\n")
+                  .append("                                    level.enabled = true;\n")
+                  .append("                                } else {\n")
+                  .append("                                    level.enabled = false;\n")
+                  .append("                                }\n")
+                  .append("                            }\n")
+                  .append("                        }\n")
                   .append("                    });\n")
                   .append("                }\n")
                   .append("            })();\n")
