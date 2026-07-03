@@ -19,8 +19,8 @@ android {
         applicationId = "org.schabi.newpipe.localserver"
         minSdk = 28
         targetSdk = 34
-        versionCode = 5
-        versionName = "3.0"
+        versionCode = 6
+        versionName = "3.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

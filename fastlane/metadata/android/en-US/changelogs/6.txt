@@ -1,0 +1,4 @@
+Switched streaming engine to adaptive DASH playback to support resolutions up to 1080p
+Resolved infinite loading issues by filtering manifest tracks for MP4 container compatibility
+Fixed quotation syntax in player template source attributes
+Removed local hardware key listener intercepts from the server dashboard
