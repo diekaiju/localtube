@@ -31,11 +31,22 @@ public class RemoteWebSocketServer extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
+        if (message != null && message.startsWith("register_client:")) {
+            String clientName = message.substring("register_client:".length());
+            conn.setAttachment(clientName);
+            LocalHttpServer.log("Registered client: " + clientName + " for IP " + conn.getRemoteSocketAddress());
+            return;
+        }
+
         // Forward the message to LocalHttpServer pending commands queue
         LocalHttpServer.addPendingCommand(message);
         
         // Broadcast immediately to other connected clients (like the TV browser)
         broadcastCommand(message, conn);
+    }
+
+    public Set<WebSocket> getConnections() {
+        return connections;
     }
 
     @Override

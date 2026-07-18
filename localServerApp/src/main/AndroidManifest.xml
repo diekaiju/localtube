@@ -41,6 +41,18 @@
             android:theme="@style/Theme.LocalMediaServer"
             android:exported="false" />
 
+        <activity
+            android:name=".ShareActivity"
+            android:label="Share to LocalTube"
+            android:theme="@style/Theme.AppCompat.Dialog"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
         <service
             android:name=".ServerService"
             android:enabled="true"

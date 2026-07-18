@@ -856,6 +856,22 @@ public class HtmlRenderer {
         return wrapInTemplate("Watch History - LocalTube", sb.toString(), isTv);
     }
 
+    public static String renderWatchLater(int serviceId, List<InfoItem> items, boolean isTv) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getHeaderHtml(serviceId, "", "watch-later"));
+        sb.append("<div class=\"container\">\n")
+          .append("  <h2 style=\"margin-bottom: 20px; font-weight: 700;\">⭐ Watch Later</h2>\n");
+
+        if (items == null || items.isEmpty()) {
+            sb.append("<div class=\"loading-placeholder\">No videos in Watch Later list. Browse videos and click \"Watch Later\" to add them!</div>\n");
+        } else {
+            renderGrid(sb, serviceId, items);
+        }
+
+        sb.append("</div>\n");
+        return wrapInTemplate("Watch Later - LocalTube", sb.toString(), isTv);
+    }
+
     public static String renderSearch(int serviceId, String query, List<InfoItem> items, Page nextPage, boolean isTv) {
         StringBuilder sb = new StringBuilder();
         sb.append(getHeaderHtml(serviceId, query));
@@ -987,7 +1003,85 @@ public class HtmlRenderer {
                   .append("          </video>\n")
                   .append("        </div>\n");
 
-                // Generate quality selector HTML options
+                // Serialize available audio tracks for JavaScript dropdown rendering
+                org.schabi.newpipe.extractor.stream.AudioStream defaultAudio = null;
+                List<org.schabi.newpipe.extractor.stream.AudioStream> audioStreams = info.getAudioStreams();
+                if (audioStreams != null && !audioStreams.isEmpty()) {
+                    List<org.schabi.newpipe.extractor.stream.AudioStream> m4aStreams = audioStreams.stream()
+                            .filter(as -> as.getFormat() == org.schabi.newpipe.extractor.MediaFormat.M4A)
+                            .collect(java.util.stream.Collectors.toList());
+                    if (m4aStreams.isEmpty()) {
+                        m4aStreams = new java.util.ArrayList<>(audioStreams);
+                    }
+                    java.util.Locale preferredLanguage = java.util.Locale.getDefault();
+                    String langCode = preferredLanguage.getISO3Language();
+                    java.util.Collections.sort(m4aStreams, (a, b) -> {
+                        org.schabi.newpipe.extractor.stream.AudioTrackType typeA = a.getAudioTrackType();
+                        org.schabi.newpipe.extractor.stream.AudioTrackType typeB = b.getAudioTrackType();
+                        boolean isOrigA = (typeA == org.schabi.newpipe.extractor.stream.AudioTrackType.ORIGINAL);
+                        boolean isOrigB = (typeB == org.schabi.newpipe.extractor.stream.AudioTrackType.ORIGINAL);
+                        if (isOrigA != isOrigB) {
+                            return isOrigA ? -1 : 1;
+                        }
+                        java.util.Locale localeA = a.getAudioLocale();
+                        java.util.Locale localeB = b.getAudioLocale();
+                        boolean langMatchA = (localeA != null && localeA.getISO3Language().equals(langCode));
+                        boolean langMatchB = (localeB != null && localeB.getISO3Language().equals(langCode));
+                        if (langMatchA != langMatchB) {
+                            return langMatchA ? -1 : 1;
+                        }
+                        int scoreA = (typeA == org.schabi.newpipe.extractor.stream.AudioTrackType.ORIGINAL) ? 4 :
+                                     (typeA == null ? 3 :
+                                     (typeA == org.schabi.newpipe.extractor.stream.AudioTrackType.DUBBED ? 2 :
+                                     (typeA == org.schabi.newpipe.extractor.stream.AudioTrackType.SECONDARY ? 1 : 0)));
+                        int scoreB = (typeB == org.schabi.newpipe.extractor.stream.AudioTrackType.ORIGINAL) ? 4 :
+                                     (typeB == null ? 3 :
+                                     (typeB == org.schabi.newpipe.extractor.stream.AudioTrackType.DUBBED ? 2 :
+                                     (typeB == org.schabi.newpipe.extractor.stream.AudioTrackType.SECONDARY ? 1 : 0)));
+                        if (scoreA != scoreB) {
+                            return Integer.compare(scoreB, scoreA);
+                        }
+                        return 0;
+                    });
+                    defaultAudio = m4aStreams.get(0);
+                }
+
+                String defaultTrackId = defaultAudio != null ? defaultAudio.getAudioTrackId() : "";
+                if (defaultTrackId == null) {
+                    defaultTrackId = "";
+                }
+
+                StringBuilder tracksJson = new StringBuilder("[");
+                if (audioStreams != null) {
+                    boolean first = true;
+                    java.util.Set<String> processedTrackIds = new java.util.HashSet<>();
+                    for (org.schabi.newpipe.extractor.stream.AudioStream stream : audioStreams) {
+                        String trackId = stream.getAudioTrackId();
+                        if (trackId == null) trackId = "";
+                        if (processedTrackIds.contains(trackId)) {
+                            continue;
+                        }
+                        processedTrackIds.add(trackId);
+
+                        String label = stream.getAudioTrackName();
+                        if (label == null || label.isEmpty()) {
+                            java.util.Locale locale = stream.getAudioLocale();
+                            label = locale != null ? locale.getDisplayName() : "Audio Track";
+                        }
+                        org.schabi.newpipe.extractor.stream.AudioTrackType type = stream.getAudioTrackType();
+                        if (type != null) {
+                            label += " (" + type.name() + ")";
+                        }
+
+                        if (!first) tracksJson.append(",");
+                        first = false;
+                        tracksJson.append("{\"id\":\"").append(escapeJs(trackId))
+                                  .append("\",\"label\":\"").append(escapeJs(label)).append("\"}");
+                    }
+                }
+                tracksJson.append("]");
+
+                // Generate quality selector and audio track selector HTML options
                 sb.append("        <div class=\"player-controls-row\" style=\"display: flex; gap: 15px; margin-top: 10px; margin-bottom: 15px; align-items: center; justify-content: flex-start; flex-wrap: wrap;\">\n")
                   .append("          <div style=\"display: flex; align-items: center; gap: 8px;\">\n")
                   .append("            <label for=\"quality-select\" style=\"font-size: 13px; font-weight: 500; color: var(--text-color); opacity: 0.8;\">Quality:</label>\n")
@@ -1018,13 +1112,21 @@ public class HtmlRenderer {
                 }
                 sb.append("            </select>\n")
                   .append("          </div>\n")
+                  .append("          <div id=\"audio-track-container\" style=\"display: flex; align-items: center; gap: 8px;\">\n")
+                  .append("            <label for=\"audio-track-select\" style=\"font-size: 13px; font-weight: 500; color: var(--text-color); opacity: 0.8;\">Audio Language:</label>\n")
+                  .append("            <select id=\"audio-track-select\" style=\"padding: 6px 12px; border-radius: 6px; border: 1px solid var(--search-input-border); background-color: var(--card-bg); color: var(--text-color); font-family: inherit; font-size: 13px; outline: none; cursor: pointer;\">\n")
+                  .append("            </select>\n")
+                  .append("          </div>\n")
                   .append("        </div>\n");
 
                 // Script for player quality switching and remote commands
                 sb.append("        <script>\n")
+                  .append("            window.availableAudioTracks = ").append(tracksJson.toString()).append(";\n")
+                  .append("            window.defaultAudioTrackId = '").append(escapeJs(defaultTrackId)).append("';\n")
                   .append("            (function() {\n")
                   .append("                const player = videojs('player', {\n")
-                  .append("                    playbackRates: [0.5, 1, 1.25, 1.5, 2]\n")
+                  .append("                    playbackRates: [0.5, 1, 1.25, 1.5, 2],\n")
+                  .append("                    controlBar: { audioTrackButton: false }\n")
                   .append("                });\n")
                   .append("                window.videoPlayer = player;\n")
                   .append("                player.ready(() => {\n")
@@ -1069,6 +1171,56 @@ public class HtmlRenderer {
                   .append("                                }\n")
                   .append("                            }\n")
                   .append("                        }\n")
+                  .append("                    });\n")
+                  .append("                }\n")
+                  .append("                \n")
+                  .append("                const audioSelect = document.getElementById('audio-track-select');\n")
+                  .append("                if (audioSelect && window.availableAudioTracks) {\n")
+                  .append("                    audioSelect.innerHTML = '';\n")
+                  .append("                    const urlParams = new URLSearchParams(window.location.search);\n")
+                  .append("                    let currentAudioTrack = urlParams.get('audio_track');\n")
+                  .append("                    if (currentAudioTrack === null) {\n")
+                  .append("                        currentAudioTrack = window.defaultAudioTrackId || '';\n")
+                  .append("                    }\n")
+                  .append("                    window.availableAudioTracks.forEach(track => {\n")
+                  .append("                        const option = document.createElement('option');\n")
+                  .append("                        option.value = track.id;\n")
+                  .append("                        option.text = track.label;\n")
+                  .append("                        option.selected = (track.id === currentAudioTrack);\n")
+                  .append("                        audioSelect.appendChild(option);\n")
+                  .append("                    });\n")
+                  .append("                    audioSelect.addEventListener('change', () => {\n")
+                  .append("                        const selectedTrackId = audioSelect.value;\n")
+                  .append("                        const currUrl = new URL(window.location.href);\n")
+                  .append("                        currUrl.searchParams.set('audio_track', selectedTrackId);\n")
+                  .append("                        window.history.replaceState({}, '', currUrl);\n")
+                  .append("                        const currentTime = player.currentTime();\n")
+                  .append("                        const isPaused = player.paused();\n")
+                  .append("                        const manifestUrl = '/manifest?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("&audio_track=' + encodeURIComponent(selectedTrackId);\n")
+                  .append("                        player.src({ src: manifestUrl, type: 'application/dash+xml' });\n")
+                  .append("                        player.ready(() => {\n")
+                  .append("                            setTimeout(() => {\n")
+                  .append("                                player.currentTime(currentTime);\n")
+                  .append("                                if (!isPaused) {\n")
+                  .append("                                    player.play().catch(e => {});\n")
+                  .append("                                }\n")
+                  .append("                            }, 150);\n")
+                  .append("                        });\n")
+                  .append("                    });\n")
+                  .append("                }\n")
+                  .append("                \n")
+                  .append("                const cacheBtn = document.getElementById('cache-offline-btn');\n")
+                  .append("                if (cacheBtn) {\n")
+                  .append("                    cacheBtn.addEventListener('click', (e) => {\n")
+                  .append("                        e.preventDefault();\n")
+                  .append("                        const qualitySelect = document.getElementById('quality-select');\n")
+                  .append("                        const audioSelectEl = document.getElementById('audio-track-select');\n")
+                  .append("                        const quality = qualitySelect ? qualitySelect.value : 'auto';\n")
+                  .append("                        const audioTrack = audioSelectEl ? audioSelectEl.value : '';\n")
+                  .append("                        const url = new URL(cacheBtn.href, window.location.origin);\n")
+                  .append("                        url.searchParams.set('quality', quality);\n")
+                  .append("                        url.searchParams.set('audio_track', audioTrack);\n")
+                  .append("                        window.location.href = url.toString();\n")
                   .append("                    });\n")
                   .append("                }\n")
                   .append("            })();\n")

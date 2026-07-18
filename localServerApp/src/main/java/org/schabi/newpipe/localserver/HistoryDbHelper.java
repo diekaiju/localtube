@@ -19,7 +19,7 @@ import java.util.List;
 public class HistoryDbHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "history.db";
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
 
     private static final String TABLE_HISTORY = "watch_history";
     private static final String KEY_ID = "id";
@@ -49,6 +49,9 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
     private static final String KEY_PLAYLIST_URL = "playlist_url";
     private static final String KEY_PLAYLIST_NAME = "playlist_name";
     private static final String KEY_PLAYLIST_UPLOADER = "playlist_uploader";
+
+    private static final String TABLE_WATCH_LATER = "watch_later";
+    private static final String KEY_WATCH_LATER_TYPE = "watch_later_type"; // "video" or "playlist"
 
     private static HistoryDbHelper instance;
 
@@ -112,6 +115,17 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
                 + KEY_TIMESTAMP + " INTEGER"
                 + ")";
         db.execSQL(CREATE_PLAYLISTS_TABLE);
+
+        String CREATE_WATCH_LATER_TABLE = "CREATE TABLE " + TABLE_WATCH_LATER + "("
+                + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + KEY_URL + " TEXT UNIQUE,"
+                + KEY_TITLE + " TEXT,"
+                + KEY_UPLOADER + " TEXT,"
+                + KEY_THUMBNAIL + " TEXT,"
+                + KEY_WATCH_LATER_TYPE + " TEXT,"
+                + KEY_TIMESTAMP + " INTEGER"
+                + ")";
+        db.execSQL(CREATE_WATCH_LATER_TABLE);
     }
 
     @Override
@@ -157,6 +171,18 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
                     + KEY_TIMESTAMP + " INTEGER"
                     + ")";
             db.execSQL(CREATE_PLAYLISTS_TABLE);
+        }
+        if (oldVersion < 6) {
+            String CREATE_WATCH_LATER_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_WATCH_LATER + "("
+                    + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + KEY_URL + " TEXT UNIQUE,"
+                    + KEY_TITLE + " TEXT,"
+                    + KEY_UPLOADER + " TEXT,"
+                    + KEY_THUMBNAIL + " TEXT,"
+                    + KEY_WATCH_LATER_TYPE + " TEXT,"
+                    + KEY_TIMESTAMP + " INTEGER"
+                    + ")";
+            db.execSQL(CREATE_WATCH_LATER_TABLE);
         }
     }
 
@@ -686,5 +712,76 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
         } finally {
             db.endTransaction();
         }
+    }
+
+    public void addWatchLater(String url, String title, String uploader, String thumbnailUrl, String type) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_URL, url);
+        values.put(KEY_TITLE, title);
+        values.put(KEY_UPLOADER, uploader);
+        values.put(KEY_THUMBNAIL, thumbnailUrl);
+        values.put(KEY_WATCH_LATER_TYPE, type);
+        values.put(KEY_TIMESTAMP, System.currentTimeMillis());
+        db.insertWithOnConflict(TABLE_WATCH_LATER, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    public void removeWatchLater(String url) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_WATCH_LATER, KEY_URL + " = ?", new String[]{url});
+    }
+
+    public boolean isWatchLater(String url) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String selectQuery = "SELECT 1 FROM " + TABLE_WATCH_LATER + " WHERE " + KEY_URL + " = ?";
+        try (Cursor cursor = db.rawQuery(selectQuery, new String[]{url})) {
+            return cursor.moveToFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public List<InfoItem> getWatchLaterItems() {
+        List<InfoItem> list = new ArrayList<>();
+        String selectQuery = "SELECT * FROM " + TABLE_WATCH_LATER + " ORDER BY " + KEY_TIMESTAMP + " DESC";
+        SQLiteDatabase db = this.getReadableDatabase();
+        try (Cursor cursor = db.rawQuery(selectQuery, null)) {
+            if (cursor.moveToFirst()) {
+                int urlIdx = cursor.getColumnIndex(KEY_URL);
+                int titleIdx = cursor.getColumnIndex(KEY_TITLE);
+                int uploaderIdx = cursor.getColumnIndex(KEY_UPLOADER);
+                int thumbIdx = cursor.getColumnIndex(KEY_THUMBNAIL);
+                int typeIdx = cursor.getColumnIndex(KEY_WATCH_LATER_TYPE);
+
+                do {
+                    String url = urlIdx != -1 ? cursor.getString(urlIdx) : "";
+                    String title = titleIdx != -1 ? cursor.getString(titleIdx) : "";
+                    String uploader = uploaderIdx != -1 ? cursor.getString(uploaderIdx) : "";
+                    String thumbnail = thumbIdx != -1 ? cursor.getString(thumbIdx) : "";
+                    String type = typeIdx != -1 ? cursor.getString(typeIdx) : "video";
+
+                    if ("playlist".equalsIgnoreCase(type)) {
+                        PlaylistInfoItem item = new PlaylistInfoItem(0, url, title);
+                        item.setUploaderName(uploader);
+                        if (thumbnail != null && !thumbnail.isEmpty()) {
+                            item.setThumbnails(List.of(new Image(thumbnail, Image.HEIGHT_UNKNOWN, Image.WIDTH_UNKNOWN, Image.ResolutionLevel.UNKNOWN)));
+                        }
+                        list.add(item);
+                    } else {
+                        StreamInfoItem item = new StreamInfoItem(0, url, title, StreamType.VIDEO_STREAM);
+                        item.setUploaderName(uploader);
+                        item.setUploaderUrl("");
+                        if (thumbnail != null && !thumbnail.isEmpty()) {
+                            item.setThumbnails(List.of(new Image(thumbnail, Image.HEIGHT_UNKNOWN, Image.WIDTH_UNKNOWN, Image.ResolutionLevel.UNKNOWN)));
+                        }
+                        list.add(item);
+                    }
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

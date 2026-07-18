@@ -50,6 +50,47 @@ public class LocalHttpServer {
     private static RemoteWebSocketServer wsServer = null;
     private static final java.util.Queue<String> pendingCommands = new java.util.concurrent.LinkedBlockingQueue<>();
 
+    public static class ClientInfo {
+        public final String name;
+        public final org.java_websocket.WebSocket connection;
+        public ClientInfo(String name, org.java_websocket.WebSocket connection) {
+            this.name = name;
+            this.connection = connection;
+        }
+    }
+
+    public static List<ClientInfo> getConnectedClients() {
+        List<ClientInfo> list = new ArrayList<>();
+        if (wsServer != null) {
+            for (org.java_websocket.WebSocket conn : wsServer.getConnections()) {
+                if (conn.isOpen()) {
+                    String name = conn.getAttachment();
+                    if (name == null || name.isEmpty()) {
+                        try {
+                            name = "Client (" + conn.getRemoteSocketAddress().getAddress().getHostAddress() + ")";
+                        } catch (Exception e) {
+                            name = "Client (Unknown)";
+                        }
+                    }
+                    list.add(new ClientInfo(name, conn));
+                }
+            }
+        }
+        return list;
+    }
+
+    public static void castToClient(org.java_websocket.WebSocket conn, String videoUrl) {
+        if (conn != null && conn.isOpen()) {
+            try {
+                conn.send("play_video:" + videoUrl);
+                log("Casted play_video command to client connection.");
+            } catch (Exception e) {
+                log("Failed to send command to specific client: " + e.getMessage());
+            }
+        }
+    }
+
+
     public static List<String> getAndClearPendingCommands() {
         List<String> copy = new ArrayList<>();
         String cmd;
@@ -123,7 +164,7 @@ public class LocalHttpServer {
     private ServerSocket serverSocket;
     private boolean isRunning = false;
     private final ExecutorService threadPool = Executors.newCachedThreadPool();
-    private static final Map<String, String> streamUrlCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final StreamUrlCache streamUrlCache = new StreamUrlCache();
     private static final okhttp3.OkHttpClient httpClient = new okhttp3.OkHttpClient.Builder()
             .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
@@ -355,12 +396,18 @@ public class LocalHttpServer {
                         handleSubscribeAction(os, params);
                     } else if (path.equals("/bookmark_playlist")) {
                         handlePlaylistBookmarkAction(os, params);
+                    } else if (path.equals("/download-cached")) {
+                        handleDownloadCached(os, params);
                     } else if (path.equals("/thumbnail")) {
                         handleThumbnail(os, params);
                     } else if (path.equals("/subtitles")) {
                         handleSubtitlesProxy(os, params);
                     } else if (path.equals("/settings")) {
                         handleSettings(os, params, isTv);
+                    } else if (path.equals("/watch-later")) {
+                        handleWatchLater(os, params, isTv);
+                    } else if (path.equals("/watch_later_action")) {
+                        handleWatchLaterAction(os, params);
                     } else {
                         sendResponse(os, 404, "Page Not Found", "text/plain; charset=UTF-8");
                     }
@@ -624,7 +671,8 @@ public class LocalHttpServer {
                 } catch (Exception e) {}
             }
 
-            String cacheKey = serviceId + "_" + mediaUrl + "_" + requestedItag;
+            String requestedTrackId = params.get("trackId");
+            String cacheKey = serviceId + "_" + mediaUrl + "_" + requestedItag + (requestedTrackId != null ? "_" + requestedTrackId : "");
             String directUrl = streamUrlCache.get(cacheKey);
 
             if (directUrl == null) {
@@ -650,8 +698,18 @@ public class LocalHttpServer {
                     if (directUrl == null) {
                         for (AudioStream stream : extractor.getAudioStreams()) {
                             if (stream.getItag() == requestedItag) {
-                                directUrl = stream.getContent();
-                                break;
+                                String streamTrackId = stream.getAudioTrackId();
+                                if (streamTrackId == null) {
+                                    streamTrackId = "";
+                                }
+                                String reqTrackId = requestedTrackId;
+                                if (reqTrackId == null) {
+                                    reqTrackId = "";
+                                }
+                                if (java.util.Objects.equals(streamTrackId, reqTrackId)) {
+                                    directUrl = stream.getContent();
+                                    break;
+                                }
                             }
                         }
                     }
@@ -712,12 +770,52 @@ public class LocalHttpServer {
                         if (directUrl == null) {
                             List<AudioStream> audioStreams = extractor.getAudioStreams();
                             if (audioStreams != null && !audioStreams.isEmpty()) {
-                                // Sort to pick highest quality for fallback
+                                // 1. Sort using NewPipe-like ranking to find the best track at index 0
+                                java.util.Locale preferredLanguage = java.util.Locale.getDefault();
+                                String langCode = preferredLanguage.getISO3Language();
                                 java.util.Collections.sort(audioStreams, (a, b) -> {
+                                    org.schabi.newpipe.extractor.stream.AudioTrackType typeA = a.getAudioTrackType();
+                                    org.schabi.newpipe.extractor.stream.AudioTrackType typeB = b.getAudioTrackType();
+                                    boolean isOrigA = (typeA == org.schabi.newpipe.extractor.stream.AudioTrackType.ORIGINAL);
+                                    boolean isOrigB = (typeB == org.schabi.newpipe.extractor.stream.AudioTrackType.ORIGINAL);
+                                    if (isOrigA != isOrigB) {
+                                        return isOrigA ? -1 : 1;
+                                    }
+                                    java.util.Locale localeA = a.getAudioLocale();
+                                    java.util.Locale localeB = b.getAudioLocale();
+                                    boolean langMatchA = (localeA != null && localeA.getISO3Language().equals(langCode));
+                                    boolean langMatchB = (localeB != null && localeB.getISO3Language().equals(langCode));
+                                    if (langMatchA != langMatchB) {
+                                        return langMatchA ? -1 : 1;
+                                    }
+                                    int scoreA = (typeA == org.schabi.newpipe.extractor.stream.AudioTrackType.ORIGINAL) ? 4 :
+                                                 (typeA == null ? 3 :
+                                                 (typeA == org.schabi.newpipe.extractor.stream.AudioTrackType.DUBBED ? 2 :
+                                                 (typeA == org.schabi.newpipe.extractor.stream.AudioTrackType.SECONDARY ? 1 : 0)));
+                                    int scoreB = (typeB == org.schabi.newpipe.extractor.stream.AudioTrackType.ORIGINAL) ? 4 :
+                                                 (typeB == null ? 3 :
+                                                 (typeB == org.schabi.newpipe.extractor.stream.AudioTrackType.DUBBED ? 2 :
+                                                 (typeB == org.schabi.newpipe.extractor.stream.AudioTrackType.SECONDARY ? 1 : 0)));
+                                    if (scoreA != scoreB) {
+                                        return Integer.compare(scoreB, scoreA);
+                                    }
+                                    boolean engMatchA = (localeA != null && localeA.getISO3Language().equals("eng"));
+                                    boolean engMatchB = (localeB != null && localeB.getISO3Language().equals("eng"));
+                                    if (engMatchA != engMatchB) {
+                                        return engMatchA ? -1 : 1;
+                                    }
                                     long brA = a.getAverageBitrate() > 0 ? a.getAverageBitrate() : a.getBitrate();
                                     long brB = b.getAverageBitrate() > 0 ? b.getAverageBitrate() : b.getBitrate();
                                     return Long.compare(brB, brA);
                                 });
+                                // 2. Keep only streams of the best track
+                                String bestTrackId = audioStreams.get(0).getAudioTrackId();
+                                List<AudioStream> filteredStreams = audioStreams.stream()
+                                        .filter(as -> java.util.Objects.equals(as.getAudioTrackId(), bestTrackId))
+                                        .collect(java.util.stream.Collectors.toList());
+                                if (!filteredStreams.isEmpty()) {
+                                    audioStreams = filteredStreams;
+                                }
                                 directUrl = audioStreams.get(0).getContent();
                             }
                         }
@@ -725,7 +823,7 @@ public class LocalHttpServer {
                 }
 
                 if (directUrl != null) {
-                    streamUrlCache.put(cacheKey, directUrl);
+                    streamUrlCache.put(cacheKey, directUrl, 3600000);
                 }
             }
 
@@ -901,59 +999,152 @@ public class LocalHttpServer {
 
             // Audio AdaptationSet
             List<AudioStream> audioStreams = extractor.getAudioStreams();
-            if (audioStreams != null) {
+            if (audioStreams != null && !audioStreams.isEmpty()) {
                 audioStreams = audioStreams.stream()
                         .filter(as -> as.getFormat() == org.schabi.newpipe.extractor.MediaFormat.M4A)
                         .collect(java.util.stream.Collectors.toList());
             }
             if (audioStreams != null && !audioStreams.isEmpty()) {
-                // Sort by bitrate descending to put "original" highest quality first
-                java.util.Collections.sort(audioStreams, (a, b) -> {
-                    long brA = a.getAverageBitrate() > 0 ? a.getAverageBitrate() : a.getBitrate();
-                    long brB = b.getAverageBitrate() > 0 ? b.getAverageBitrate() : b.getBitrate();
-                    return Long.compare(brB, brA);
-                });
-
-                sb.append("    <AdaptationSet id=\"1\" mimeType=\"audio/mp4\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\">\n");
-                java.util.Set<Integer> seenAudioItags = new java.util.HashSet<>();
-                for (AudioStream as : audioStreams) {
-                    int itag = as.getItag();
-                    if (seenAudioItags.contains(itag)) {
-                        continue;
-                    }
-                    seenAudioItags.add(itag);
-
-                    long bitrate = as.getAverageBitrate();
-                    if (bitrate <= 0) {
-                        bitrate = as.getBitrate();
-                    }
-                    if (bitrate <= 0) {
-                        bitrate = 128000;
-                    }
-                    if (bitrate < 1000) {
-                        bitrate *= 1000;
-                    }
-                    String codec = as.getCodec();
-
-                    int initStart = as.getInitStart();
-                    int initEnd = as.getInitEnd();
-                    int indexStart = as.getIndexStart();
-                    int indexEnd = as.getIndexEnd();
-
-                    if (initStart < 0 || initEnd < 0 || indexStart < 0 || indexEnd < 0) {
-                        continue; // Skip streams without index range markers
-                    }
-
-                    String proxyUrl = "/stream?serviceId=" + serviceId + "&amp;id=" + java.net.URLEncoder.encode(mediaUrl, "UTF-8") + "&amp;itag=" + itag;
-                    sb.append("      <Representation id=\"").append(itag).append("\" bandwidth=\"").append(bitrate).append("\" codecs=\"").append(codec).append("\" audioSamplingRate=\"44100\">\n");
-                    sb.append("        <AudioChannelConfiguration schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\" value=\"2\"/>\n");
-                    sb.append("        <BaseURL>").append(proxyUrl).append("</BaseURL>\n");
-                    sb.append("        <SegmentBase indexRange=\"").append(indexStart).append("-").append(indexEnd).append("\" indexRangeExact=\"true\">\n");
-                    sb.append("          <Initialization range=\"").append(initStart).append("-").append(initEnd).append("\"/>\n");
-                    sb.append("        </SegmentBase>\n");
-                    sb.append("      </Representation>\n");
+                String targetAudioTrack = params.get("audio_track");
+                String selectedTrackId = "";
+                
+                // If a track is explicitly selected, find it
+                if (targetAudioTrack != null) {
+                    selectedTrackId = targetAudioTrack;
+                } else {
+                    // Default to best track using NewPipe comparator
+                    java.util.Locale preferredLanguage = java.util.Locale.getDefault();
+                    String langCode = preferredLanguage.getISO3Language();
+                    java.util.Collections.sort(audioStreams, (a, b) -> {
+                        org.schabi.newpipe.extractor.stream.AudioTrackType typeA = a.getAudioTrackType();
+                        org.schabi.newpipe.extractor.stream.AudioTrackType typeB = b.getAudioTrackType();
+                        boolean isOrigA = (typeA == org.schabi.newpipe.extractor.stream.AudioTrackType.ORIGINAL);
+                        boolean isOrigB = (typeB == org.schabi.newpipe.extractor.stream.AudioTrackType.ORIGINAL);
+                        if (isOrigA != isOrigB) {
+                            return isOrigA ? -1 : 1;
+                        }
+                        java.util.Locale localeA = a.getAudioLocale();
+                        java.util.Locale localeB = b.getAudioLocale();
+                        boolean langMatchA = (localeA != null && localeA.getISO3Language().equals(langCode));
+                        boolean langMatchB = (localeB != null && localeB.getISO3Language().equals(langCode));
+                        if (langMatchA != langMatchB) {
+                            return langMatchA ? -1 : 1;
+                        }
+                        int scoreA = (typeA == org.schabi.newpipe.extractor.stream.AudioTrackType.ORIGINAL) ? 4 :
+                                     (typeA == null ? 3 :
+                                     (typeA == org.schabi.newpipe.extractor.stream.AudioTrackType.DUBBED ? 2 :
+                                     (typeA == org.schabi.newpipe.extractor.stream.AudioTrackType.SECONDARY ? 1 : 0)));
+                        int scoreB = (typeB == org.schabi.newpipe.extractor.stream.AudioTrackType.ORIGINAL) ? 4 :
+                                     (typeB == null ? 3 :
+                                     (typeB == org.schabi.newpipe.extractor.stream.AudioTrackType.DUBBED ? 2 :
+                                     (typeB == org.schabi.newpipe.extractor.stream.AudioTrackType.SECONDARY ? 1 : 0)));
+                        if (scoreA != scoreB) {
+                            return Integer.compare(scoreB, scoreA);
+                        }
+                        boolean engMatchA = (localeA != null && localeA.getISO3Language().equals("eng"));
+                        boolean engMatchB = (localeB != null && localeB.getISO3Language().equals("eng"));
+                        if (engMatchA != engMatchB) {
+                            return engMatchA ? -1 : 1;
+                        }
+                        long brA = a.getAverageBitrate() > 0 ? a.getAverageBitrate() : a.getBitrate();
+                        long brB = b.getAverageBitrate() > 0 ? b.getAverageBitrate() : b.getBitrate();
+                        return Long.compare(brB, brA);
+                    });
+                    
+                    String bestId = audioStreams.get(0).getAudioTrackId();
+                    selectedTrackId = bestId != null ? bestId : "";
                 }
-                sb.append("    </AdaptationSet>\n");
+                
+                // Filter to only keep streams matching the selectedTrackId
+                final String finalTrackId = selectedTrackId;
+                audioStreams = audioStreams.stream()
+                        .filter(as -> java.util.Objects.equals(as.getAudioTrackId() == null ? "" : as.getAudioTrackId(), finalTrackId))
+                        .collect(java.util.stream.Collectors.toList());
+                
+                if (!audioStreams.isEmpty()) {
+                    // Sort by quality (bitrate descending)
+                    java.util.Collections.sort(audioStreams, (a, b) -> {
+                        long brA = a.getAverageBitrate() > 0 ? a.getAverageBitrate() : a.getBitrate();
+                        long brB = b.getAverageBitrate() > 0 ? b.getAverageBitrate() : b.getBitrate();
+                        return Long.compare(brB, brA);
+                    });
+                    
+                    AudioStream firstStream = audioStreams.get(0);
+                    java.util.Locale locale = firstStream.getAudioLocale();
+                    String langStr = "";
+                    if (locale != null) {
+                        langStr = " lang=\"" + locale.getLanguage() + "\"";
+                    } else if (!finalTrackId.isEmpty()) {
+                        int dotIdx = finalTrackId.indexOf(".");
+                        if (dotIdx != -1) {
+                            langStr = " lang=\"" + finalTrackId.substring(0, dotIdx) + "\"";
+                        } else {
+                            langStr = " lang=\"" + finalTrackId + "\"";
+                        }
+                    }
+                    
+                    String labelStr = "";
+                    String trackName = firstStream.getAudioTrackName();
+                    if (trackName != null && !trackName.isEmpty()) {
+                        labelStr = " label=\"" + trackName.replace("\"", "&quot;") + "\"";
+                    }
+                    
+                    sb.append("    <AdaptationSet id=\"1\" mimeType=\"audio/mp4\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\"").append(langStr).append(labelStr).append(">\n");
+                    
+                    // Add Role element if track type is known
+                    org.schabi.newpipe.extractor.stream.AudioTrackType type = firstStream.getAudioTrackType();
+                    if (type != null) {
+                        String roleVal = "main";
+                        if (type == org.schabi.newpipe.extractor.stream.AudioTrackType.DUBBED) {
+                            roleVal = "dub";
+                        } else if (type == org.schabi.newpipe.extractor.stream.AudioTrackType.DESCRIPTIVE) {
+                            roleVal = "description";
+                        } else if (type == org.schabi.newpipe.extractor.stream.AudioTrackType.SECONDARY) {
+                            roleVal = "alternate";
+                        }
+                        sb.append("      <Role schemeIdUri=\"urn:mpeg:dash:role:2011\" value=\"").append(roleVal).append("\"/>\n");
+                    }
+                    
+                    java.util.Set<Integer> seenAudioItags = new java.util.HashSet<>();
+                    for (AudioStream as : audioStreams) {
+                        int itag = as.getItag();
+                        if (seenAudioItags.contains(itag)) {
+                            continue;
+                        }
+                        seenAudioItags.add(itag);
+                        
+                        long bitrate = as.getAverageBitrate();
+                        if (bitrate <= 0) {
+                            bitrate = as.getBitrate();
+                        }
+                        if (bitrate <= 0) {
+                            bitrate = 128000;
+                        }
+                        if (bitrate < 1000) {
+                            bitrate *= 1000;
+                        }
+                        String codec = as.getCodec();
+                        
+                        int initStart = as.getInitStart();
+                        int initEnd = as.getInitEnd();
+                        int indexStart = as.getIndexStart();
+                        int indexEnd = as.getIndexEnd();
+                        
+                        if (initStart < 0 || initEnd < 0 || indexStart < 0 || indexEnd < 0) {
+                            continue; // Skip streams without index range markers
+                        }
+                        
+                        String proxyUrl = "/stream?serviceId=" + serviceId + "&amp;id=" + java.net.URLEncoder.encode(mediaUrl, "UTF-8") + "&amp;itag=" + itag + (!finalTrackId.isEmpty() ? "&amp;trackId=" + java.net.URLEncoder.encode(finalTrackId, "UTF-8") : "");
+                        sb.append("      <Representation id=\"").append(itag).append("\" bandwidth=\"").append(bitrate).append("\" codecs=\"").append(codec).append("\" audioSamplingRate=\"44100\">\n");
+                        sb.append("        <AudioChannelConfiguration schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\" value=\"2\"/>\n");
+                        sb.append("        <BaseURL>").append(proxyUrl).append("</BaseURL>\n");
+                        sb.append("        <SegmentBase indexRange=\"").append(indexStart).append("-").append(indexEnd).append("\" indexRangeExact=\"true\">\n");
+                        sb.append("          <Initialization range=\"").append(initStart).append("-").append(initEnd).append("\"/>\n");
+                        sb.append("        </SegmentBase>\n");
+                        sb.append("      </Representation>\n");
+                    }
+                    sb.append("    </AdaptationSet>\n");
+                }
             }
 
             sb.append("  </Period>\n");
@@ -1220,7 +1411,9 @@ public class LocalHttpServer {
             String mediaUrl = params.get("id");
 
             if ("add".equals(action) && mediaUrl != null && !mediaUrl.isEmpty()) {
-                VideoCacheManager.getInstance(context).startCaching(mediaUrl, serviceId);
+                String quality = params.get("quality");
+                String audioTrack = params.get("audio_track");
+                VideoCacheManager.getInstance(context).startCaching(mediaUrl, serviceId, quality, audioTrack);
                 sendRedirect(os, "/watch?serviceId=" + serviceId + "&id=" + java.net.URLEncoder.encode(mediaUrl, "UTF-8"));
                 return;
             } else if ("delete".equals(action) && mediaUrl != null && !mediaUrl.isEmpty()) {
@@ -1542,6 +1735,131 @@ public class LocalHttpServer {
             }
             sb.append("]}");
             sendResponse(os, 200, sb.toString(), "application/json; charset=UTF-8");
+        }
+
+        private void handleWatchLater(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
+            int serviceId = getServiceId(params);
+            List<InfoItem> items = dbHelper.getWatchLaterItems();
+            String html = HtmlRenderer.renderWatchLater(serviceId, items, isTv);
+            sendResponse(os, 200, html, "text/html; charset=UTF-8");
+        }
+
+        private void handleWatchLaterAction(OutputStream os, Map<String, String> params) throws Exception {
+            int serviceId = getServiceId(params);
+            String action = params.get("action");
+            String url = params.get("url");
+            String back = params.get("back");
+
+            if ("add".equals(action) && url != null && !url.isEmpty()) {
+                String title = params.get("title");
+                String uploader = params.get("uploader");
+                String thumbnail = params.get("thumbnail");
+                String type = params.get("type"); // "video" or "playlist"
+                if (title == null || title.isEmpty()) title = "Shared Item";
+                if (uploader == null) uploader = "";
+                if (thumbnail == null) thumbnail = "";
+                if (type == null) type = "video";
+                dbHelper.addWatchLater(url, title, uploader, thumbnail, type);
+            } else if ("remove".equals(action) && url != null && !url.isEmpty()) {
+                dbHelper.removeWatchLater(url);
+            }
+
+            if (back != null && !back.isEmpty()) {
+                if (back.startsWith("/")) {
+                    sendRedirect(os, back);
+                } else {
+                    sendRedirect(os, "/watch?serviceId=" + serviceId + "&id=" + java.net.URLEncoder.encode(back, "UTF-8"));
+                }
+            } else {
+                sendRedirect(os, "/watch-later?serviceId=" + serviceId);
+            }
+        }
+
+        private void handleDownloadCached(OutputStream os, Map<String, String> params) throws Exception {
+            String mediaUrl = params.get("id");
+            if (mediaUrl == null || mediaUrl.isEmpty()) {
+                sendResponse(os, 400, "Missing id parameter", "text/plain; charset=UTF-8");
+                return;
+            }
+            CachedVideo cachedVideo = dbHelper.getCachedVideo(mediaUrl);
+            if (cachedVideo == null || !"COMPLETED".equals(cachedVideo.getStatus())) {
+                sendResponse(os, 404, "Cached video not found or not completed yet", "text/plain; charset=UTF-8");
+                return;
+            }
+            java.io.File file = new java.io.File(cachedVideo.getVideoLocalPath());
+            if (!file.exists()) {
+                sendResponse(os, 404, "Cached file not found on disk", "text/plain; charset=UTF-8");
+                return;
+            }
+            String title = cachedVideo.getTitle();
+            if (title == null || title.isEmpty()) {
+                title = "video";
+            }
+            String filename = title.replaceAll("[\\\\/:*?\"<>|]", "_") + ".mp4";
+            long fileLength = file.length();
+            String headers = "HTTP/1.1 200 OK\r\n" +
+                    "Content-Type: video/mp4\r\n" +
+                    "Content-Length: " + fileLength + "\r\n" +
+                    "Content-Disposition: attachment; filename=\"" + java.net.URLEncoder.encode(filename, "UTF-8").replace("+", "%20") + "\"\r\n" +
+                    "Connection: close\r\n\r\n";
+            os.write(headers.getBytes("UTF-8"));
+            try (java.io.FileInputStream fis = new java.io.FileInputStream(file)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = fis.read(buffer)) != -1) {
+                    os.write(buffer, 0, read);
+                }
+            }
+            os.flush();
+        }
+    }
+
+    private static final class CacheData {
+        final String value;
+        final long expireTimestamp;
+
+        CacheData(String value, long timeoutMillis) {
+            this.value = value;
+            this.expireTimestamp = System.currentTimeMillis() + timeoutMillis;
+        }
+
+        boolean isExpired() {
+            return System.currentTimeMillis() > expireTimestamp;
+        }
+    }
+
+    private static final class StreamUrlCache {
+        private static final int MAX_ITEMS = 60;
+        private final java.util.LinkedHashMap<String, CacheData> map = new java.util.LinkedHashMap<String, CacheData>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, CacheData> eldest) {
+                return size() > MAX_ITEMS;
+            }
+        };
+
+        public synchronized String get(String key) {
+            CacheData data = map.get(key);
+            if (data == null) {
+                return null;
+            }
+            if (data.isExpired()) {
+                map.remove(key);
+                return null;
+            }
+            return data.value;
+        }
+
+        public synchronized void put(String key, String value, long timeoutMillis) {
+            removeStale();
+            map.put(key, new CacheData(value, timeoutMillis));
+        }
+
+        private void removeStale() {
+            map.entrySet().removeIf(entry -> entry.getValue().isExpired());
+        }
+
+        public synchronized void clear() {
+            map.clear();
         }
     }
 }

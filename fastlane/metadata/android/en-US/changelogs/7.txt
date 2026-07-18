@@ -1,0 +1,5 @@
+Upgraded video cache downloader to support high-quality (up to 1080p) stream merging using native MediaMuxer
+Added client-side download button to easily save completed cached videos offline
+Enabled robust auto-retry and custom User-Agent headers to prevent cache download interruptions
+Implemented dynamic audio language track switching via single-track manifest reloading
+Added system share integration to instantly cast videos or save them to a new Watch Later queue

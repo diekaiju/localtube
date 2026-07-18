@@ -1,0 +1,11 @@
+
+### LocalTube Enhancements
+
+1. **High-Quality Video Caching & Merging:**
+   Upgraded the video cache download logic to fetch separate high-quality video-only (up to 1080p) and audio-only streams from YouTube, merging them natively on-the-fly using the Android `MediaExtractor` and `MediaMuxer` APIs into a unified MP4 file.
+
+2. **DASH Audio Track Selector:**
+   Implemented robust support for selecting and switching dubbed audio language tracks dynamically, bypassing Chromium WebView MSE limitations using single-track manifest reloading.
+
+3. **Offline Client Downloads:**
+   Added a download button in the Cached Videos library to serve saved videos with an attachment header, allowing users to save the files directly to their client device's filesystem.
