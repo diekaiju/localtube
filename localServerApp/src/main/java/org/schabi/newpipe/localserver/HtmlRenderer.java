@@ -300,6 +300,95 @@ public class HtmlRenderer {
             "    body.is-phone .bottom-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--bottom-nav-item-color); font-size: 11px; font-weight: 500; transition: color 0.3s; }\n" +
             "    body.is-phone .bottom-nav-item.active { color: var(--bottom-nav-item-active-color); }\n" +
             "    body.is-phone .bottom-nav-icon { font-size: 20px; }\n" +
+            "    .container { margin: 16px auto; padding: 0 12px; }\n" +
+            "    .grid { gap: 16px; }\n" +
+            "    .player-container { gap: 16px; margin-top: 8px; }\n" +
+            "    .media-info { padding: 16px; border-radius: 12px; }\n" +
+            "    .media-title { font-size: 18px; line-height: 1.3; margin-bottom: 8px; }\n" +
+            "    .media-stats { font-size: 12px; gap: 8px; padding-bottom: 12px; margin-bottom: 12px; }\n" +
+            "    .uploader-profile { gap: 12px; margin-bottom: 16px; }\n" +
+            "    .uploader-avatar { width: 40px; height: 40px; }\n" +
+            "    .uploader-name { font-size: 14px; }\n" +
+            "    .uploader-subs { font-size: 12px; }\n" +
+            "    .subscribe-btn { padding: 8px 16px; font-size: 13px; border-radius: 20px; }\n" +
+            "    .media-description { padding: 12px; font-size: 13px; max-height: 180px; border-radius: 10px; }\n" +
+            "    .comments-section { padding: 16px; border-radius: 12px; margin-top: 8px; }\n" +
+            "    .comment-count { font-size: 16px; margin-bottom: 16px; }\n" +
+            "    .comment { gap: 12px; margin-bottom: 16px; padding-bottom: 12px; }\n" +
+            "    .comment-avatar { width: 32px; height: 32px; }\n" +
+            "    .comment-author { font-size: 13px; }\n" +
+            "    .comment-time { font-size: 11px; }\n" +
+            "    .comment-text { font-size: 13px; }\n" +
+            "    .native-player { border-radius: 12px; }\n" +
+            "    .channel-header { border-radius: 12px; margin-bottom: 16px; }\n" +
+            "    .channel-banner { height: 100px; }\n" +
+            "    .channel-details { padding: 16px; gap: 16px; flex-direction: column; align-items: center; text-align: center; }\n" +
+            "    .channel-avatar { width: 80px; height: 80px; }\n" +
+            "    .channel-info-block { align-items: center; }\n" +
+            "    .channel-name { font-size: 20px; }\n" +
+            "    .channel-desc { font-size: 13px; margin-top: 6px; }\n" +
+            "    .channel-tabs-selector { padding: 0 10px; justify-content: center; }\n" +
+            "    .channel-tab-btn { padding: 12px 16px; font-size: 13px; }\n" +
+            "    .settings-card { padding: 16px; border-radius: 12px; }\n" +
+            "    .settings-title { font-size: 20px; margin-bottom: 20px; }\n" +
+            "    .settings-section { margin-bottom: 20px; padding-bottom: 16px; }\n" +
+            "    .settings-section-title { font-size: 16px; }\n" +
+            "    .setting-row { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 16px; }\n" +
+            "    .switch { align-self: flex-start; }\n" +
+            "    .btn-save { padding: 12px; font-size: 14px; }\n" +
+            "}\n" +
+            "@media (max-width: 600px) {\n" +
+            "    header { padding: 10px 14px; }\n" +
+            "    .top-bar {\n" +
+            "        display: flex;\n" +
+            "        flex-wrap: wrap;\n" +
+            "        justify-content: space-between;\n" +
+            "        align-items: center;\n" +
+            "        gap: 12px;\n" +
+            "    }\n" +
+            "    .logo {\n" +
+            "        order: 1;\n" +
+            "        font-size: 20px;\n" +
+            "    }\n" +
+            "    .top-bar > div {\n" +
+            "        order: 2;\n" +
+            "    }\n" +
+            "    .search-form {\n" +
+            "        order: 3;\n" +
+            "        width: 100%;\n" +
+            "        max-width: 100%;\n" +
+            "    }\n" +
+            "    .search-input {\n" +
+            "        padding: 10px 16px;\n" +
+            "        font-size: 14px;\n" +
+            "    }\n" +
+            "    .search-btn {\n" +
+            "        padding: 10px 20px;\n" +
+            "        font-size: 14px;\n" +
+            "    }\n" +
+            "    .connect-text {\n" +
+            "        display: none;\n" +
+            "    }\n" +
+            "    #connect-remote-btn {\n" +
+            "        padding: 0 10px;\n" +
+            "        height: 36px;\n" +
+            "        font-size: 14px;\n" +
+            "    }\n" +
+            "}\n" +
+            "@media (max-width: 480px) {\n" +
+            "    .grid {\n" +
+            "        grid-template-columns: 1fr;\n" +
+            "        gap: 20px;\n" +
+            "    }\n" +
+            "    .card {\n" +
+            "        border-radius: 12px;\n" +
+            "    }\n" +
+            "    .card-details {\n" +
+            "        padding: 12px;\n" +
+            "    }\n" +
+            "    .card-title {\n" +
+            "        font-size: 14px;\n" +
+            "    }\n" +
             "}\n" +
             "body.is-tv *:focus {\n" +
             "  outline: 4px solid #c084fc !important;\n" +
@@ -360,7 +449,7 @@ public class HtmlRenderer {
           .append("      <button type=\"submit\" class=\"search-btn\">🔎</button>\n")
           .append("    </form>\n")
           .append("    <div style=\"display:flex; align-items:center; gap:10px;\">\n")
-          .append("      <button id=\"connect-remote-btn\" onclick=\"playOnTV(window.location.href, document.title)\">📺 Connect Remote</button>\n")
+          .append("      <button id=\"connect-remote-btn\" onclick=\"playOnTV(window.location.href, document.title)\">📺<span class=\"connect-text\"> Connect Remote</span></button>\n")
           .append("      <button id=\"theme-toggle\" class=\"theme-toggle-btn\" aria-label=\"Toggle Theme\">\n")
           .append("        <span class=\"theme-icon-light\">☀️</span>\n")
           .append("        <span class=\"theme-icon-dark\">🌙</span>\n")
