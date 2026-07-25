@@ -3,10 +3,15 @@ LocalTube is an enhanced, self-hosted streaming server solution built on top of 
 Key Features:
 - Decentralized Local Server: Runs a lightweight, concurrent Java HTTP server directly on your Android device (default port 8080), serving a modern, responsive web interface.
 - Cross-Device Playback: Connect seamlessly to the server from any device on your local network (PC, laptop, smart TV, tablet) by visiting your device's local IP.
-- Video.js Media Player: High-performance HTML5 player using Video.js for seamless quality switching, adaptive playback speed control, and smooth seeking.
+- Video.js Media Player: High-performance HTML5 player using Video.js for quality switching, adaptive playback speed, gesture controls, and smooth seeking.
+- Enhanced Gestures & Shortcuts: Double-tap or double-click to seek 10s forward/backward (with chevron ripples), swipe vertically to adjust volume (with volume HUD), and use keyboard/remote D-pad shortcuts (Space, J, L, M, Arrows).
+- Autoplay Queue: Seamless "Up Next" autoplay timer countdown at the end of video playback with Cancel and Play Now actions.
+- Picture-in-Picture & Subtitles: Native floating Picture-in-Picture window support, and fully fixed WebVTT captions/subtitles rendering.
 - Remote Playback Control: Remotely control other active clients on your network (play, pause, fast-forward, rewind) from the web interface.
 - Database Backup Import/Export: Back up and restore your settings and SQLite watch history as JSON files.
 - Custom Quality Preferences: Easily manage preferred video streaming resolutions directly inside the client and server settings.
 - Theme Customization: Toggle between modern Dark and clean Light themes instantly.
+- Material 3 User Interface: Beautifully updated UI with cohesive Material Design 3 tokens, color harmonies, and responsive layouts.
 - Private Watch History: Tracks your watched videos locally on the host device using a secure SQLite database, maintaining privacy with zero external telemetry or tracking.
+
 

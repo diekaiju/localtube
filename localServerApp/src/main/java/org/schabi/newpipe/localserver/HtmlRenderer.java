@@ -313,7 +313,80 @@ public class HtmlRenderer {
             ".search-suggestion-item:hover { background-color: var(--service-tab-hover-bg); }\n" +
             ".search-suggestion-text { display: flex; align-items: center; gap: 12px; flex-grow: 1; }\n" +
             ".search-suggestion-delete { color: #cc0000; font-size: 12px; cursor: pointer; padding: 4px 8px; border-radius: 4px; }\n" +
-            ".search-suggestion-delete:hover { background-color: rgba(204,0,0,0.1); }";
+            ".search-suggestion-delete:hover { background-color: rgba(204,0,0,0.1); }\n" +
+            ".vjs-player-wrapper { position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #000; }\n" +
+            ".double-tap-indicator {\n" +
+            "  position: absolute;\n" +
+            "  top: 0;\n" +
+            "  bottom: 0;\n" +
+            "  width: 35%;\n" +
+            "  display: flex;\n" +
+            "  flex-direction: column;\n" +
+            "  align-items: center;\n" +
+            "  justify-content: center;\n" +
+            "  background: rgba(0, 0, 0, 0.4);\n" +
+            "  color: #fff;\n" +
+            "  opacity: 0;\n" +
+            "  pointer-events: none;\n" +
+            "  transition: opacity 0.25s ease-in-out;\n" +
+            "  z-index: 10;\n" +
+            "}\n" +
+            ".double-tap-indicator.left { left: 0; border-top-left-radius: 12px; border-bottom-left-radius: 12px; }\n" +
+            ".double-tap-indicator.right { right: 0; border-top-right-radius: 12px; border-bottom-right-radius: 12px; }\n" +
+            ".double-tap-indicator.show { opacity: 1; }\n" +
+            ".double-tap-indicator svg { width: 44px; height: 44px; fill: #fff; animation: bounceGlow 0.5s infinite alternate; }\n" +
+            ".double-tap-text { font-size: 14px; font-weight: bold; margin-top: 6px; }\n" +
+            "@keyframes bounceGlow {\n" +
+            "  0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(255,255,255,0.6)); }\n" +
+            "  100% { transform: scale(1.08); filter: drop-shadow(0 0 8px rgba(255,255,255,0.9)); }\n" +
+            "}\n" +
+            ".volume-hud {\n" +
+            "  position: absolute;\n" +
+            "  top: 24px;\n" +
+            "  left: 50%;\n" +
+            "  transform: translateX(-50%);\n" +
+            "  background: rgba(0, 0, 0, 0.8);\n" +
+            "  color: #fff;\n" +
+            "  padding: 8px 16px;\n" +
+            "  border-radius: 20px;\n" +
+            "  font-size: 13px;\n" +
+            "  font-weight: 500;\n" +
+            "  z-index: 15;\n" +
+            "  display: flex;\n" +
+            "  align-items: center;\n" +
+            "  gap: 8px;\n" +
+            "  opacity: 0;\n" +
+            "  transition: opacity 0.2s ease;\n" +
+            "  pointer-events: none;\n" +
+            "}\n" +
+            ".volume-hud.show { opacity: 1; }\n" +
+            ".up-next-overlay {\n" +
+            "  position: absolute;\n" +
+            "  top: 0; left: 0; right: 0; bottom: 0;\n" +
+            "  background: rgba(0,0,0,0.88);\n" +
+            "  z-index: 20;\n" +
+            "  display: flex;\n" +
+            "  flex-direction: column;\n" +
+            "  align-items: center;\n" +
+            "  justify-content: center;\n" +
+            "  color: #fff;\n" +
+            "  opacity: 0;\n" +
+            "  pointer-events: none;\n" +
+            "  transition: opacity 0.3s ease;\n" +
+            "}\n" +
+            ".up-next-overlay.show { opacity: 1; pointer-events: auto; }\n" +
+            ".up-next-title { font-size: 12px; text-transform: uppercase; color: #bbb; letter-spacing: 1.5px; margin-bottom: 6px; }\n" +
+            ".up-next-name { font-size: 18px; font-weight: bold; text-align: center; max-width: 80%; margin-bottom: 12px; }\n" +
+            ".up-next-thumb { width: 160px; aspect-ratio: 16/9; border-radius: 8px; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-bottom: 16px; }\n" +
+            ".up-next-btn-row { display: flex; gap: 12px; }\n" +
+            ".up-next-btn { padding: 8px 20px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer; font-size: 13px; }\n" +
+            ".up-next-btn-play { background: #7c3aed; color: #fff; }\n" +
+            ".up-next-btn-cancel { background: rgba(255,255,255,0.18); color: #fff; }\n" +
+            ".up-next-circle { position: relative; width: 56px; height: 56px; margin-bottom: 12px; }\n" +
+            ".up-next-circle svg { transform: rotate(-90deg); }\n" +
+            ".up-next-circle circle { fill: none; stroke-width: 4; }\n" +
+            ".up-next-circle-bg { stroke: rgba(255,255,255,0.2); }\n" +
+            ".up-next-circle-val { stroke: #7c3aed; stroke-dasharray: 138; stroke-dashoffset: 0; transition: stroke-dashoffset 0.1s linear; }";
 
     // Supported platform details
     public static final String[] SERVICE_NAMES = {"YouTube"};
@@ -1312,6 +1385,239 @@ public class HtmlRenderer {
 
     public static String renderWatchContent(int serviceId, StreamInfo info, CachedVideo cachedVideo, boolean isSubscribed, boolean isTv, String targetQuality, long duration) {
         StringBuilder sb = new StringBuilder();
+        String nextVideoUrl = "";
+        String nextVideoTitle = "";
+        String nextVideoThumb = "";
+        if (info.getRelatedItems() != null && !info.getRelatedItems().isEmpty()) {
+            InfoItem nextItem = info.getRelatedItems().get(0);
+            nextVideoUrl = "/watch?serviceId=" + serviceId + "&id=" + nextItem.getUrl();
+            nextVideoTitle = nextItem.getName();
+            nextVideoThumb = getThumbnailUrl(nextItem.getThumbnails());
+        }
+        
+        String advancedJs = 
+            "                (function() {\n" +
+            "                    const nextUrl = \"" + escapeJs(nextVideoUrl) + "\";\n" +
+            "                    const nextTitle = \"" + escapeJs(nextVideoTitle) + "\";\n" +
+            "                    const nextThumb = \"" + escapeJs(nextVideoThumb) + "\";\n" +
+            "                    \n" +
+            "                    const wrapper = player.el();\n" +
+            "                    player.ready(() => {\n" +
+            "                        const el = player.el();\n" +
+            "                        const leftTap = document.getElementById(\"double-tap-left\");\n" +
+            "                        const rightTap = document.getElementById(\"double-tap-right\");\n" +
+            "                        const volumeHud = document.getElementById(\"volume-hud-indicator\");\n" +
+            "                        const autoplayOverlay = document.getElementById(\"autoplay-overlay\");\n" +
+            "                        if (leftTap) el.appendChild(leftTap);\n" +
+            "                        if (rightTap) el.appendChild(rightTap);\n" +
+            "                        if (volumeHud) el.appendChild(volumeHud);\n" +
+            "                        if (autoplayOverlay) el.appendChild(autoplayOverlay);\n" +
+            "                    });\n" +
+            "                    \n" +
+            "                    // Double tap & Double click to seek\n" +
+            "                    if (wrapper) {\n" +
+            "                        let lastTap = 0;\n" +
+            "                        wrapper.addEventListener(\"touchstart\", function(e) {\n" +
+            "                            const now = Date.now();\n" +
+            "                            const DOUBLE_PRESS_DELAY = 300;\n" +
+            "                            if (now - lastTap < DOUBLE_PRESS_DELAY) {\n" +
+            "                                e.preventDefault();\n" +
+            "                                const rect = wrapper.getBoundingClientRect();\n" +
+            "                                const touchX = e.touches[0].clientX - rect.left;\n" +
+            "                                const isLeft = touchX < rect.width * 0.4;\n" +
+            "                                const isRight = touchX > rect.width * 0.6;\n" +
+            "                                if (isLeft) {\n" +
+            "                                    window.seekVideo(-10);\n" +
+            "                                    showDoubleTapRipple(\"left\");\n" +
+            "                                } else if (isRight) {\n" +
+            "                                    window.seekVideo(10);\n" +
+            "                                    showDoubleTapRipple(\"right\");\n" +
+            "                                }\n" +
+            "                            }\n" +
+            "                            lastTap = now;\n" +
+            "                        }, { passive: false });\n" +
+            "                        \n" +
+            "                        wrapper.addEventListener(\"dblclick\", function(e) {\n" +
+            "                            e.preventDefault();\n" +
+            "                            const rect = wrapper.getBoundingClientRect();\n" +
+            "                            const clickX = e.clientX - rect.left;\n" +
+            "                            const isLeft = clickX < rect.width * 0.4;\n" +
+            "                            const isRight = clickX > rect.width * 0.6;\n" +
+            "                            if (isLeft) {\n" +
+            "                                window.seekVideo(-10);\n" +
+            "                                showDoubleTapRipple(\"left\");\n" +
+            "                            } else if (isRight) {\n" +
+            "                                window.seekVideo(10);\n" +
+            "                                showDoubleTapRipple(\"right\");\n" +
+            "                            }\n" +
+            "                        });\n" +
+            "                    }\n" +
+            "                    \n" +
+            "                    function showDoubleTapRipple(side) {\n" +
+            "                        const ind = document.getElementById(\"double-tap-\" + side);\n" +
+            "                        if (ind) {\n" +
+            "                            ind.classList.add(\"show\");\n" +
+            "                            setTimeout(() => ind.classList.remove(\"show\"), 650);\n" +
+            "                        }\n" +
+            "                    }\n" +
+            "                    \n" +
+            "                    // Swipe vertically on right side to adjust volume\n" +
+            "                    if (wrapper) {\n" +
+            "                        let touchStartY = 0;\n" +
+            "                        let initialVolume = 1;\n" +
+            "                        let isSwipeActive = false;\n" +
+            "                        \n" +
+            "                        wrapper.addEventListener(\"touchstart\", function(e) {\n" +
+            "                            if (e.touches.length === 1) {\n" +
+            "                                const rect = wrapper.getBoundingClientRect();\n" +
+            "                                const touchX = e.touches[0].clientX - rect.left;\n" +
+            "                                if (touchX > rect.width * 0.5) {\n" +
+            "                                    touchStartY = e.touches[0].clientY;\n" +
+            "                                    initialVolume = player.volume();\n" +
+            "                                    isSwipeActive = true;\n" +
+            "                                }\n" +
+            "                            }\n" +
+            "                        }, { passive: true });\n" +
+            "                        \n" +
+            "                        wrapper.addEventListener(\"touchmove\", function(e) {\n" +
+            "                            if (isSwipeActive && e.touches.length === 1) {\n" +
+            "                                e.preventDefault();\n" +
+            "                                const deltaY = touchStartY - e.touches[0].clientY;\n" +
+            "                                const rect = wrapper.getBoundingClientRect();\n" +
+            "                                const volumeChange = deltaY / (rect.height * 0.8);\n" +
+            "                                const newVolume = Math.max(0, Math.min(1, initialVolume + volumeChange));\n" +
+            "                                player.volume(newVolume);\n" +
+            "                                showVolumeHUD(Math.round(newVolume * 100));\n" +
+            "                            }\n" +
+            "                        }, { passive: false });\n" +
+            "                        \n" +
+            "                        wrapper.addEventListener(\"touchend\", function() {\n" +
+            "                            isSwipeActive = false;\n" +
+            "                        });\n" +
+            "                    }\n" +
+            "                    \n" +
+            "                    let volumeHudTimeout = null;\n" +
+            "                    function showVolumeHUD(volumePercent) {\n" +
+            "                        const hud = document.getElementById(\"volume-hud-indicator\");\n" +
+            "                        const text = document.getElementById(\"volume-hud-text\");\n" +
+            "                        const icon = document.getElementById(\"volume-hud-icon\");\n" +
+            "                        if (hud && text && icon) {\n" +
+            "                            text.innerText = volumePercent + \"%\";\n" +
+            "                            if (volumePercent === 0) icon.innerText = \"🔇\";\n" +
+            "                            else if (volumePercent < 30) icon.innerText = \"🔈\";\n" +
+            "                            else if (volumePercent < 70) icon.innerText = \"🔉\";\n" +
+            "                            else icon.innerText = \"🔊\";\n" +
+            "                            hud.classList.add(\"show\");\n" +
+            "                            clearTimeout(volumeHudTimeout);\n" +
+            "                            volumeHudTimeout = setTimeout(() => hud.classList.remove(\"show\"), 1000);\n" +
+            "                        }\n" +
+            "                    }\n" +
+            "                    \n" +
+            "                    // Autoplay Queue\n" +
+            "                    let autoplayTimer = null;\n" +
+            "                    let autoplayInterval = null;\n" +
+            "                    player.on(\"ended\", function() {\n" +
+            "                        if (!nextUrl) return;\n" +
+            "                        const overlay = document.getElementById(\"autoplay-overlay\");\n" +
+            "                        const titleEl = document.getElementById(\"autoplay-next-title\");\n" +
+            "                        const thumbEl = document.getElementById(\"autoplay-next-thumb\");\n" +
+            "                        const progressCircle = document.getElementById(\"autoplay-progress-circle\");\n" +
+            "                        \n" +
+            "                        if (overlay && titleEl && thumbEl && progressCircle) {\n" +
+            "                            titleEl.innerText = nextTitle;\n" +
+            "                            thumbEl.src = nextThumb;\n" +
+            "                            overlay.classList.add(\"show\");\n" +
+            "                            \n" +
+            "                            const totalDash = 138;\n" +
+            "                            progressCircle.style.strokeDashoffset = 0;\n" +
+            "                            \n" +
+            "                            autoplayTimer = setTimeout(() => {\n" +
+            "                                window.location.href = nextUrl;\n" +
+            "                            }, 5000);\n" +
+            "                            \n" +
+            "                            let elapsed = 0;\n" +
+            "                            autoplayInterval = setInterval(() => {\n" +
+            "                                elapsed += 100;\n" +
+            "                                const progress = elapsed / 5000;\n" +
+            "                                progressCircle.style.strokeDashoffset = totalDash * progress;\n" +
+            "                            }, 100);\n" +
+            "                        }\n" +
+            "                    });\n" +
+            "                    \n" +
+            "                    function clearAutoplay() {\n" +
+            "                        clearTimeout(autoplayTimer);\n" +
+            "                        clearInterval(autoplayInterval);\n" +
+            "                        const overlay = document.getElementById(\"autoplay-overlay\");\n" +
+            "                        if (overlay) overlay.classList.remove(\"show\");\n" +
+            "                    }\n" +
+            "                    \n" +
+            "                    const cancelBtn = document.getElementById(\"autoplay-cancel\");\n" +
+            "                    if (cancelBtn) cancelBtn.addEventListener(\"click\", clearAutoplay);\n" +
+            "                    \n" +
+            "                    const playNowBtn = document.getElementById(\"autoplay-play-now\");\n" +
+            "                    if (playNowBtn) {\n" +
+            "                        playNowBtn.addEventListener(\"click\", () => {\n" +
+            "                            if (nextUrl) window.location.href = nextUrl;\n" +
+            "                        });\n" +
+            "                    }\n" +
+            "                    \n" +
+            "                    // Keyboard Shortcuts\n" +
+            "                    document.addEventListener(\"keydown\", (e) => {\n" +
+            "                        const active = document.activeElement;\n" +
+            "                        if (active && (active.tagName === \"INPUT\" || active.tagName === \"SELECT\" || active.tagName === \"TEXTAREA\" || active.isContentEditable)) {\n" +
+            "                            return;\n" +
+            "                        }\n" +
+            "                        if (e.key === \" \" || e.key === \"k\" || e.key === \"K\") {\n" +
+            "                            e.preventDefault();\n" +
+            "                            if (player.paused()) player.play().catch(e => {}); else player.pause();\n" +
+            "                        } else if (e.key === \"j\" || e.key === \"J\") {\n" +
+            "                            e.preventDefault();\n" +
+            "                            window.seekVideo(-10);\n" +
+            "                            showDoubleTapRipple(\"left\");\n" +
+            "                        } else if (e.key === \"l\" || e.key === \"L\") {\n" +
+            "                            e.preventDefault();\n" +
+            "                            window.seekVideo(10);\n" +
+            "                            showDoubleTapRipple(\"right\");\n" +
+            "                        } else if (e.key === \"m\" || e.key === \"M\") {\n" +
+            "                            e.preventDefault();\n" +
+            "                            player.muted(!player.muted());\n" +
+            "                            showVolumeHUD(player.muted() ? 0 : Math.round(player.volume() * 100));\n" +
+            "                        }\n" +
+            "                    });\n" +
+            "                    \n" +
+            "                    // Picture-in-Picture Control\n" +
+            "                    try {\n" +
+            "                        const Button = videojs.getComponent(\"Button\");\n" +
+            "                        const PipButton = videojs.extend(Button, {\n" +
+            "                            constructor: function() {\n" +
+            "                                Button.apply(this, arguments);\n" +
+            "                                this.controlText(\"Picture-in-Picture\");\n" +
+            "                            },\n" +
+            "                            createEl: function() {\n" +
+            "                                return videojs.dom.createEl(\"button\", {\n" +
+            "                                    className: \"vjs-pip-control vjs-control vjs-button\",\n" +
+            "                                    innerHTML: '<span aria-hidden=\"true\" class=\"vjs-icon-placeholder\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" style=\"width:18px;height:18px;vertical-align:middle;margin-top:6px;\"><path d=\"M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z\"/></svg></span>',\n" +
+            "                                    type: \"button\"\n" +
+            "                                });\n" +
+            "                            },\n" +
+            "                            handleClick: function() {\n" +
+            "                                const video = document.querySelector(\"#player_html5_api\") || document.querySelector(\"video\");\n" +
+            "                                if (video) {\n" +
+            "                                    if (document.pictureInPictureElement) {\n" +
+            "                                        document.exitPictureInPicture().catch(e => {});\n" +
+            "                                    } else {\n" +
+            "                                        video.requestPictureInPicture().catch(e => {});\n" +
+            "                                    }\n" +
+            "                                }\n" +
+            "                            }\n" +
+            "                        });\n" +
+            "                        videojs.registerComponent(\"PipButton\", PipButton);\n" +
+            "                        player.ready(() => {\n" +
+            "                            player.getChild(\"controlBar\").addChild(\"PipButton\", {}, player.getChild(\"controlBar\").children().length - 1);\n" +
+            "                        });\n" +
+            "                    } catch(e) { console.error(e); }\n" +
+            "                })();\n";
+
         sb.append("<script>document.title = \"").append(escapeJs(info.getName())).append(" - LocalTube\";</script>\n");
         sb.append("<div class=\"container\">\n")
           .append("  <div class=\"player-container\">\n")
@@ -1340,11 +1646,38 @@ public class HtmlRenderer {
             }
 
             if (isCached) {
-                sb.append("        <div style=\"width:100%; border-radius:12px; overflow:hidden; background:#000;\">\n")
+                sb.append("        <div class=\"vjs-player-wrapper\">\n")
                   .append("          <video id=\"player\" class=\"video-js vjs-default-skin vjs-big-play-centered\" controls autoplay preload=\"auto\" style=\"width:100%; height:auto; aspect-ratio:16/9; display:block;\" poster=\"/thumbnail?id=").append(encodeUrl(info.getUrl())).append("\">\n")
                   .append("            <source src=\"/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" type=\"video/mp4\">\n")
                   .append(trackTags.toString())
                   .append("          </video>\n")
+                  .append("          <div class=\"double-tap-indicator left\" id=\"double-tap-left\">\n")
+                  .append("            <svg viewBox=\"0 0 24 24\"><path d=\"M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z\"/></svg>\n")
+                  .append("            <div class=\"double-tap-text\">-10s</div>\n")
+                  .append("          </div>\n")
+                  .append("          <div class=\"double-tap-indicator right\" id=\"double-tap-right\">\n")
+                  .append("            <svg viewBox=\"0 0 24 24\"><path d=\"M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z\"/></svg>\n")
+                  .append("            <div class=\"double-tap-text\">+10s</div>\n")
+                  .append("          </div>\n")
+                  .append("          <div class=\"volume-hud\" id=\"volume-hud-indicator\">\n")
+                  .append("            <span id=\"volume-hud-icon\">🔊</span>\n")
+                  .append("            <span id=\"volume-hud-text\">100%</span>\n")
+                  .append("          </div>\n")
+                  .append("          <div class=\"up-next-overlay\" id=\"autoplay-overlay\">\n")
+                  .append("            <div class=\"up-next-title\">Up Next</div>\n")
+                  .append("            <div class=\"up-next-name\" id=\"autoplay-next-title\"></div>\n")
+                  .append("            <img class=\"up-next-thumb\" id=\"autoplay-next-thumb\" src=\"\" alt=\"\">\n")
+                  .append("            <div class=\"up-next-circle\">\n")
+                  .append("              <svg width=\"56\" height=\"56\">\n")
+                  .append("                <circle cx=\"28\" cy=\"28\" r=\"22\" class=\"up-next-circle-bg\" />\n" )
+                  .append("                <circle cx=\"28\" cy=\"28\" r=\"22\" class=\"up-next-circle-val\" id=\"autoplay-progress-circle\" />\n")
+                  .append("              </svg>\n")
+                  .append("            </div>\n")
+                  .append("            <div class=\"up-next-btn-row\">\n")
+                  .append("              <button class=\"up-next-btn up-next-btn-play\" id=\"autoplay-play-now\">Play Now</button>\n")
+                  .append("              <button class=\"up-next-btn up-next-btn-cancel\" id=\"autoplay-cancel\">Cancel</button>\n")
+                  .append("            </div>\n")
+                  .append("          </div>\n")
                   .append("        </div>\n");
 
                 sb.append("        <script>\n")
@@ -1370,15 +1703,43 @@ public class HtmlRenderer {
                   .append("                window.seekVideo = (delta) => {\n")
                   .append("                    player.currentTime(Math.max(0, Math.min(player.duration() || 0, player.currentTime() + delta)));\n")
                   .append("                };\n")
+                  .append(advancedJs)
                   .append("            })();\n")
                   .append("        </script>\n");
             } else {
-                sb.append("        <div style=\"width:100%; border-radius:12px; overflow:hidden; background:#000;\">\n")
+                sb.append("        <div class=\"vjs-player-wrapper\">\n")
                   .append("          <video id=\"player\" class=\"video-js vjs-default-skin vjs-big-play-centered\" controls autoplay preload=\"auto\" style=\"width:100%; height:auto; aspect-ratio:16/9; display:block;\">\n")
                   .append("            <source src=\"/manifest?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" type=\"application/dash+xml\">\n")
                   .append(trackTags.toString())
                   .append("            Your browser does not support HTML5 video.\n")
                   .append("          </video>\n")
+                  .append("          <div class=\"double-tap-indicator left\" id=\"double-tap-left\">\n")
+                  .append("            <svg viewBox=\"0 0 24 24\"><path d=\"M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z\"/></svg>\n")
+                  .append("            <div class=\"double-tap-text\">-10s</div>\n")
+                  .append("          </div>\n")
+                  .append("          <div class=\"double-tap-indicator right\" id=\"double-tap-right\">\n")
+                  .append("            <svg viewBox=\"0 0 24 24\"><path d=\"M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z\"/></svg>\n")
+                  .append("            <div class=\"double-tap-text\">+10s</div>\n")
+                  .append("          </div>\n")
+                  .append("          <div class=\"volume-hud\" id=\"volume-hud-indicator\">\n")
+                  .append("            <span id=\"volume-hud-icon\">🔊</span>\n")
+                  .append("            <span id=\"volume-hud-text\">100%</span>\n")
+                  .append("          </div>\n")
+                  .append("          <div class=\"up-next-overlay\" id=\"autoplay-overlay\">\n")
+                  .append("            <div class=\"up-next-title\">Up Next</div>\n")
+                  .append("            <div class=\"up-next-name\" id=\"autoplay-next-title\"></div>\n")
+                  .append("            <img class=\"up-next-thumb\" id=\"autoplay-next-thumb\" src=\"\" alt=\"\">\n")
+                  .append("            <div class=\"up-next-circle\">\n")
+                  .append("              <svg width=\"56\" height=\"56\">\n")
+                  .append("                <circle cx=\"28\" cy=\"28\" r=\"22\" class=\"up-next-circle-bg\" />\n" )
+                  .append("                <circle cx=\"28\" cy=\"28\" r=\"22\" class=\"up-next-circle-val\" id=\"autoplay-progress-circle\" />\n")
+                  .append("              </svg>\n")
+                  .append("            </div>\n")
+                  .append("            <div class=\"up-next-btn-row\">\n")
+                  .append("              <button class=\"up-next-btn up-next-btn-play\" id=\"autoplay-play-now\">Play Now</button>\n")
+                  .append("              <button class=\"up-next-btn up-next-btn-cancel\" id=\"autoplay-cancel\">Cancel</button>\n")
+                  .append("            </div>\n")
+                  .append("          </div>\n")
                   .append("        </div>\n");
 
                 // Serialize available audio tracks for JavaScript dropdown rendering
@@ -1612,6 +1973,7 @@ public class HtmlRenderer {
                   .append("                        window.location.href = url.toString();\n")
                   .append("                    });\n")
                   .append("                }\n")
+                  .append(advancedJs)
                   .append("            })();\n")
                   .append("        </script>\n");
             }

@@ -1,0 +1,7 @@
+Added gesture controls: double-tap to seek 10s forward/backward (with chevron overlay indicators) and swipe vertically to adjust volume (with volume HUD overlay)
+Integrated modern "Up Next" autoplay countdown queue at the end of video playback with Cancel and Play Now options
+Added native Picture-in-Picture (PiP) toggle button inside the player control bar
+Reimplemented WebVTT captions proxy loading to fix broken subtitles/captions rendering
+Enhanced keyboard/remote D-pad shortcuts (Space/K for play-pause, J/L/Arrows for seek, M for mute)
+Upgraded user interface with a modern, responsive Material 3 design system
+

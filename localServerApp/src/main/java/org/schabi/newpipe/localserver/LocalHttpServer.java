@@ -1233,22 +1233,16 @@ public class LocalHttpServer {
 
             if (targetStream != null) {
                 String subUrl = targetStream.getContent();
+                if (subUrl != null) {
+                    subUrl = subUrl.replaceAll("&fmt=[^&]*", "") + "&fmt=vtt";
+                }
                 okhttp3.Request req = new okhttp3.Request.Builder()
                         .url(subUrl)
                         .header("User-Agent", "Mozilla/5.0")
                         .build();
                 try (okhttp3.Response response = httpClient.newCall(req).execute()) {
                     byte[] bodyBytes = response.body() != null ? response.body().bytes() : new byte[0];
-                    String contentType = response.header("Content-Type");
-                    if (contentType == null) {
-                        if (targetStream.getFormat() == MediaFormat.VTT) {
-                            contentType = "text/vtt";
-                        } else if (targetStream.getFormat() == MediaFormat.TTML) {
-                            contentType = "application/ttml+xml";
-                        } else {
-                            contentType = "text/plain";
-                        }
-                    }
+                    String contentType = "text/vtt";
                     String headers = "HTTP/1.1 200 OK\r\n" +
                             "Content-Type: " + contentType + "; charset=UTF-8\r\n" +
                             "Content-Length: " + bodyBytes.length + "\r\n" +
