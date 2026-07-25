@@ -390,6 +390,8 @@ public class LocalHttpServer {
                         sendResponse(os, 200, "OK", "text/plain; charset=UTF-8");
                     } else if (path.equals("/cache")) {
                         handleCache(os, params, isTv);
+                    } else if (path.equals("/cache-status")) {
+                        handleCacheStatus(os, params);
                     } else if (path.equals("/subscriptions")) {
                         handleSubscriptions(os, params, isTv);
                     } else if (path.equals("/subscribe")) {
@@ -1409,22 +1411,45 @@ public class LocalHttpServer {
             int serviceId = getServiceId(params);
             String action = params.get("action");
             String mediaUrl = params.get("id");
+            boolean isAjax = "ajax".equals(params.get("back"));
 
             if ("add".equals(action) && mediaUrl != null && !mediaUrl.isEmpty()) {
                 String quality = params.get("quality");
                 String audioTrack = params.get("audio_track");
                 VideoCacheManager.getInstance(context).startCaching(mediaUrl, serviceId, quality, audioTrack);
-                sendRedirect(os, "/watch?serviceId=" + serviceId + "&id=" + java.net.URLEncoder.encode(mediaUrl, "UTF-8"));
+                if (isAjax) {
+                    sendResponse(os, 200, "{\"status\":\"success\"}", "application/json");
+                } else {
+                    sendRedirect(os, "/watch?serviceId=" + serviceId + "&id=" + java.net.URLEncoder.encode(mediaUrl, "UTF-8"));
+                }
                 return;
             } else if ("delete".equals(action) && mediaUrl != null && !mediaUrl.isEmpty()) {
                 VideoCacheManager.getInstance(context).deleteCache(mediaUrl);
-                sendRedirect(os, "/cache?serviceId=" + serviceId);
+                if (isAjax) {
+                    sendResponse(os, 200, "{\"status\":\"success\"}", "application/json");
+                } else {
+                    sendRedirect(os, "/cache?serviceId=" + serviceId);
+                }
                 return;
             }
 
             List<CachedVideo> cachedVideos = dbHelper.getCachedVideos();
             String html = HtmlRenderer.renderCachedList(serviceId, cachedVideos, isTv);
             sendResponse(os, 200, html, "text/html; charset=UTF-8");
+        }
+
+        private void handleCacheStatus(OutputStream os, Map<String, String> params) throws Exception {
+            String mediaUrl = params.get("id");
+            if (mediaUrl == null || mediaUrl.isEmpty()) {
+                sendResponse(os, 400, "{\"error\":\"Missing id\"}", "application/json");
+                return;
+            }
+            CachedVideo cached = dbHelper.getCachedVideo(mediaUrl);
+            if (cached == null) {
+                sendResponse(os, 200, "{\"status\":\"NONE\",\"progress\":0}", "application/json");
+            } else {
+                sendResponse(os, 200, "{\"status\":\"" + cached.getStatus() + "\",\"progress\":" + cached.getProgress() + "}", "application/json");
+            }
         }
 
         private void handleSubscriptions(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
@@ -1450,7 +1475,9 @@ public class LocalHttpServer {
                 dbHelper.removeSubscription(channelUrl);
             }
 
-            if (back != null && !back.isEmpty()) {
+            if ("ajax".equals(back)) {
+                sendResponse(os, 200, "{\"status\":\"success\"}", "application/json");
+            } else if (back != null && !back.isEmpty()) {
                 if (back.startsWith("/")) {
                     sendRedirect(os, back);
                 } else {

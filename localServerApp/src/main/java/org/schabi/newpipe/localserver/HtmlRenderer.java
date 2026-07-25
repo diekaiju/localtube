@@ -25,379 +25,255 @@ public class HtmlRenderer {
 
     // Global CSS stylesheet for a premium, themeable, responsive user experience
     private static final String CSS = 
-            "@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');\n" +
+            "@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');\n" +
             ":root {\n" +
-            "  --bg-color: #f9fafb;\n" +
-            "  --text-color: #111827;\n" +
-            "  --header-bg: rgba(255, 255, 255, 0.85);\n" +
-            "  --header-border: rgba(0, 0, 0, 0.08);\n" +
-            "  --logo-color: #111827;\n" +
-            "  --search-input-border: rgba(0, 0, 0, 0.15);\n" +
-            "  --search-input-bg: rgba(0, 0, 0, 0.02);\n" +
-            "  --search-input-color: #111827;\n" +
-            "  --service-tab-bg: rgba(0, 0, 0, 0.04);\n" +
-            "  --service-tab-color: #4b5563;\n" +
-            "  --service-tab-hover-bg: rgba(0, 0, 0, 0.08);\n" +
-            "  --service-tab-hover-color: #111827;\n" +
-            "  --card-bg: #ffffff;\n" +
-            "  --card-border: rgba(0, 0, 0, 0.06);\n" +
-            "  --card-thumbnail-bg: #f3f4f6;\n" +
-            "  --card-title-color: #111827;\n" +
-            "  --card-meta-color: #4b5563;\n" +
-            "  --media-info-bg: #ffffff;\n" +
-            "  --media-info-border: rgba(0, 0, 0, 0.06);\n" +
-            "  --media-title-color: #111827;\n" +
-            "  --media-stats-color: #4b5563;\n" +
-            "  --uploader-name-color: #111827;\n" +
-            "  --uploader-subs-color: #4b5563;\n" +
-            "  --media-desc-color: #374151;\n" +
-            "  --media-desc-bg: rgba(0, 0, 0, 0.02);\n" +
-            "  --media-desc-border: rgba(0, 0, 0, 0.04);\n" +
-            "  --comments-bg: #ffffff;\n" +
-            "  --comments-border: rgba(0, 0, 0, 0.06);\n" +
-            "  --comment-count-color: #111827;\n" +
-            "  --comment-border: rgba(0, 0, 0, 0.06);\n" +
-            "  --comment-author-color: #111827;\n" +
-            "  --comment-time-color: #4b5563;\n" +
-            "  --comment-text-color: #374151;\n" +
-            "  --channel-header-bg: #ffffff;\n" +
-            "  --channel-header-border: rgba(0, 0, 0, 0.06);\n" +
-            "  --channel-name-color: #111827;\n" +
-            "  --channel-desc-color: #4b5563;\n" +
-            "  --bottom-nav-bg: rgba(255, 255, 255, 0.95);\n" +
-            "  --bottom-nav-border: rgba(0, 0, 0, 0.08);\n" +
-            "  --bottom-nav-item-color: #4b5563;\n" +
-            "  --bottom-nav-item-active-color: #111827;\n" +
+            "  --bg-color: #ffffff;\n" +
+            "  --text-color: #0f0f0f;\n" +
+            "  --header-bg: #ffffff;\n" +
+            "  --header-border: rgba(0, 0, 0, 0.1);\n" +
+            "  --logo-color: #0f0f0f;\n" +
+            "  --search-input-border: #cccccc;\n" +
+            "  --search-input-bg: #ffffff;\n" +
+            "  --search-input-color: #0f0f0f;\n" +
+            "  --search-btn-bg: #f8f8f8;\n" +
+            "  --search-btn-hover: #f0f0f0;\n" +
+            "  --service-tab-bg: #f2f2f2;\n" +
+            "  --service-tab-color: #0f0f0f;\n" +
+            "  --service-tab-hover-bg: #e5e5e5;\n" +
+            "  --service-tab-hover-color: #0f0f0f;\n" +
+            "  --card-bg: transparent;\n" +
+            "  --card-border: transparent;\n" +
+            "  --card-thumbnail-bg: #e5e5e5;\n" +
+            "  --card-title-color: #0f0f0f;\n" +
+            "  --card-meta-color: #606060;\n" +
+            "  --media-info-bg: transparent;\n" +
+            "  --media-info-border: rgba(0, 0, 0, 0.1);\n" +
+            "  --media-title-color: #0f0f0f;\n" +
+            "  --media-stats-color: #606060;\n" +
+            "  --uploader-name-color: #0f0f0f;\n" +
+            "  --uploader-subs-color: #606060;\n" +
+            "  --media-desc-color: #0f0f0f;\n" +
+            "  --media-desc-bg: #f2f2f2;\n" +
+            "  --media-desc-border: transparent;\n" +
+            "  --comments-bg: transparent;\n" +
+            "  --comments-border: rgba(0, 0, 0, 0.1);\n" +
+            "  --comment-count-color: #0f0f0f;\n" +
+            "  --comment-border: rgba(0, 0, 0, 0.05);\n" +
+            "  --comment-author-color: #0f0f0f;\n" +
+            "  --comment-time-color: #606060;\n" +
+            "  --comment-text-color: #0f0f0f;\n" +
+            "  --channel-header-bg: transparent;\n" +
+            "  --channel-header-border: rgba(0, 0, 0, 0.1);\n" +
+            "  --channel-name-color: #0f0f0f;\n" +
+            "  --channel-desc-color: #606060;\n" +
+            "  --bottom-nav-bg: #ffffff;\n" +
+            "  --bottom-nav-border: rgba(0, 0, 0, 0.1);\n" +
+            "  --bottom-nav-item-color: #606060;\n" +
+            "  --bottom-nav-item-active-color: #0f0f0f;\n" +
             "  --settings-card-bg: #ffffff;\n" +
-            "  --settings-card-border: rgba(0, 0, 0, 0.06);\n" +
-            "  --settings-title-color: #111827;\n" +
-            "  --settings-section-border: rgba(0, 0, 0, 0.06);\n" +
-            "  --settings-section-title-color: #111827;\n" +
-            "  --setting-label-color: #111827;\n" +
-            "  --setting-desc-color: #4b5563;\n" +
-            "  --textarea-label-color: #111827;\n" +
-            "  --textarea-border: rgba(0, 0, 0, 0.15);\n" +
-            "  --textarea-bg: rgba(0, 0, 0, 0.02);\n" +
-            "  --textarea-color: #111827;\n" +
-            "  --slider-bg: #cbd5e1;\n" +
+            "  --settings-card-border: rgba(0, 0, 0, 0.1);\n" +
+            "  --settings-title-color: #0f0f0f;\n" +
+            "  --settings-section-border: rgba(0, 0, 0, 0.1);\n" +
+            "  --settings-section-title-color: #0f0f0f;\n" +
+            "  --setting-label-color: #0f0f0f;\n" +
+            "  --setting-desc-color: #606060;\n" +
+            "  --textarea-label-color: #0f0f0f;\n" +
+            "  --textarea-border: #cccccc;\n" +
+            "  --textarea-bg: #ffffff;\n" +
+            "  --textarea-color: #0f0f0f;\n" +
+            "  --slider-bg: #ccc;\n" +
             "}\n" +
             "[data-theme=\"dark\"] {\n" +
-            "  --bg-color: #08070d;\n" +
-            "  --text-color: #e5e7eb;\n" +
-            "  --header-bg: rgba(18, 17, 26, 0.85);\n" +
-            "  --header-border: rgba(255, 255, 255, 0.07);\n" +
+            "  --bg-color: #0f0f0f;\n" +
+            "  --text-color: #f1f1f1;\n" +
+            "  --header-bg: #0f0f0f;\n" +
+            "  --header-border: rgba(255, 255, 255, 0.1);\n" +
             "  --logo-color: #ffffff;\n" +
-            "  --search-input-border: rgba(255, 255, 255, 0.1);\n" +
-            "  --search-input-bg: rgba(255, 255, 255, 0.05);\n" +
+            "  --search-input-border: #303030;\n" +
+            "  --search-input-bg: #121212;\n" +
             "  --search-input-color: #ffffff;\n" +
-            "  --service-tab-bg: rgba(255, 255, 255, 0.05);\n" +
-            "  --service-tab-color: #d1d5db;\n" +
-            "  --service-tab-hover-bg: rgba(255, 255, 255, 0.12);\n" +
+            "  --search-btn-bg: #222222;\n" +
+            "  --search-btn-hover: #272727;\n" +
+            "  --service-tab-bg: #272727;\n" +
+            "  --service-tab-color: #f1f1f1;\n" +
+            "  --service-tab-hover-bg: #3f3f3f;\n" +
             "  --service-tab-hover-color: #ffffff;\n" +
-            "  --card-bg: #12111a;\n" +
-            "  --card-border: rgba(255, 255, 255, 0.05);\n" +
-            "  --card-thumbnail-bg: #1a1a26;\n" +
-            "  --card-title-color: #ffffff;\n" +
-            "  --card-meta-color: #9ca3af;\n" +
-            "  --media-info-bg: #12111a;\n" +
-            "  --media-info-border: rgba(255, 255, 255, 0.05);\n" +
-            "  --media-title-color: #ffffff;\n" +
-            "  --media-stats-color: #9ca3af;\n" +
-            "  --uploader-name-color: #ffffff;\n" +
-            "  --uploader-subs-color: #9ca3af;\n" +
-            "  --media-desc-color: #d1d5db;\n" +
-            "  --media-desc-bg: rgba(255, 255, 255, 0.03);\n" +
-            "  --media-desc-border: rgba(255, 255, 255, 0.04);\n" +
-            "  --comments-bg: #12111a;\n" +
-            "  --comments-border: rgba(255, 255, 255, 0.05);\n" +
-            "  --comment-count-color: #ffffff;\n" +
-            "  --comment-border: rgba(255, 255, 255, 0.05);\n" +
-            "  --comment-author-color: #ffffff;\n" +
-            "  --comment-time-color: #9ca3af;\n" +
-            "  --comment-text-color: #d1d5db;\n" +
-            "  --channel-header-bg: #12111a;\n" +
-            "  --channel-header-border: rgba(255, 255, 255, 0.05);\n" +
-            "  --channel-name-color: #ffffff;\n" +
-            "  --channel-desc-color: #9ca3af;\n" +
-            "  --bottom-nav-bg: rgba(18, 17, 26, 0.95);\n" +
-            "  --bottom-nav-border: rgba(255, 255, 255, 0.08);\n" +
-            "  --bottom-nav-item-color: #9ca3af;\n" +
+            "  --card-bg: transparent;\n" +
+            "  --card-border: transparent;\n" +
+            "  --card-thumbnail-bg: #272727;\n" +
+            "  --card-title-color: #f1f1f1;\n" +
+            "  --card-meta-color: #aaaaaa;\n" +
+            "  --media-info-bg: transparent;\n" +
+            "  --media-info-border: rgba(255, 255, 255, 0.1);\n" +
+            "  --media-title-color: #f1f1f1;\n" +
+            "  --media-stats-color: #aaaaaa;\n" +
+            "  --uploader-name-color: #f1f1f1;\n" +
+            "  --uploader-subs-color: #aaaaaa;\n" +
+            "  --media-desc-color: #f1f1f1;\n" +
+            "  --media-desc-bg: #272727;\n" +
+            "  --media-desc-border: transparent;\n" +
+            "  --comments-bg: transparent;\n" +
+            "  --comments-border: rgba(255, 255, 255, 0.1);\n" +
+            "  --comment-count-color: #f1f1f1;\n" +
+            "  --comment-border: rgba(255, 255, 255, 0.1);\n" +
+            "  --comment-author-color: #f1f1f1;\n" +
+            "  --comment-time-color: #aaaaaa;\n" +
+            "  --comment-text-color: #f1f1f1;\n" +
+            "  --channel-header-bg: transparent;\n" +
+            "  --channel-header-border: rgba(255, 255, 255, 0.1);\n" +
+            "  --channel-name-color: #f1f1f1;\n" +
+            "  --channel-desc-color: #aaaaaa;\n" +
+            "  --bottom-nav-bg: #0f0f0f;\n" +
+            "  --bottom-nav-border: rgba(255, 255, 255, 0.1);\n" +
+            "  --bottom-nav-item-color: #aaaaaa;\n" +
             "  --bottom-nav-item-active-color: #ffffff;\n" +
-            "  --settings-card-bg: #12111a;\n" +
-            "  --settings-card-border: rgba(255, 255, 255, 0.05);\n" +
-            "  --settings-title-color: #ffffff;\n" +
-            "  --settings-section-border: rgba(255, 255, 255, 0.06);\n" +
-            "  --settings-section-title-color: #ffffff;\n" +
-            "  --setting-label-color: #ffffff;\n" +
-            "  --setting-desc-color: #9ca3af;\n" +
-            "  --textarea-label-color: #ffffff;\n" +
-            "  --textarea-border: rgba(255, 255, 255, 0.1);\n" +
-            "  --textarea-bg: rgba(255, 255, 255, 0.03);\n" +
-            "  --textarea-color: #ffffff;\n" +
+            "  --settings-card-bg: #0f0f0f;\n" +
+            "  --settings-card-border: rgba(255, 255, 255, 0.1);\n" +
+            "  --settings-title-color: #f1f1f1;\n" +
+            "  --settings-section-border: rgba(255, 255, 255, 0.1);\n" +
+            "  --settings-section-title-color: #f1f1f1;\n" +
+            "  --setting-label-color: #f1f1f1;\n" +
+            "  --setting-desc-color: #aaaaaa;\n" +
+            "  --textarea-label-color: #f1f1f1;\n" +
+            "  --textarea-border: #303030;\n" +
+            "  --textarea-bg: #121212;\n" +
+            "  --textarea-color: #f1f1f1;\n" +
             "  --slider-bg: #374151;\n" +
             "}\n" +
             "* { box-sizing: border-box; margin: 0; padding: 0; }\n" +
-            "body { font-family: 'Outfit', sans-serif; background-color: var(--bg-color); color: var(--text-color); padding-bottom: 50px; -webkit-font-smoothing: antialiased; transition: background-color 0.3s, color 0.3s; }\n" +
+            "body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); -webkit-font-smoothing: antialiased; transition: background-color 0.2s, color 0.2s; }\n" +
             "a { color: inherit; text-decoration: none; }\n" +
-            "header { display: flex; flex-direction: column; background: var(--header-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 16px 28px; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--header-border); transition: background 0.3s, border-bottom 0.3s; }\n" +
-            ".top-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }\n" +
-            ".logo { font-size: 24px; font-weight: 700; color: var(--logo-color); display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; transition: color 0.3s; }\n" +
-            ".logo svg { filter: drop-shadow(0 0 8px rgba(255, 0, 85, 0.6)); }\n" +
-            ".search-form { display: flex; flex-grow: 1; max-width: 600px; position: relative; }\n" +
-            ".search-input { width: 100%; padding: 12px 20px; border-radius: 30px 0 0 30px; border: 1px solid var(--search-input-border); background-color: var(--search-input-bg); color: var(--search-input-color); font-size: 15px; outline: none; transition: all 0.3s ease; }\n" +
-            ".search-input:focus { border-color: #a78bfa; background-color: var(--search-input-bg); box-shadow: 0 0 15px rgba(167, 139, 250, 0.2); }\n" +
-            ".search-btn { padding: 12px 28px; border-radius: 0 30px 30px 0; border: 1px solid var(--search-input-border); border-left: none; background: linear-gradient(135deg, #7c3aed, #db2777); color: #ffffff; cursor: pointer; font-size: 16px; transition: all 0.3s ease; }\n" +
-            ".search-btn:hover { opacity: 0.9; transform: scale(1.02); }\n" +
-            ".service-selector { display: flex; gap: 10px; margin-top: 14px; overflow-x: auto; padding-bottom: 4px; }\n" +
-            ".service-tab { padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; background-color: var(--service-tab-bg); color: var(--service-tab-color); cursor: pointer; border: 1px solid var(--service-tab-bg); transition: all 0.3s ease; }\n" +
-            ".service-tab:hover { background-color: var(--service-tab-hover-bg); color: var(--service-tab-hover-color); }\n" +
-            ".service-tab.active { background: linear-gradient(135deg, #7c3aed, #db2777); color: #ffffff; border-color: transparent; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3); }\n" +
-            ".container { max-width: 1280px; margin: 28px auto; padding: 0 20px; }\n" +
-            ".grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }\n" +
-            ".card { background-color: var(--card-bg); border-radius: 18px; overflow: hidden; border: 1px solid var(--card-border); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }\n" +
-            ".card:hover { transform: translateY(-6px); border-color: rgba(167, 139, 250, 0.4); box-shadow: 0 12px 30px rgba(124, 58, 237, 0.15); }\n" +
-            ".card-thumbnail { width: 100%; aspect-ratio: 16/9; background-color: var(--card-thumbnail-bg); object-fit: cover; border-bottom: 1px solid var(--card-border); transition: transform 0.5s ease; }\n" +
-            ".card:hover .card-thumbnail { transform: scale(1.02); }\n" +
-            ".card-details { padding: 16px; display: flex; flex-direction: column; flex-grow: 1; }\n" +
-            ".card-title { font-size: 15px; font-weight: 600; line-height: 1.4; max-height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 8px; color: var(--card-title-color); transition: color 0.2s; }\n" +
-            ".card-title:hover { color: #c084fc; }\n" +
-            ".card-meta { font-size: 12px; color: var(--card-meta-color); margin-top: auto; display: flex; flex-direction: column; gap: 4px; }\n" +
-            ".card-uploader { font-weight: 600; color: #c084fc; }\n" +
-            ".card-uploader:hover { color: #e9d5ff; }\n" +
-            ".pagination { display: flex; justify-content: center; margin: 48px 0; }\n" +
-            ".btn-page { display: inline-block; padding: 12px 32px; border-radius: 30px; font-weight: 600; background: linear-gradient(135deg, #7c3aed, #db2777); color: #ffffff; border: none; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3); }\n" +
-            ".btn-page:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4); }\n" +
-            ".player-container { display: flex; flex-direction: column; gap: 28px; margin-top: 16px; }\n" +
-            ".main-content { flex-grow: 3; display: flex; flex-direction: column; gap: 20px; }\n" +
-            ".sidebar { flex-grow: 1; display: flex; flex-direction: column; gap: 20px; }\n" +
-            "@media(min-width: 900px) { .player-layout { display: flex; gap: 28px; } .sidebar { width: 380px; flex-shrink: 0; } }\n" +
-            ".native-player { width: 100%; aspect-ratio: 16/9; border-radius: 18px; background-color: #000; outline: none; border: 1px solid var(--media-info-border); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }\n" +
-            ".native-audio { width: 100%; margin: 24px 0; outline: none; filter: invert(0.9); }\n" +
-            ".media-info { background-color: var(--media-info-bg); padding: 24px; border-radius: 18px; border: 1px solid var(--media-info-border); transition: background-color 0.3s, border-color 0.3s; }\n" +
-            ".media-title { font-size: 22px; font-weight: 700; margin-bottom: 12px; color: var(--media-title-color); line-height: 1.3; }\n" +
-            ".media-stats { display: flex; justify-content: space-between; font-size: 13px; color: var(--media-stats-color); padding-bottom: 18px; border-bottom: 1px solid var(--media-info-border); margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }\n" +
-            ".uploader-profile { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }\n" +
-            ".uploader-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--media-info-border); }\n" +
-            ".uploader-info { display: flex; flex-direction: column; }\n" +
-            ".uploader-name { font-size: 16px; font-weight: 700; color: var(--uploader-name-color); }\n" +
-            ".uploader-subs { font-size: 13px; color: var(--uploader-subs-color); }\n" +
-            ".subscribe-btn { padding: 10px 22px; border-radius: 25px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }\n" +
-            ".subscribe-btn:hover { transform: translateY(-1px); }\n" +
-            ".media-description { font-size: 14px; line-height: 1.6; color: var(--media-desc-color); white-space: pre-wrap; background-color: var(--media-desc-bg); padding: 20px; border-radius: 14px; border: 1px solid var(--media-desc-border); max-height: 250px; overflow-y: auto; transition: background-color 0.3s, color 0.3s; }\n" +
-            ".comments-section { background-color: var(--comments-bg); padding: 24px; border-radius: 18px; border: 1px solid var(--comments-border); margin-top: 12px; transition: background-color 0.3s, border-color 0.3s; }\n" +
-            ".comment-count { font-size: 18px; font-weight: 700; margin-bottom: 24px; color: var(--comment-count-color); }\n" +
-            ".comment { display: flex; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--comment-border); padding-bottom: 18px; transition: border-bottom 0.3s; }\n" +
-            ".comment:last-child { border-bottom: none; }\n" +
-            ".comment-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background-color: var(--card-thumbnail-bg); transition: background-color 0.3s; }\n" +
-            ".comment-details { display: flex; flex-direction: column; gap: 6px; }\n" +
-            ".comment-header { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }\n" +
-            ".comment-author { font-size: 14px; font-weight: 600; color: var(--comment-author-color); }\n" +
+            "header { display: flex; align-items: center; justify-content: space-between; background: var(--header-bg); padding: 0 16px; position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 1000; border-bottom: 1px solid var(--header-border); transition: background 0.2s, border-bottom 0.2s; }\n" +
+            ".top-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 100%; gap: 16px; }\n" +
+            ".logo { font-size: 20px; font-weight: 700; color: var(--logo-color); display: flex; align-items: center; gap: 4px; letter-spacing: -0.8px; transition: color 0.2s; font-family: 'Roboto', sans-serif; }\n" +
+            ".search-form { display: flex; flex-grow: 1; max-width: 640px; position: relative; margin: 0 16px; }\n" +
+            ".search-input { width: 100%; padding: 0 16px; height: 40px; border-radius: 40px 0 0 40px; border: 1px solid var(--search-input-border); background-color: var(--search-input-bg); color: var(--search-input-color); font-size: 16px; outline: none; transition: border-color 0.2s; }\n" +
+            ".search-input:focus { border-color: #1a73e8; }\n" +
+            ".search-btn { height: 40px; width: 64px; padding: 0; border-radius: 0 40px 40px 0; border: 1px solid var(--search-input-border); border-left: none; background-color: var(--search-btn-bg); color: var(--text-color); cursor: pointer; font-size: 16px; transition: background-color 0.2s; display: flex; align-items: center; justify-content: center; }\n" +
+            ".search-btn:hover { background-color: var(--search-btn-hover); }\n" +
+            ".service-selector { display: none; }\n" +
+            ".container { transition: all 0.2s ease; }\n" +
+            ".grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 40px 16px; }\n" +
+            ".card { display: flex; flex-direction: column; cursor: pointer; }\n" +
+            ".card-thumbnail { width: 100%; aspect-ratio: 16/9; background-color: var(--card-thumbnail-bg); object-fit: cover; border-radius: 12px; transition: border-radius 0.2s; }\n" +
+            ".card-details { display: flex; gap: 12px; padding: 12px 0 0 0; }\n" +
+            ".card-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 14px; flex-shrink: 0; }\n" +
+            ".card-info { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; }\n" +
+            ".card-title { font-size: 14px; font-weight: 500; line-height: 1.4; max-height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 4px; color: var(--card-title-color); }\n" +
+            ".card-meta { font-size: 12px; color: var(--card-meta-color); display: flex; flex-direction: column; gap: 2px; }\n" +
+            ".card-uploader { font-weight: 400; color: var(--card-meta-color); text-decoration: none; }\n" +
+            ".card-uploader:hover { color: var(--text-color); }\n" +
+            ".pagination { display: flex; justify-content: center; margin: 32px 0; }\n" +
+            ".btn-page { display: inline-block; padding: 10px 24px; border-radius: 20px; font-weight: 500; font-size: 14px; background-color: var(--service-tab-bg); color: var(--text-color); border: none; cursor: pointer; transition: background-color 0.2s; }\n" +
+            ".btn-page:hover { background-color: var(--service-tab-hover-bg); }\n" +
+            ".sidebar-nav { position: fixed; top: 56px; left: 0; bottom: 0; width: 240px; background-color: var(--bg-color); padding: 12px 4px; display: flex; flex-direction: column; gap: 4px; z-index: 99; overflow-y: auto; }\n" +
+            ".sidebar-item { display: flex; align-items: center; gap: 24px; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 400; color: var(--text-color); transition: background-color 0.2s; cursor: pointer; }\n" +
+            ".sidebar-item:hover { background-color: var(--service-tab-hover-bg); }\n" +
+            ".sidebar-item.active { font-weight: 600; background-color: var(--service-tab-hover-bg); }\n" +
+            ".sidebar-icon { font-size: 18px; }\n" +
+            "@media (min-width: 769px) {\n" +
+            "  .bottom-nav { display: none !important; }\n" +
+            "  .sidebar-nav { display: flex !important; }\n" +
+            "  .container { margin-left: 240px; max-width: calc(100% - 240px); padding: 24px 40px; margin-top: 56px; }\n" +
+            "}\n" +
+            "@media (max-width: 768px) {\n" +
+            "  .sidebar-nav { display: none !important; }\n" +
+            "  .bottom-nav { display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; height: 48px; background: var(--bottom-nav-bg); border-top: 1px solid var(--bottom-nav-border); justify-content: space-around; align-items: center; z-index: 1000; }\n" +
+            "  .container { margin-left: 0; max-width: 100%; padding: 12px; margin-top: 56px; padding-bottom: 70px; }\n" +
+            "  .grid { grid-template-columns: 1fr; gap: 24px; }\n" +
+            "  .card-thumbnail { border-radius: 0; }\n" +
+            "  .card-details { padding: 12px; }\n" +
+            "  .bottom-nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--bottom-nav-item-color); font-size: 10px; text-decoration: none; }\n" +
+            "  .bottom-nav-item.active { color: var(--bottom-nav-item-active-color); font-weight: 500; }\n" +
+            "  .bottom-nav-icon { font-size: 20px; }\n" +
+            "}\n" +
+            ".player-container { display: flex; flex-direction: column; gap: 20px; margin-top: 16px; }\n" +
+            ".player-layout { display: flex; flex-direction: column; gap: 24px; }\n" +
+            "@media (min-width: 1024px) {\n" +
+            "  .player-layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; }\n" +
+            "}\n" +
+            ".main-content { display: flex; flex-direction: column; gap: 16px; }\n" +
+            ".sidebar { display: flex; flex-direction: column; gap: 16px; }\n" +
+            ".native-player { width: 100%; aspect-ratio: 16/9; border-radius: 12px; background-color: #000; outline: none; }\n" +
+            ".media-info { padding: 16px 0; border-bottom: 1px solid var(--media-info-border); }\n" +
+            ".media-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--media-title-color); line-height: 1.4; }\n" +
+            ".media-stats { font-size: 14px; color: var(--media-stats-color); margin-bottom: 12px; }\n" +
+            ".uploader-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }\n" +
+            ".uploader-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }\n" +
+            ".uploader-info { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; }\n" +
+            ".uploader-name { font-size: 16px; font-weight: 500; color: var(--uploader-name-color); text-decoration: none; }\n" +
+            ".uploader-subs { font-size: 12px; color: var(--uploader-subs-color); }\n" +
+            ".subscribe-btn { padding: 8px 16px; border-radius: 18px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; text-decoration: none; text-align: center; color: #ffffff; background-color: #cc0000; }\n" +
+            ".subscribe-btn:hover { opacity: 0.9; }\n" +
+            ".media-description { font-size: 14px; line-height: 1.5; color: var(--media-desc-color); white-space: pre-wrap; background-color: var(--media-desc-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--media-desc-border); margin-top: 12px; }\n" +
+            ".comments-section { padding-top: 16px; }\n" +
+            ".comment-count { font-size: 16px; font-weight: 500; margin-bottom: 16px; color: var(--comment-count-color); }\n" +
+            ".comment { display: flex; gap: 12px; margin-bottom: 16px; }\n" +
+            ".comment-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background-color: var(--card-thumbnail-bg); }\n" +
+            ".comment-details { display: flex; flex-direction: column; gap: 4px; }\n" +
+            ".comment-header { display: flex; gap: 8px; align-items: center; }\n" +
+            ".comment-author { font-size: 13px; font-weight: 500; color: var(--comment-author-color); }\n" +
             ".comment-time { font-size: 12px; color: var(--comment-time-color); }\n" +
-            ".comment-text { font-size: 14px; line-height: 1.5; color: var(--comment-text-color); white-space: pre-wrap; transition: color 0.3s; }\n" +
-            ".channel-header { background-color: var(--channel-header-bg); border-radius: 18px; overflow: hidden; border: 1px solid var(--channel-header-border); margin-bottom: 28px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: background-color 0.3s, border-color 0.3s; }\n" +
-            ".channel-banner { width: 100%; height: 220px; object-fit: cover; background: linear-gradient(90deg, #1f1e2e, #12111a); }\n" +
-            ".channel-details { display: flex; padding: 28px; align-items: center; gap: 24px; flex-wrap: wrap; }\n" +
-            ".channel-avatar { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 3px solid var(--channel-header-border); }\n" +
-            ".channel-info-block { display: flex; flex-direction: column; gap: 6px; flex-grow: 1; }\n" +
-            ".channel-name { font-size: 26px; font-weight: 700; color: var(--channel-name-color); }\n" +
-            ".channel-desc { font-size: 14px; color: var(--channel-desc-color); max-width: 700px; margin-top: 10px; line-height: 1.5; }\n" +
-            ".channel-tabs-selector { display: flex; background-color: var(--media-desc-bg); border-top: 1px solid var(--media-desc-border); padding: 4px 20px; transition: background-color 0.3s, border-top-color 0.3s; }\n" +
-            ".channel-tab-btn { padding: 14px 24px; font-size: 14px; font-weight: 600; color: var(--card-meta-color); border-bottom: 3px solid transparent; cursor: pointer; transition: all 0.3s ease; }\n" +
+            ".comment-text { font-size: 14px; line-height: 1.4; color: var(--comment-text-color); white-space: pre-wrap; }\n" +
+            ".channel-header { background-color: var(--channel-header-bg); border-radius: 12px; overflow: hidden; margin-bottom: 24px; border: 1px solid var(--channel-header-border); }\n" +
+            ".channel-banner { width: 100%; height: 160px; object-fit: cover; background: #272727; }\n" +
+            ".channel-details { display: flex; padding: 16px; align-items: center; gap: 16px; flex-wrap: wrap; }\n" +
+            ".channel-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }\n" +
+            ".channel-info-block { display: flex; flex-direction: column; gap: 4px; flex-grow: 1; }\n" +
+            ".channel-name { font-size: 24px; font-weight: 700; color: var(--channel-name-color); }\n" +
+            ".channel-desc { font-size: 14px; color: var(--channel-desc-color); max-width: 600px; margin-top: 8px; line-height: 1.4; }\n" +
+            ".channel-tabs-selector { display: flex; border-top: 1px solid var(--media-info-border); padding: 0 16px; }\n" +
+            ".channel-tab-btn { padding: 12px 16px; font-size: 14px; font-weight: 500; color: var(--card-meta-color); border-bottom: 3px solid transparent; cursor: pointer; text-decoration: none; }\n" +
             ".channel-tab-btn:hover { color: var(--text-color); }\n" +
-            ".channel-tab-btn.active { color: var(--text-color); border-bottom-color: #c084fc; }\n" +
-            ".loading-placeholder { text-align: center; font-size: 16px; padding: 60px 0; color: var(--card-meta-color); background-color: var(--card-bg); border-radius: 18px; border: 1px solid var(--card-border); transition: background-color 0.3s, border-color 0.3s; }\n" +
-            ".settings-card { background-color: var(--settings-card-bg); padding: 32px; border-radius: 20px; border: 1px solid var(--settings-card-border); max-width: 650px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: background-color 0.3s, border-color 0.3s; }\n" +
-            ".settings-title { font-size: 24px; font-weight: 700; margin-bottom: 28px; color: var(--settings-title-color); }\n" +
-            ".settings-section { margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid var(--settings-section-border); transition: border-bottom 0.3s; }\n" +
+            ".channel-tab-btn.active { color: var(--text-color); border-bottom-color: #0f0f0f; }\n" +
+            "[data-theme=\"dark\"] .channel-tab-btn.active { border-bottom-color: #ffffff; }\n" +
+            ".loading-placeholder { text-align: center; font-size: 14px; padding: 40px 0; color: var(--card-meta-color); }\n" +
+            ".settings-card { background-color: var(--settings-card-bg); padding: 24px; border-radius: 12px; border: 1px solid var(--settings-card-border); max-width: 600px; margin: 0 auto; }\n" +
+            ".settings-title { font-size: 20px; font-weight: 700; margin-bottom: 24px; color: var(--settings-title-color); }\n" +
+            ".settings-section { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--settings-section-border); }\n" +
             ".settings-section:last-child { border-bottom: none; }\n" +
-            ".settings-section-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: var(--settings-section-title-color); }\n" +
-            ".setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }\n" +
-            ".setting-label-group { display: flex; flex-direction: column; gap: 4px; }\n" +
-            ".setting-label { font-size: 15px; font-weight: 500; color: var(--setting-label-color); }\n" +
+            ".settings-section-title { font-size: 16px; font-weight: 500; margin-bottom: 12px; color: var(--settings-section-title-color); }\n" +
+            ".setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }\n" +
+            ".setting-label-group { display: flex; flex-direction: column; gap: 2px; }\n" +
+            ".setting-label { font-size: 14px; font-weight: 500; color: var(--setting-label-color); }\n" +
             ".setting-desc { font-size: 12px; color: var(--setting-desc-color); }\n" +
-            ".switch { position: relative; display: inline-block; width: 48px; height: 26px; }\n" +
+            ".switch { position: relative; display: inline-block; width: 40px; height: 20px; }\n" +
             ".switch input { opacity: 0; width: 0; height: 0; }\n" +
-            ".slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--slider-bg); transition: .3s; border-radius: 26px; }\n" +
-            ".slider:before { position: absolute; content: ''; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; }\n" +
-            "input:checked + .slider { background: linear-gradient(135deg, #7c3aed, #db2777); }\n" +
-            "input:checked + .slider:before { transform: translateX(22px); }\n" +
-            ".textarea-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }\n" +
-            ".textarea-label { font-size: 15px; font-weight: 500; color: var(--textarea-label-color); }\n" +
-            ".settings-textarea { width: 100%; height: 110px; padding: 14px; border-radius: 12px; border: 1px solid var(--textarea-border); background-color: var(--textarea-bg); color: var(--textarea-color); font-size: 14px; outline: none; transition: all 0.3s ease; resize: vertical; font-family: inherit; }\n" +
-            ".settings-textarea:focus { border-color: #a78bfa; background-color: var(--textarea-bg); }\n" +
-            ".btn-save { display: inline-block; width: 100%; padding: 14px; border-radius: 30px; font-size: 15px; font-weight: 600; text-align: center; border: none; cursor: pointer; transition: all 0.3s ease; }\n" +
-            ".btn-save-primary { background: linear-gradient(135deg, #7c3aed, #db2777); color: #ffffff; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3); }\n" +
-            ".btn-save-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4); }\n" +
-            ".alert-banner { background-color: rgba(16, 185, 129, 0.1); color: #34d399; padding: 14px 20px; border-radius: 12px; margin-bottom: 24px; font-size: 14px; font-weight: 600; border: 1px solid rgba(52, 211, 153, 0.2); display: flex; align-items: center; gap: 10px; }\n" +
-            "body.is-tv { font-size: 18px; padding-bottom: 80px; }\n" +
-            "body.is-tv .container { max-width: 100%; margin: 40px auto; padding: 0 40px; }\n" +
-            "body.is-tv .grid { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 32px; }\n" +
-            "body.is-tv .card-title { font-size: 18px; }\n" +
-            "body.is-tv .card-meta { font-size: 14px; }\n" +
-            "body.is-tv header { padding: 24px 40px; }\n" +
-            "body.is-tv .logo { font-size: 32px; }\n" +
-            "body.is-tv .search-input { font-size: 18px; padding: 16px 24px; }\n" +
-            "body.is-tv .search-btn { font-size: 20px; padding: 16px 36px; }\n" +
-            "body.is-tv .service-tab { font-size: 16px; padding: 10px 24px; }\n" +
-            "body.is-tv .native-player { border-radius: 24px; }\n" +
-            "body.is-tv .media-title { font-size: 30px; }\n" +
-            "body.is-tv .media-stats { font-size: 16px; }\n" +
-            "body.is-tv .uploader-name { font-size: 20px; }\n" +
-            "body.is-tv .uploader-subs { font-size: 16px; }\n" +
-            "body.is-tv .subscribe-btn { padding: 14px 28px; font-size: 16px; }\n" +
-            "body.is-tv .media-description { font-size: 16px; max-height: 350px; }\n" +
-            ".theme-toggle-btn {\n" +
-            "  background: none;\n" +
-            "  border: none;\n" +
-            "  font-size: 20px;\n" +
-            "  cursor: pointer;\n" +
-            "  padding: 8px;\n" +
-            "  border-radius: 50%;\n" +
-            "  display: flex;\n" +
-            "  align-items: center;\n" +
-            "  justify-content: center;\n" +
-            "  transition: background-color 0.3s, transform 0.2s;\n" +
-            "  color: var(--logo-color);\n" +
-            "}\n" +
-            ".theme-toggle-btn:hover {\n" +
-            "  background-color: var(--service-tab-hover-bg);\n" +
-            "  transform: scale(1.05);\n" +
-            "}\n" +
-            "#connect-remote-btn {\n" +
-            "  background: rgba(124, 58, 237, 0.08);\n" +
-            "  border: 1px solid rgba(124, 58, 237, 0.25);\n" +
-            "  color: #7c3aed;\n" +
-            "  font-size: 12px;\n" +
-            "  font-weight: 700;\n" +
-            "  border-radius: 20px;\n" +
-            "  padding: 0 16px;\n" +
-            "  height: 40px;\n" +
-            "  display: inline-flex;\n" +
-            "  align-items: center;\n" +
-            "  gap: 6px;\n" +
-            "  cursor: pointer;\n" +
-            "  transition: all 0.3s ease;\n" +
-            "  outline: none;\n" +
-            "}\n" +
-            "#connect-remote-btn:hover {\n" +
-            "  background: rgba(124, 58, 237, 0.15);\n" +
-            "  transform: translateY(-1px);\n" +
-            "}\n" +
-            "[data-theme=\"dark\"] #connect-remote-btn {\n" +
-            "  color: #a78bfa;\n" +
-            "  border-color: rgba(167, 139, 250, 0.3);\n" +
-            "  background: rgba(167, 139, 250, 0.06);\n" +
-            "}\n" +
+            ".slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--slider-bg); transition: .2s; border-radius: 20px; }\n" +
+            ".slider:before { position: absolute; content: ''; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .2s; border-radius: 50%; }\n" +
+            "input:checked + .slider { background-color: #cc0000; }\n" +
+            "input:checked + .slider:before { transform: translateX(20px); }\n" +
+            ".textarea-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }\n" +
+            ".textarea-label { font-size: 14px; font-weight: 500; color: var(--textarea-label-color); }\n" +
+            ".settings-textarea { width: 100%; height: 100px; padding: 12px; border-radius: 8px; border: 1px solid var(--textarea-border); background-color: var(--textarea-bg); color: var(--textarea-color); font-size: 14px; outline: none; transition: border-color 0.2s; resize: vertical; font-family: inherit; }\n" +
+            ".settings-textarea:focus { border-color: #1a73e8; }\n" +
+            ".btn-save { display: inline-block; width: 100%; padding: 12px; border-radius: 24px; font-size: 14px; font-weight: 500; text-align: center; border: none; cursor: pointer; transition: background-color 0.2s; }\n" +
+            ".btn-save-primary { background-color: #cc0000; color: #ffffff; }\n" +
+            ".btn-save-primary:hover { opacity: 0.9; }\n" +
+            ".alert-banner { background-color: rgba(43, 138, 62, 0.1); color: #2b8a3e; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-weight: 500; border: 1px solid rgba(43, 138, 62, 0.2); }\n" +
+            ".theme-toggle-btn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-color); }\n" +
+            ".theme-toggle-btn:hover { background-color: var(--service-tab-hover-bg); }\n" +
+            "#connect-remote-btn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-color); }\n" +
+            "#connect-remote-btn:hover { background-color: var(--service-tab-hover-bg); }\n" +
+            ".connect-text { display: none; }\n" +
             "[data-theme=\"dark\"] .theme-icon-light { display: block; }\n" +
             "[data-theme=\"dark\"] .theme-icon-dark { display: none; }\n" +
             ".theme-icon-light { display: none; }\n" +
             ".theme-icon-dark { display: block; }\n" +
-            ".bottom-nav { display: none; }\n" +
+            "body.has-banner header { top: 40px; }\n" +
+            "body.has-banner .sidebar-nav { top: 96px; }\n" +
+            "body.has-banner .container { margin-top: 96px; }\n" +
             "@media (max-width: 768px) {\n" +
-            "    body.is-phone { padding-bottom: 80px; }\n" +
-            "    body.is-phone .service-selector { display: none; }\n" +
-            "    body.is-phone .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bottom-nav-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--bottom-nav-border); justify-content: space-around; padding: 12px 0; z-index: 1000; }\n" +
-            "    body.is-phone .bottom-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--bottom-nav-item-color); font-size: 11px; font-weight: 500; transition: color 0.3s; }\n" +
-            "    body.is-phone .bottom-nav-item.active { color: var(--bottom-nav-item-active-color); }\n" +
-            "    body.is-phone .bottom-nav-icon { font-size: 20px; }\n" +
-            "    .container { margin: 16px auto; padding: 0 12px; }\n" +
-            "    .grid { gap: 16px; }\n" +
-            "    .player-container { gap: 16px; margin-top: 8px; }\n" +
-            "    .media-info { padding: 16px; border-radius: 12px; }\n" +
-            "    .media-title { font-size: 18px; line-height: 1.3; margin-bottom: 8px; }\n" +
-            "    .media-stats { font-size: 12px; gap: 8px; padding-bottom: 12px; margin-bottom: 12px; }\n" +
-            "    .uploader-profile { gap: 12px; margin-bottom: 16px; }\n" +
-            "    .uploader-avatar { width: 40px; height: 40px; }\n" +
-            "    .uploader-name { font-size: 14px; }\n" +
-            "    .uploader-subs { font-size: 12px; }\n" +
-            "    .subscribe-btn { padding: 8px 16px; font-size: 13px; border-radius: 20px; }\n" +
-            "    .media-description { padding: 12px; font-size: 13px; max-height: 180px; border-radius: 10px; }\n" +
-            "    .comments-section { padding: 16px; border-radius: 12px; margin-top: 8px; }\n" +
-            "    .comment-count { font-size: 16px; margin-bottom: 16px; }\n" +
-            "    .comment { gap: 12px; margin-bottom: 16px; padding-bottom: 12px; }\n" +
-            "    .comment-avatar { width: 32px; height: 32px; }\n" +
-            "    .comment-author { font-size: 13px; }\n" +
-            "    .comment-time { font-size: 11px; }\n" +
-            "    .comment-text { font-size: 13px; }\n" +
-            "    .native-player { border-radius: 12px; }\n" +
-            "    .channel-header { border-radius: 12px; margin-bottom: 16px; }\n" +
-            "    .channel-banner { height: 100px; }\n" +
-            "    .channel-details { padding: 16px; gap: 16px; flex-direction: column; align-items: center; text-align: center; }\n" +
-            "    .channel-avatar { width: 80px; height: 80px; }\n" +
-            "    .channel-info-block { align-items: center; }\n" +
-            "    .channel-name { font-size: 20px; }\n" +
-            "    .channel-desc { font-size: 13px; margin-top: 6px; }\n" +
-            "    .channel-tabs-selector { padding: 0 10px; justify-content: center; }\n" +
-            "    .channel-tab-btn { padding: 12px 16px; font-size: 13px; }\n" +
-            "    .settings-card { padding: 16px; border-radius: 12px; }\n" +
-            "    .settings-title { font-size: 20px; margin-bottom: 20px; }\n" +
-            "    .settings-section { margin-bottom: 20px; padding-bottom: 16px; }\n" +
-            "    .settings-section-title { font-size: 16px; }\n" +
-            "    .setting-row { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 16px; }\n" +
-            "    .switch { align-self: flex-start; }\n" +
-            "    .btn-save { padding: 12px; font-size: 14px; }\n" +
+            "  body.has-banner .container { margin-top: 96px; }\n" +
+            "  #sidebar-toggle-btn { display: none !important; }\n" +
             "}\n" +
-            "@media (max-width: 600px) {\n" +
-            "    header { padding: 10px 14px; }\n" +
-            "    .top-bar {\n" +
-            "        display: flex;\n" +
-            "        flex-wrap: wrap;\n" +
-            "        justify-content: space-between;\n" +
-            "        align-items: center;\n" +
-            "        gap: 12px;\n" +
-            "    }\n" +
-            "    .logo {\n" +
-            "        order: 1;\n" +
-            "        font-size: 20px;\n" +
-            "    }\n" +
-            "    .top-bar > div {\n" +
-            "        order: 2;\n" +
-            "    }\n" +
-            "    .search-form {\n" +
-            "        order: 3;\n" +
-            "        width: 100%;\n" +
-            "        max-width: 100%;\n" +
-            "    }\n" +
-            "    .search-input {\n" +
-            "        padding: 10px 16px;\n" +
-            "        font-size: 14px;\n" +
-            "    }\n" +
-            "    .search-btn {\n" +
-            "        padding: 10px 20px;\n" +
-            "        font-size: 14px;\n" +
-            "    }\n" +
-            "    .connect-text {\n" +
-            "        display: none;\n" +
-            "    }\n" +
-            "    #connect-remote-btn {\n" +
-            "        padding: 0 10px;\n" +
-            "        height: 36px;\n" +
-            "        font-size: 14px;\n" +
-            "    }\n" +
+            "@media (min-width: 769px) {\n" +
+            "  body.sidebar-collapsed .sidebar-nav { width: 72px; }\n" +
+            "  body.sidebar-collapsed .sidebar-nav .sidebar-label { display: none; }\n" +
+            "  body.sidebar-collapsed .sidebar-nav .sidebar-item { justify-content: center; padding: 12px; }\n" +
+            "  body.sidebar-collapsed .container { margin-left: 72px; max-width: calc(100% - 72px); }\n" +
             "}\n" +
-            "@media (max-width: 480px) {\n" +
-            "    .grid {\n" +
-            "        grid-template-columns: 1fr;\n" +
-            "        gap: 20px;\n" +
-            "    }\n" +
-            "    .card {\n" +
-            "        border-radius: 12px;\n" +
-            "    }\n" +
-            "    .card-details {\n" +
-            "        padding: 12px;\n" +
-            "    }\n" +
-            "    .card-title {\n" +
-            "        font-size: 14px;\n" +
-            "    }\n" +
-            "}\n" +
-            "body.is-tv *:focus {\n" +
-            "  outline: 4px solid #c084fc !important;\n" +
-            "  outline-offset: 2px !important;\n" +
-            "  box-shadow: 0 0 25px rgba(192, 132, 252, 0.7) !important;\n" +
-            "  transform: scale(1.03) !important;\n" +
-            "  z-index: 10 !important;\n" +
-            "  transition: transform 0.2s, box-shadow 0.2s, outline 0.2s !important;\n" +
-            "}";
+            ".sidebar-nav, .container { transition: width 0.2s ease, margin-left 0.2s ease, max-width 0.2s ease; }";
 
     // Supported platform details
     public static final String[] SERVICE_NAMES = {"YouTube"};
@@ -439,59 +315,76 @@ public class HtmlRenderer {
 
     private static String getHeaderHtml(int activeServiceId, String query, String activeTab) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<header>\n")
-          .append("  <div class=\"top-bar\">\n")
-          .append("    <a href=\"/\" class=\"logo\"><svg viewBox=\"0 0 24 24\" width=\"28\" height=\"28\" fill=\"#FF0000\" style=\"display:inline-block; vertical-align:middle; margin-right:6px;\"><path d=\"M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.545 12 3.545 12 3.545s-7.518 0-9.388.508a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.87.508 9.388.508 9.388.508s7.518 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z\"/></svg>LocalTube</a>\n")
-          .append("    <form action=\"/search\" method=\"GET\" class=\"search-form\">\n")
-          .append("      <input type=\"hidden\" name=\"serviceId\" value=\"").append(activeServiceId).append("\">\n")
-          .append("      <input type=\"text\" name=\"q\" class=\"search-input\" placeholder=\"Search...\" value=\"")
-          .append(query != null ? query.replace("\"", "&quot;") : "").append("\" required>\n")
-          .append("      <button type=\"submit\" class=\"search-btn\">🔎</button>\n")
-          .append("    </form>\n")
-          .append("    <div style=\"display:flex; align-items:center; gap:10px;\">\n")
-          .append("      <button id=\"connect-remote-btn\" onclick=\"playOnTV(window.location.href, document.title)\">📺<span class=\"connect-text\"> Connect Remote</span></button>\n")
-          .append("      <button id=\"theme-toggle\" class=\"theme-toggle-btn\" aria-label=\"Toggle Theme\">\n")
-          .append("        <span class=\"theme-icon-light\">☀️</span>\n")
-          .append("        <span class=\"theme-icon-dark\">🌙</span>\n")
-          .append("      </button>\n")
-          .append("    </div>\n")
-          .append("  </div>\n")
-          .append("  <div class=\"service-selector\">\n");
-
         String ytActive = "youtube".equals(activeTab) ? "active" : "";
         String histActive = "history".equals(activeTab) ? "active" : "";
         String cachedActive = "cached".equals(activeTab) ? "active" : "";
         String subsActive = "subscriptions".equals(activeTab) ? "active" : "";
         String settingsActive = "settings".equals(activeTab) ? "active" : "";
 
-        sb.append("    <a href=\"/\" class=\"service-tab ").append(ytActive).append("\">YouTube</a>\n")
-          .append("    <a href=\"/subscriptions\" class=\"service-tab ").append(subsActive).append("\">🔔 Subscriptions</a>\n")
-          .append("    <a href=\"/history\" class=\"service-tab ").append(histActive).append("\">📜 History</a>\n")
-          .append("    <a href=\"/cache\" class=\"service-tab ").append(cachedActive).append("\">📥 Cached</a>\n")
-          .append("    <a href=\"/settings\" class=\"service-tab ").append(settingsActive).append("\">⚙️ Settings</a>\n");
-
-        sb.append("  </div>\n")
+            sb.append("<header>\n")
+          .append("  <div class=\"top-bar\">\n")
+          .append("    <div style=\"display:flex; align-items:center;\">\n")
+          .append("      <button id=\"sidebar-toggle-btn\" class=\"theme-toggle-btn\" aria-label=\"Toggle Sidebar\" style=\"margin-right:8px;\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M21 6H3V5h18v1zm0 5H3v1h18v-1zm0 6H3v1h18v-1z\"/></svg></button>\n")
+          .append("      <a href=\"/\" class=\"logo\"><svg viewBox=\"0 0 24 24\" width=\"28\" height=\"28\" fill=\"#FF0000\" style=\"display:inline-block; vertical-align:middle; margin-right:6px;\"><path d=\"M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.545 12 3.545 12 3.545s-7.518 0-9.388.508a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.87.508 9.388.508 9.388.508s7.518 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z\"/></svg>LocalTube</a>\n")
+          .append("    </div>\n")
+          .append("    <form action=\"/search\" method=\"GET\" class=\"search-form\">\n")
+          .append("      <input type=\"hidden\" name=\"serviceId\" value=\"").append(activeServiceId).append("\">\n")
+          .append("      <input type=\"text\" name=\"q\" class=\"search-input\" placeholder=\"Search\" value=\"")
+          .append(query != null ? query.replace("\"", "&quot;") : "").append("\" required>\n")
+          .append("      <button type=\"submit\" class=\"search-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"20\" height=\"20\"><path d=\"M20.87 20.17l-5.59-5.59C16.31 13.33 17 11.75 17 10c0-3.87-3.13-7-7-7s-7 3.13-7 7 3.13 7 7 7c1.75 0 3.33-.69 4.58-1.72l5.59 5.59.7-.71zM10 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z\"/></svg></button>\n")
+          .append("    </form>\n")
+          .append("    <div style=\"display:flex; align-items:center; gap:10px;\">\n")
+          .append("      <button id=\"connect-remote-btn\" onclick=\"playOnTV(window.location.href, document.title)\" aria-label=\"Connect Remote\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"22\" height=\"22\"><path d=\"M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.9-.9 1.9-2l.01-12c0-1.1-.9-2-2-2zm0 14H3V5h18v12zm-10 7v-2h2v2h-2z\"/></svg></button>\n")
+          .append("      <button id=\"theme-toggle\" class=\"theme-toggle-btn\" aria-label=\"Toggle Theme\">\n")
+          .append("        <span class=\"theme-icon-light\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"22\" height=\"22\"><path d=\"M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.02-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.38-.38.38-1.02 0-1.41zM6.63 17.65l-1.06 1.06c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41s-1.02-.39-1.41 0z\"/></svg></span>\n")
+          .append("        <span class=\"theme-icon-dark\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"22\" height=\"22\"><path d=\"M12.1 21.4c-4.7 0-8.6-3.9-8.6-8.6 0-3.3 1.9-6.2 4.9-7.5.3-.1.5.1.4.4-.8 2.5-.2 5.2 1.6 7.1s4.6 2.4 7.1 1.6c.3-.1.5.2.4.4-1.3 3-4.2 4.9-7.5 4.9-1.3 0-2.6-.3-3.7-.9.5.4 1 .7 1.6.8.5.1.9.1 1.4 0 3-.5 5.2-3 5.2-6.1V12c.1 4.7-3.8 8.6-8.5 8.6z\"/></svg></span>\n")
+          .append("      </button>\n")
+          .append("    </div>\n")
+          .append("  </div>\n")
           .append("</header>\n");
+
+        sb.append("<div class=\"sidebar-nav\">\n")
+          .append("  <a href=\"/\" class=\"sidebar-item ").append(ytActive).append("\">\n")
+          .append("    <span class=\"sidebar-icon\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M4 21V10.08l8-6.92 8 6.92V21h-6v-6h-4v6H4z\"/></svg></span>\n")
+          .append("    <span class=\"sidebar-label\">Home</span>\n")
+          .append("  </a>\n")
+          .append("  <a href=\"/subscriptions\" class=\"sidebar-item ").append(subsActive).append("\">\n")
+          .append("    <span class=\"sidebar-icon\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M10 14.65v-5.3L15 12l-5 2.65zM19 4H5v1h14V4zm2 2H3v1h18V6zm2 2H1v12h22V8z\"/></svg></span>\n")
+          .append("    <span class=\"sidebar-label\">Subscriptions</span>\n")
+          .append("  </a>\n")
+          .append("  <a href=\"/history\" class=\"sidebar-item ").append(histActive).append("\">\n")
+          .append("    <span class=\"sidebar-icon\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M11.9 21.1c-4.3 0-8-3.1-8.7-7.4-.1-.7-.1-1.4 0-2.1.8-4.4 4.6-7.5 9-7.5H13V2l5.3 4.2-5.3 4.2V8.1H12.2c-3.1 0-5.7 2.2-6.2 5.2-.1.5-.1 1 0 1.5.5 3 3.1 5.2 6.2 5.2 3.5 0 6.3-2.8 6.3-6.3h2c0 4.6-3.7 8.2-8.6 8.2zm-.4-12.6h1v4.8l4.2 2.5-.5.9-4.7-2.8z\"/></svg></span>\n")
+          .append("    <span class=\"sidebar-label\">History</span>\n")
+          .append("  </a>\n")
+          .append("  <a href=\"/cache\" class=\"sidebar-item ").append(cachedActive).append("\">\n")
+          .append("    <span class=\"sidebar-icon\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M17 18H7v-1h10v1zm-5-3.4l3.1-3.1.7.7-4.3 4.3-4.3-4.3.7-.7 3.1 3.1V5h1v9.6z\"/></svg></span>\n")
+          .append("    <span class=\"sidebar-label\">Downloads</span>\n")
+          .append("  </a>\n")
+          .append("  <a href=\"/settings\" class=\"sidebar-item ").append(settingsActive).append("\">\n")
+          .append("    <span class=\"sidebar-icon\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M19.4 13c0-.3.1-.6.1-.9s0-.6-.1-.9l2.1-1.7c.2-.2.2-.4.1-.6l-2-3.5c-.1-.2-.4-.3-.6-.2l-2.5 1c-.5-.4-1.1-.7-1.7-.9l-.4-2.6c0-.2-.2-.4-.5-.4h-4c-.3 0-.5.2-.5.4l-.4 2.6c-.6.2-1.2.5-1.7.9l-2.5-1c-.2-.1-.5 0-.6.2l-2 3.5c-.1.2-.1.4.1.6l2.1 1.7c-.1.3-.1.6-.1.9s0 .6.1.9l-2.1 1.7c-.2.2-.2.4-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7.9l.4 2.6c0 .2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.2 1.2-.5 1.7-.9l2.5 1c.2.1.5 0 .6-.2l2-3.5c.1-.2.1-.4-.1-.6l-2.1-1zm-7.4 2.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z\"/></svg></span>\n")
+          .append("    <span class=\"sidebar-label\">Settings</span>\n")
+          .append("  </a>\n")
+          .append("</div>\n");
 
         sb.append("<div class=\"bottom-nav\">\n")
           .append("  <a href=\"/\" class=\"bottom-nav-item ").append(ytActive).append("\">\n")
-          .append("    <span class=\"bottom-nav-icon\">🏠</span>\n")
+          .append("    <span class=\"bottom-nav-icon\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M4 21V10.08l8-6.92 8 6.92V21h-6v-6h-4v6H4z\"/></svg></span>\n")
           .append("    <span>Home</span>\n")
           .append("  </a>\n")
           .append("  <a href=\"/subscriptions\" class=\"bottom-nav-item ").append(subsActive).append("\">\n")
-          .append("    <span class=\"bottom-nav-icon\">🔔</span>\n")
-          .append("    <span>Library</span>\n")
+          .append("    <span class=\"bottom-nav-icon\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M10 14.65v-5.3L15 12l-5 2.65zM19 4H5v1h14V4zm2 2H3v1h18V6zm2 2H1v12h22V8z\"/></svg></span>\n")
+          .append("    <span>Subscriptions</span>\n")
           .append("  </a>\n")
           .append("  <a href=\"/history\" class=\"bottom-nav-item ").append(histActive).append("\">\n")
-          .append("    <span class=\"bottom-nav-icon\">📜</span>\n")
+          .append("    <span class=\"bottom-nav-icon\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M11.9 21.1c-4.3 0-8-3.1-8.7-7.4-.1-.7-.1-1.4 0-2.1.8-4.4 4.6-7.5 9-7.5H13V2l5.3 4.2-5.3 4.2V8.1H12.2c-3.1 0-5.7 2.2-6.2 5.2-.1.5-.1 1 0 1.5.5 3 3.1 5.2 6.2 5.2 3.5 0 6.3-2.8 6.3-6.3h2c0 4.6-3.7 8.2-8.6 8.2zm-.4-12.6h1v4.8l4.2 2.5-.5.9-4.7-2.8z\"/></svg></span>\n")
           .append("    <span>History</span>\n")
           .append("  </a>\n")
           .append("  <a href=\"/cache\" class=\"bottom-nav-item ").append(cachedActive).append("\">\n")
-          .append("    <span class=\"bottom-nav-icon\">📥</span>\n")
-          .append("    <span>Cached</span>\n")
+          .append("    <span class=\"bottom-nav-icon\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M17 18H7v-1h10v1zm-5-3.4l3.1-3.1.7.7-4.3 4.3-4.3-4.3.7-.7 3.1 3.1V5h1v9.6z\"/></svg></span>\n")
+          .append("    <span>Downloads</span>\n")
           .append("  </a>\n")
           .append("  <a href=\"/settings\" class=\"bottom-nav-item ").append(settingsActive).append("\">\n")
-          .append("    <span class=\"bottom-nav-icon\">⚙️</span>\n")
+          .append("    <span class=\"bottom-nav-icon\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M19.4 13c0-.3.1-.6.1-.9s0-.6-.1-.9l2.1-1.7c.2-.2.2-.4.1-.6l-2-3.5c-.1-.2-.4-.3-.6-.2l-2.5 1c-.5-.4-1.1-.7-1.7-.9l-.4-2.6c0-.2-.2-.4-.5-.4h-4c-.3 0-.5.2-.5.4l-.4 2.6c-.6.2-1.2.5-1.7.9l-2.5-1c-.2-.1-.5 0-.6.2l-2 3.5c-.1.2-.1.4.1.6l2.1 1.7c-.1.3-.1.6-.1.9s0 .6.1.9l-2.1 1.7c-.2.2-.2.4-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7.9l.4 2.6c0 .2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.2 1.2-.5 1.7-.9l2.5 1c.2.1.5 0 .6-.2l2-3.5c.1-.2.1-.4-.1-.6l-2.1-1zm-7.4 2.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z\"/></svg></span>\n")
           .append("    <span>Settings</span>\n")
           .append("  </a>\n")
           .append("</div>\n");
@@ -539,7 +432,7 @@ public class HtmlRenderer {
                 "        <circle cx=\"11\" cy=\"11\" r=\"3\" fill=\"white\" fill-opacity=\"0.8\"/>\n" +
                 "      </svg>\n" +
                 "    </div>\n" +
-                "    <div id=\"tv-lock-banner\" style=\"display:none; flex-direction:column; background: linear-gradient(135deg, #7c3aed, #db2777); color: white; padding: 12px 24px; position: sticky; top: 0; z-index: 10000; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);\">\n" +
+                "    <div id=\"tv-lock-banner\" style=\"display:none; flex-direction:column; background: linear-gradient(135deg, #7c3aed, #db2777); color: white; padding: 0 24px; position: fixed; top: 0; left: 0; right: 0; height: 40px; justify-content: center; z-index: 10001; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);\">\n" +
                 "      <div style=\"display:flex; align-items:center; justify-content:space-between; width:100%; font-weight:500; font-size:14px;\">\n" +
                 "        <span>📺 Currently controlling TV playback</span>\n" +
                 "        <div style=\"display:flex; gap:10px;\">\n" +
@@ -567,8 +460,10 @@ public class HtmlRenderer {
                 "            const code = localStorage.getItem('server_play_release_code');\n" +
                 "            if (code) {\n" +
                 "                banner.style.display = 'flex';\n" +
+                "                document.body.classList.add('has-banner');\n" +
                 "            } else {\n" +
                 "                banner.style.display = 'none';\n" +
+                "                document.body.classList.remove('has-banner');\n" +
                 "            }\n" +
                 "        }\n" +
                 "        \n" +
@@ -901,7 +796,149 @@ public class HtmlRenderer {
                 "            if (localStorage.getItem('server_play_release_code')) {\n" +
                 "                startCommandPolling();\n" +
                 "            }\n" +
+                "            \n" +
+                "            const sidebarToggle = document.getElementById('sidebar-toggle-btn');\n" +
+                "            if (sidebarToggle) {\n" +
+                "                sidebarToggle.addEventListener('click', () => {\n" +
+                "                    document.body.classList.toggle('sidebar-collapsed');\n" +
+                "                    localStorage.setItem('sidebar-collapsed', document.body.classList.contains('sidebar-collapsed'));\n" +
+                "                });\n" +
+                "            }\n" +
+                "            if (localStorage.getItem('sidebar-collapsed') === 'true') {\n" +
+                "                document.body.classList.add('sidebar-collapsed');\n" +
+                "            }\n" +
+                "            \n" +
+                "            const cacheBtn = document.getElementById('cache-btn');\n" +
+                "            if (cacheBtn && cacheBtn.textContent.toLowerCase().includes('downloading')) {\n" +
+                "                const videoUrl = cacheBtn.getAttribute('data-url');\n" +
+                "                if (videoUrl) {\n" +
+                "                    pollDownloadProgress(videoUrl, cacheBtn);\n" +
+                "                }\n" +
+                "            }\n" +
+                "            \n" +
+                "            const activeStatusLabels = document.querySelectorAll('.cache-status-label');\n" +
+                "            activeStatusLabels.forEach(label => {\n" +
+                "                const status = label.getAttribute('data-status');\n" +
+                "                if (status === 'DOWNLOADING' || status === 'PENDING') {\n" +
+                "                    const videoUrl = label.getAttribute('data-url');\n" +
+                "                    pollListDownloadProgress(videoUrl, label);\n" +
+                "                }\n" +
+                "            });\n" +
                 "        });\n" +
+                "        \n" +
+                "        function toggleSubscribe(event, btn, uploaderUrl, name, avatar) {\n" +
+                "            event.preventDefault();\n" +
+                "            const isSub = btn.classList.contains('subscribed');\n" +
+                "            const action = isSub ? 'unsubscribe' : 'subscribe';\n" +
+                "            const url = '/subscribe?action=' + action + '&id=' + encodeURIComponent(uploaderUrl) + '&name=' + encodeURIComponent(name) + '&avatar=' + encodeURIComponent(avatar) + '&back=ajax';\n" +
+                "            \n" +
+                "            if (isSub) {\n" +
+                "                btn.classList.remove('subscribed');\n" +
+                "                btn.textContent = 'Subscribe';\n" +
+                "            } else {\n" +
+                "                btn.classList.add('subscribed');\n" +
+                "                btn.textContent = 'Subscribed';\n" +
+                "            }\n" +
+                "            \n" +
+                "            fetch(url).catch(() => {\n" +
+                "                if (isSub) {\n" +
+                "                    btn.classList.add('subscribed');\n" +
+                "                    btn.textContent = 'Subscribed';\n" +
+                "                } else {\n" +
+                "                    btn.classList.remove('subscribed');\n" +
+                "                    btn.textContent = 'Subscribe';\n" +
+                "                }\n" +
+                "            });\n" +
+                "        }\n" +
+                "        \n" +
+                "        function toggleCache(event, btn, videoUrl, serviceId) {\n" +
+                "            event.preventDefault();\n" +
+                "            const text = btn.textContent.toLowerCase();\n" +
+                "            let action = 'add';\n" +
+                "            if (text.includes('download') && !text.includes('delete') && !text.includes('downloading')) {\n" +
+                "                action = 'add';\n" +
+                "                btn.style.backgroundColor = 'var(--service-tab-bg)';\n" +
+                "                btn.style.color = 'var(--text-color)';\n" +
+                "                btn.textContent = 'Downloading (0%)';\n" +
+                "                btn.style.pointerEvents = 'none';\n" +
+                "            } else if (text.includes('delete')) {\n" +
+                "                action = 'delete';\n" +
+                "                btn.textContent = 'Deleting...';\n" +
+                "                btn.style.pointerEvents = 'none';\n" +
+                "            }\n" +
+                "            \n" +
+                "            const url = '/cache?action=' + action + '&id=' + encodeURIComponent(videoUrl) + '&serviceId=' + serviceId + '&back=ajax';\n" +
+                "            fetch(url).then(res => {\n" +
+                "                if (action === 'add') {\n" +
+                "                    pollDownloadProgress(videoUrl, btn);\n" +
+                "                } else if (action === 'delete') {\n" +
+                "                    const card = btn.closest('.card');\n" +
+                "                    if (card) {\n" +
+                "                        card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';\n" +
+                "                        card.style.opacity = '0';\n" +
+                "                        card.style.transform = 'scale(0.9)';\n" +
+                "                        setTimeout(() => card.remove(), 300);\n" +
+                "                    }\n" +
+                "                }\n" +
+                "            }).catch(() => {\n" +
+                "                btn.style.pointerEvents = '';\n" +
+                "                if (action === 'delete') {\n" +
+                "                    btn.textContent = 'Delete';\n" +
+                "                }\n" +
+                "            });\n" +
+                "        }\n" +
+                "        \n" +
+                "        function pollDownloadProgress(videoUrl, btn) {\n" +
+                "            const interval = setInterval(() => {\n" +
+                "                fetch('/cache-status?id=' + encodeURIComponent(videoUrl))\n" +
+                "                    .then(res => res.json())\n" +
+                "                    .then(data => {\n" +
+                "                        if (data.status === 'COMPLETED') {\n" +
+                "                            clearInterval(interval);\n" +
+                "                            btn.textContent = 'Delete Download';\n" +
+                "                            btn.style.backgroundColor = '#c00c0c';\n" +
+                "                            btn.style.color = '#ffffff';\n" +
+                "                            btn.style.pointerEvents = '';\n" +
+                "                        } else if (data.status === 'DOWNLOADING' || data.status === 'PENDING') {\n" +
+                "                            btn.textContent = 'Downloading (' + data.progress + '%)';\n" +
+                "                        } else if (data.status === 'FAILED') {\n" +
+                "                            clearInterval(interval);\n" +
+                "                            btn.textContent = 'Retry Download';\n" +
+                "                            btn.style.backgroundColor = '#c00c0c';\n" +
+                "                            btn.style.color = '#ffffff';\n" +
+                "                            btn.style.pointerEvents = '';\n" +
+                "                        }\n" +
+                "                    })\n" +
+                "                    .catch(() => clearInterval(interval));\n" +
+                "            }, 2000);\n" +
+                "        }\n" +
+                "        \n" +
+                "        function pollListDownloadProgress(videoUrl, label) {\n" +
+                "            const card = label.closest('.card');\n" +
+                "            const deleteBtn = card ? card.querySelector('.cache-delete-btn') : null;\n" +
+                "            const interval = setInterval(() => {\n" +
+                "                fetch('/cache-status?id=' + encodeURIComponent(videoUrl))\n" +
+                "                    .then(res => res.json())\n" +
+                "                    .then(data => {\n" +
+                "                        if (data.status === 'COMPLETED') {\n" +
+                "                            clearInterval(interval);\n" +
+                "                            label.textContent = '✅ Saved Offline';\n" +
+                "                            label.style.color = '#2b8a3e';\n" +
+                "                            label.setAttribute('data-status', 'COMPLETED');\n" +
+                "                        } else if (data.status === 'DOWNLOADING' || data.status === 'PENDING') {\n" +
+                "                            label.textContent = '⏳ Caching (' + data.progress + '%)';\n" +
+                "                            label.style.color = '#e67e22';\n" +
+                "                            label.setAttribute('data-status', data.status);\n" +
+                "                        } else if (data.status === 'FAILED') {\n" +
+                "                            clearInterval(interval);\n" +
+                "                            label.textContent = '❌ Failed';\n" +
+                "                            label.style.color = '#c0392b';\n" +
+                "                            label.setAttribute('data-status', 'FAILED');\n" +
+                "                        }\n" +
+                "                    })\n" +
+                "                    .catch(() => clearInterval(interval));\n" +
+                "            }, 2000);\n" +
+                "        }\n" +
                 "    </script>\n" +
                 "</body>\n" +
                 "</html>";
@@ -1366,21 +1403,21 @@ public class HtmlRenderer {
           .append("              <span class=\"uploader-subs\">").append(info.getUploaderSubscriberCount() >= 0 ? info.getUploaderSubscriberCount() + " subscribers" : "").append("</span>\n")
           .append("            </div>\n");
 
+        String uploaderAvatar = getThumbnailUrl(info.getUploaderAvatars());
         if (isSubscribed) {
-            sb.append("            <a href=\"/subscribe?action=unsubscribe&id=").append(encodeUrl(info.getUploaderUrl())).append("&back=").append(encodeUrl(info.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:#606060; text-decoration:none; margin-left:auto; margin-right:8px;\">🔔 Subscribed</a>\n");
+            sb.append("            <a href=\"/subscribe?action=unsubscribe&id=").append(encodeUrl(info.getUploaderUrl())).append("&back=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleSubscribe(event, this, '").append(escapeJs(info.getUploaderUrl())).append("', '").append(escapeJs(info.getUploaderName())).append("', '").append(escapeJs(uploaderAvatar)).append("')\" class=\"subscribe-btn subscribed\" style=\"margin-left:auto; margin-right:8px;\">Subscribed</a>\n");
         } else {
-            String uploaderAvatar = getThumbnailUrl(info.getUploaderAvatars());
-            sb.append("            <a href=\"/subscribe?action=subscribe&id=").append(encodeUrl(info.getUploaderUrl())).append("&name=").append(encodeUrl(info.getUploaderName())).append("&avatar=").append(encodeUrl(uploaderAvatar)).append("&back=").append(encodeUrl(info.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:#cc0000; text-decoration:none; margin-left:auto; margin-right:8px;\">🔔 Subscribe</a>\n");
+            sb.append("            <a href=\"/subscribe?action=subscribe&id=").append(encodeUrl(info.getUploaderUrl())).append("&name=").append(encodeUrl(info.getUploaderName())).append("&avatar=").append(encodeUrl(uploaderAvatar)).append("&back=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleSubscribe(event, this, '").append(escapeJs(info.getUploaderUrl())).append("', '").append(escapeJs(info.getUploaderName())).append("', '").append(escapeJs(uploaderAvatar)).append("')\" class=\"subscribe-btn\" style=\"margin-left:auto; margin-right:8px;\">Subscribe</a>\n");
         }
 
         if (cachedVideo == null) {
-            sb.append("            <a href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:#007acc; text-decoration:none; margin-left:0;\">📥 Cache Offline</a>\n");
+            sb.append("            <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"subscribe-btn\" style=\"background-color:var(--service-tab-bg); color:var(--text-color); margin-left:0;\">Download</a>\n");
         } else if ("COMPLETED".equals(cachedVideo.getStatus())) {
-            sb.append("            <a href=\"/cache?action=delete&id=").append(encodeUrl(info.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:#d9534f; text-decoration:none; margin-left:0;\">🗑️ Delete Cache</a>\n");
+            sb.append("            <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=delete&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"subscribe-btn\" style=\"background-color:#c00c0c; color:#ffffff; margin-left:0;\">Delete Download</a>\n");
         } else if ("DOWNLOADING".equals(cachedVideo.getStatus()) || "PENDING".equals(cachedVideo.getStatus())) {
-            sb.append("            <span class=\"subscribe-btn\" style=\"background-color:#f0ad4e; text-decoration:none; cursor:default; pointer-events:none; margin-left:0;\">⏳ Caching (").append(cachedVideo.getProgress()).append("%)</span>\n");
+            sb.append("            <span id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:var(--service-tab-bg); color:var(--text-color); cursor:default; pointer-events:none; margin-left:0;\">Downloading (").append(cachedVideo.getProgress()).append("%)</span>\n");
         } else if ("FAILED".equals(cachedVideo.getStatus())) {
-            sb.append("            <a href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:#d9534f; text-decoration:none; margin-left:0;\">❌ Retry Cache</a>\n");
+            sb.append("            <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"subscribe-btn\" style=\"background-color:#c00c0c; color:#ffffff; margin-left:0;\">Retry Download</a>\n");
         }
 
         sb.append("          </div>\n");
@@ -1396,14 +1433,32 @@ public class HtmlRenderer {
           .append("      </div>\n");
 
         sb.append("      <div class=\"sidebar\">\n")
-          .append("        <h3 style=\"font-size: 16px; font-weight: 700; margin-bottom: 12px;\">Related Content</h3>\n");
+          .append("        <h3 style=\"font-size: 16px; font-weight: 700; margin-bottom: 16px;\">Related Content</h3>\n");
         for (InfoItem related : info.getRelatedItems()) {
-            sb.append("        <div class=\"card\" style=\"margin-bottom:12px; flex-direction:row; height:90px;\">\n")
-              .append("          <img src=\"").append(getThumbnailUrl(related.getThumbnails())).append("\" style=\"width:120px; height:100%; object-fit:cover;\">\n")
-              .append("          <div class=\"card-details\" style=\"padding:8px; justify-content:space-between;\">\n")
-              .append("            <a href=\"/watch?serviceId=").append(serviceId).append("&id=").append(related.getUrl()).append("\" class=\"card-title\" style=\"font-size:12px; -webkit-line-clamp:2;\">")
+            String uploader = "";
+            String metaText = "";
+            if (related instanceof StreamInfoItem) {
+                StreamInfoItem stream = (StreamInfoItem) related;
+                uploader = stream.getUploaderName();
+                metaText = (stream.getViewCount() >= 0 ? stream.getViewCount() + " views" : "Live") + " • " + (stream.getTextualUploadDate() != null ? stream.getTextualUploadDate() : "");
+            } else {
+                uploader = related.getName();
+            }
+            if (uploader == null) uploader = "";
+
+            sb.append("        <div class=\"card\" style=\"margin-bottom:8px; flex-direction:row; gap:8px; height:94px; background:transparent; border:none; box-shadow:none;\">\n")
+              .append("          <a href=\"/watch?serviceId=").append(serviceId).append("&id=").append(related.getUrl()).append("\" style=\"flex-shrink:0; width:168px; height:94px; border-radius:8px; overflow:hidden; background:var(--card-thumbnail-bg);\">\n")
+              .append("            <img src=\"").append(getThumbnailUrl(related.getThumbnails())).append("\" style=\"width:100%; height:100%; object-fit:cover;\">\n")
+              .append("          </a>\n")
+              .append("          <div class=\"card-details\" style=\"padding:0; display:flex; flex-direction:column; justify-content:flex-start; min-width:0; flex-grow:1;\">\n")
+              .append("            <a href=\"/watch?serviceId=\"").append(serviceId).append("&id=").append(related.getUrl()).append("\" class=\"card-title\" style=\"font-size:14px; font-weight:500; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.2; margin-bottom:4px;\">")
               .append(related.getName()).append("</a>\n")
-              .append("            <span class=\"card-meta\" style=\"font-size:10px;\">").append(related.getName()).append("</span>\n")
+              .append("            <span class=\"card-meta\" style=\"font-size:12px; line-height:1.4;\">\n")
+              .append("              <span class=\"card-uploader\">").append(uploader).append("</span>\n");
+            if (!metaText.isEmpty()) {
+                sb.append("              <span>").append(metaText).append("</span>\n");
+            }
+            sb.append("            </span>\n")
               .append("          </div>\n")
               .append("        </div>\n");
         }
@@ -1541,27 +1596,58 @@ public class HtmlRenderer {
                     break;
             }
 
+            if (item.getInfoType() == org.schabi.newpipe.extractor.InfoItem.InfoType.CHANNEL) {
+                sb.append("    <div class=\"card\" style=\"flex-direction:row; align-items:center; gap:24px; padding:16px 0;\">\n")
+                  .append("      <a href=\"").append(clickUrl).append("\" style=\"flex-shrink:0;\">\n")
+                  .append("        <img class=\"card-thumbnail\" src=\"").append(getThumbnailUrl(item.getThumbnails())).append("\" style=\"width:100px; height:100px; border-radius:50%; aspect-ratio:1/1;\">\n")
+                  .append("      </a>\n")
+                  .append("      <div class=\"card-info\">\n")
+                  .append("        <a href=\"").append(clickUrl).append("\" class=\"card-title\" style=\"font-size:18px; margin-bottom:4px;\">").append(item.getName()).append("</a>\n")
+                  .append("        <div class=\"card-meta\">\n")
+                  .append("          <span class=\"card-uploader\">").append(item.getName()).append("</span>\n")
+                  .append("          <span style=\"color:#ff0000; font-weight:bold; font-size:11px;\">👤 Channel</span>\n")
+                  .append("        </div>\n")
+                  .append("      </div>\n")
+                  .append("    </div>\n");
+                continue;
+            }
+
+            String uploaderName = "";
+            if (item instanceof StreamInfoItem) {
+                uploaderName = ((StreamInfoItem) item).getUploaderName();
+            } else {
+                uploaderName = item.getName();
+            }
+            if (uploaderName == null) uploaderName = "";
+            String firstChar = (!uploaderName.isEmpty()) ? uploaderName.substring(0, 1).toUpperCase() : "?";
+            int hash = Math.abs(uploaderName.hashCode());
+            String[] colors = {"#ff5722", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50", "#8bc34a", "#cddc39", "#ffc107", "#ff9800"};
+            String avatarBg = colors[hash % colors.length];
+
             sb.append("    <div class=\"card\">\n")
               .append("      <a href=\"").append(clickUrl).append("\">\n")
               .append("        <img class=\"card-thumbnail\" src=\"").append(getThumbnailUrl(item.getThumbnails())).append("\">\n")
               .append("      </a>\n")
               .append("      <div class=\"card-details\">\n")
-              .append("        <a href=\"").append(clickUrl).append("\" class=\"card-title\">").append(item.getName()).append("</a>\n")
-              .append("        <div class=\"card-meta\">\n");
+              .append("        <div class=\"card-avatar\" style=\"background-color:").append(avatarBg).append(";\">").append(firstChar).append("</div>\n")
+              .append("        <div class=\"card-info\">\n")
+              .append("          <a href=\"").append(clickUrl).append("\" class=\"card-title\">").append(item.getName()).append("</a>\n")
+              .append("          <div class=\"card-meta\">\n");
 
             if (!typeBadge.isEmpty()) {
-                sb.append("          <span style=\"color:#ff4e50; font-weight:bold; font-size:11px;\">").append(typeBadge).append("</span>\n");
+                sb.append("            <span style=\"color:#ff0000; font-weight:bold; font-size:11px;\">").append(typeBadge).append("</span>\n");
             } else if (item instanceof StreamInfoItem) {
                 StreamInfoItem stream = (StreamInfoItem) item;
-                sb.append("          <a href=\"/channel?serviceId=").append(serviceId).append("&id=").append(stream.getUploaderUrl()).append("\" class=\"card-uploader\">")
+                sb.append("            <a href=\"/channel?serviceId=").append(serviceId).append("&id=").append(stream.getUploaderUrl()).append("\" class=\"card-uploader\">")
                   .append(stream.getUploaderName()).append("</a>\n")
-                  .append("          <span>👁️ ").append(stream.getViewCount() >= 0 ? stream.getViewCount() + " views" : "Live / Dynamic").append(" • ")
+                  .append("            <span>👁️ ").append(stream.getViewCount() >= 0 ? stream.getViewCount() + " views" : "Live / Dynamic").append(" • ")
                   .append(stream.getTextualUploadDate() != null ? stream.getTextualUploadDate() : "").append("</span>\n");
             } else {
-                sb.append("          <span class=\"card-uploader\">").append(item.getName()).append("</span>\n");
+                sb.append("            <span class=\"card-uploader\">").append(item.getName()).append("</span>\n");
             }
 
-            sb.append("        </div>\n")
+            sb.append("          </div>\n")
+              .append("        </div>\n")
               .append("      </div>\n")
               .append("    </div>\n");
         }
@@ -1607,8 +1693,8 @@ public class HtmlRenderer {
           .append("            <div class=\"uploader-info\">\n")
           .append("              <span class=\"uploader-name\">").append(video.getUploader()).append("</span>\n")
           .append("            </div>\n")
-          .append("            <a href=\"/cache?action=delete&id=").append(encodeUrl(video.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:#d9534f; text-decoration:none;\">🗑️ Delete Cache</a>\n")
-          .append("            <button onclick=\"playOnTV('").append(escapeJs(video.getUrl())).append("', '").append(escapeJs(video.getTitle())).append("')\" class=\"subscribe-btn\" style=\"background-color:#7c3aed; color:white; border:none; margin-left:8px; cursor:pointer;\">📺 Play on TV</button>\n")
+          .append("            <a href=\"/cache?action=delete&id=").append(encodeUrl(video.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:#c00c0c; color:#ffffff;\">Delete Download</a>\n")
+          .append("            <button onclick=\"playOnTV('").append(escapeJs(video.getUrl())).append("', '").append(escapeJs(video.getTitle())).append("')\" class=\"subscribe-btn\" style=\"background-color:var(--text-color); color:var(--bg-color); border:none; margin-left:8px; cursor:pointer;\">Play on TV</button>\n")
           .append("          </div>\n");
 
         sb.append("          <div class=\"media-description\">")
@@ -1619,17 +1705,22 @@ public class HtmlRenderer {
         sb.append("      </div>\n");
 
         sb.append("      <div class=\"sidebar\">\n")
-          .append("        <h3 style=\"font-size: 16px; font-weight: 700; margin-bottom: 12px;\">Other Cached Videos</h3>\n");
+          .append("        <h3 style=\"font-size: 16px; font-weight: 700; margin-bottom: 16px;\">Other Cached Videos</h3>\n");
         int count = 0;
         for (CachedVideo other : otherCached) {
             if (other.getUrl().equals(video.getUrl())) continue;
             count++;
-            sb.append("        <div class=\"card\" style=\"margin-bottom:12px; flex-direction:row; height:90px;\">\n")
-              .append("          <img src=\"/thumbnail?id=").append(encodeUrl(other.getUrl())).append("\" style=\"width:120px; height:100%; object-fit:cover; border-radius:8px;\">\n")
-              .append("          <div class=\"card-details\" style=\"padding:8px; justify-content:space-between;\">\n")
-              .append("            <a href=\"/watch?serviceId=").append(serviceId).append("&id=").append(encodeUrl(other.getUrl())).append("\" class=\"card-title\" style=\"font-size:12px; -webkit-line-clamp:2;\">")
+            sb.append("        <div class=\"card\" style=\"margin-bottom:8px; flex-direction:row; gap:8px; height:94px; background:transparent; border:none; box-shadow:none;\">\n")
+              .append("          <a href=\"/watch?serviceId=").append(serviceId).append("&id=").append(encodeUrl(other.getUrl())).append("\" style=\"flex-shrink:0; width:168px; height:94px; border-radius:8px; overflow:hidden; background:var(--card-thumbnail-bg);\">\n")
+              .append("            <img src=\"/thumbnail?id=").append(encodeUrl(other.getUrl())).append("\" style=\"width:100%; height:100%; object-fit:cover;\">\n")
+              .append("          </a>\n")
+              .append("          <div class=\"card-details\" style=\"padding:0; display:flex; flex-direction:column; justify-content:flex-start; min-width:0; flex-grow:1;\">\n")
+              .append("            <a href=\"/watch?serviceId=").append(serviceId).append("&id=").append(encodeUrl(other.getUrl())).append("\" class=\"card-title\" style=\"font-size:14px; font-weight:500; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.2; margin-bottom:4px;\">")
               .append(other.getTitle()).append("</a>\n")
-              .append("            <span class=\"card-meta\" style=\"font-size:10px;\">").append(other.getUploader()).append("</span>\n")
+              .append("            <span class=\"card-meta\" style=\"font-size:12px; line-height:1.4;\">\n")
+              .append("              <span class=\"card-uploader\">").append(other.getUploader()).append("</span>\n")
+              .append("              <span>💾 Cached</span>\n")
+              .append("            </span>\n")
               .append("          </div>\n")
               .append("        </div>\n");
         }
@@ -1673,17 +1764,27 @@ public class HtmlRenderer {
                     statusColor = "#c0392b";
                 }
 
-                sb.append("    <div class=\"card\" style=\"position: relative;\">\n")
+                String uploaderName = item.getUploader();
+                if (uploaderName == null) uploaderName = "";
+                String firstChar = (!uploaderName.isEmpty()) ? uploaderName.substring(0, 1).toUpperCase() : "?";
+                int hash = Math.abs(uploaderName.hashCode());
+                String[] colors = {"#ff5722", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50", "#8bc34a", "#cddc39", "#ffc107", "#ff9800"};
+                String avatarBg = colors[hash % colors.length];
+
+                sb.append("    <div class=\"card\">\n")
                   .append("      <a href=\"").append(clickUrl).append("\">\n")
                   .append("        <img class=\"card-thumbnail\" src=\"/thumbnail?id=").append(encodeUrl(item.getUrl())).append("\">\n")
                   .append("      </a>\n")
                   .append("      <div class=\"card-details\">\n")
-                  .append("        <a href=\"").append(clickUrl).append("\" class=\"card-title\">").append(item.getTitle()).append("</a>\n")
-                  .append("        <div class=\"card-meta\">\n")
-                  .append("          <span class=\"card-uploader\">").append(item.getUploader()).append("</span>\n")
-                  .append("          <div style=\"display:flex; justify-content:space-between; align-items:center; margin-top:8px;\">\n")
-                  .append("            <span style=\"color:").append(statusColor).append("; font-weight:bold; font-size:12px;\">").append(statusLabel).append("</span>\n")
-                  .append("            <a href=\"/cache?action=delete&id=").append(encodeUrl(item.getUrl())).append("\" style=\"color:#d9534f; font-weight:bold; font-size:12px;\">🗑️ Delete</a>\n")
+                  .append("        <div class=\"card-avatar\" style=\"background-color:").append(avatarBg).append(";\">").append(firstChar).append("</div>\n")
+                  .append("        <div class=\"card-info\">\n")
+                  .append("          <a href=\"").append(clickUrl).append("\" class=\"card-title\">").append(item.getTitle()).append("</a>\n")
+                  .append("          <div class=\"card-meta\">\n")
+                  .append("            <span class=\"card-uploader\">").append(item.getUploader()).append("</span>\n")
+                  .append("            <div style=\"display:flex; justify-content:space-between; align-items:center; margin-top:8px;\">\n")
+                  .append("              <span class=\"cache-status-label\" data-url=\"").append(escapeJs(item.getUrl())).append("\" data-status=\"").append(item.getStatus()).append("\" style=\"color:").append(statusColor).append("; font-weight:bold; font-size:12px;\">").append(statusLabel).append("</span>\n")
+                  .append("              <a href=\"/cache?action=delete&id=").append(encodeUrl(item.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(item.getUrl())).append("', ").append(serviceId).append(")\" class=\"subscribe-btn\" style=\"background-color:#c00c0c; color:#ffffff; padding:4px 10px; font-size:11px; border-radius:12px;\">Delete</a>\n")
+                  .append("            </div>\n")
                   .append("          </div>\n")
                   .append("        </div>\n")
                   .append("      </div>\n")
