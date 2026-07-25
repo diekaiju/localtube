@@ -17,6 +17,7 @@ import org.schabi.newpipe.extractor.stream.StreamInfo;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 import org.schabi.newpipe.extractor.stream.VideoStream;
 import org.schabi.newpipe.extractor.stream.SubtitlesStream;
+import org.schabi.newpipe.extractor.stream.StreamType;
 import org.schabi.newpipe.extractor.MediaFormat;
 
 import java.io.BufferedReader;
@@ -375,6 +376,8 @@ public class LocalHttpServer {
                         handleStreamProxy(os, params, requestHeaders);
                     } else if (path.equals("/manifest")) {
                         handleManifestProxy(os, params);
+                    } else if (path.equals("/subtitles")) {
+                        handleSubtitlesProxy(os, params);
                     } else if (path.equals("/log_client_capabilities")) {
                         String supported = params.get("supported");
                         String error = params.get("error");
@@ -392,6 +395,8 @@ public class LocalHttpServer {
                         handleCache(os, params, isTv);
                     } else if (path.equals("/cache-status")) {
                         handleCacheStatus(os, params);
+                    } else if (path.equals("/search-history")) {
+                        handleSearchHistory(os, params);
                     } else if (path.equals("/subscriptions")) {
                         handleSubscriptions(os, params, isTv);
                     } else if (path.equals("/subscribe")) {
@@ -432,6 +437,12 @@ public class LocalHttpServer {
             int serviceId = getServiceId(params);
             String nextPageStr = params.get("nextPage");
             Page nextPage = HtmlRenderer.deserializePage(nextPageStr);
+
+            if (!"ajax".equals(params.get("feed"))) {
+                String html = HtmlRenderer.renderHomeSkeleton(serviceId, isTv);
+                sendResponse(os, 200, html, "text/html; charset=UTF-8");
+                return;
+            }
 
             try {
                 StreamingService service = NewPipe.getService(serviceId);
@@ -502,12 +513,32 @@ public class LocalHttpServer {
                 }
 
                 List<InfoItem> filtered = filterItems(items);
-                String html = HtmlRenderer.renderHome(serviceId, filtered, next, isTv);
+                String html = HtmlRenderer.renderHomeFeed(serviceId, filtered, next);
                 sendResponse(os, 200, html, "text/html; charset=UTF-8");
             } catch (Exception e) {
                 List<CachedVideo> cachedVideos = dbHelper.getCachedVideos();
-                String html = HtmlRenderer.renderOfflineHome(serviceId, "Offline - Showing cached content (" + e.getMessage() + ")", cachedVideos, isTv);
-                sendResponse(os, 200, html, "text/html; charset=UTF-8");
+                List<InfoItem> offlineItems = new ArrayList<>();
+                if (cachedVideos != null) {
+                    for (CachedVideo cv : cachedVideos) {
+                        if ("COMPLETED".equals(cv.getStatus())) {
+                            StreamInfoItem sii = new StreamInfoItem(0, cv.getUrl(), cv.getTitle(), StreamType.VIDEO_STREAM);
+                            sii.setUploaderName(cv.getUploader());
+                            sii.setUploaderUrl("");
+                            offlineItems.add(sii);
+                        }
+                    }
+                }
+                StringBuilder feedSb = new StringBuilder();
+                feedSb.append("  <div style=\"background-color:#fce8e6; color:#c5221f; padding:16px; border-radius:12px; margin-bottom:24px; font-size:14px; font-weight:500; border: 1px solid #fad2cf;\">\n")
+                      .append("    📶 You are currently offline (").append(e.getMessage()).append("). Showing your locally cached videos.\n")
+                      .append("  </div>\n")
+                      .append("  <h2 style=\"margin-bottom: 20px; font-weight: 700;\">📥 Offline Library</h2>\n");
+                if (offlineItems.isEmpty()) {
+                    feedSb.append("<div class=\"loading-placeholder\">No offline videos available. Connect to the internet to cache videos!</div>\n");
+                } else {
+                    HtmlRenderer.renderGrid(feedSb, serviceId, offlineItems);
+                }
+                sendResponse(os, 200, feedSb.toString(), "text/html; charset=UTF-8");
             }
         }
 
@@ -554,6 +585,7 @@ public class LocalHttpServer {
                 sendRedirect(os, "/?serviceId=" + serviceId);
                 return;
             }
+            dbHelper.addSearchQuery(query);
 
             String nextPageStr = params.get("nextPage");
             Page nextPage = HtmlRenderer.deserializePage(nextPageStr);
@@ -1174,13 +1206,12 @@ public class LocalHttpServer {
             boolean isAuto = "true".equals(params.get("auto"));
 
             StreamingService service = NewPipe.getService(serviceId);
-            StreamExtractor extractor = service.getStreamExtractor(mediaUrl);
-            extractor.fetchPage();
+            StreamInfo info = StreamInfo.getInfo(service, mediaUrl);
 
             SubtitlesStream targetStream = null;
             List<SubtitlesStream> subs = null;
             try {
-                subs = extractor.getSubtitlesDefault();
+                subs = info.getSubtitles();
             } catch (Exception e) {}
 
             if (subs != null) {
@@ -1450,6 +1481,26 @@ public class LocalHttpServer {
             } else {
                 sendResponse(os, 200, "{\"status\":\"" + cached.getStatus() + "\",\"progress\":" + cached.getProgress() + "}", "application/json");
             }
+        }
+
+        private void handleSearchHistory(OutputStream os, Map<String, String> params) throws Exception {
+            String deleteQuery = params.get("delete");
+            if (deleteQuery != null && !deleteQuery.isEmpty()) {
+                dbHelper.deleteSearchQuery(deleteQuery);
+                sendResponse(os, 200, "{\"status\":\"success\"}", "application/json");
+                return;
+            }
+            List<String> history = dbHelper.getSearchHistory();
+            StringBuilder json = new StringBuilder();
+            json.append("[");
+            for (int i = 0; i < history.size(); i++) {
+                json.append("\"").append(history.get(i).replace("\"", "\\\"")).append("\"");
+                if (i < history.size() - 1) {
+                    json.append(",");
+                }
+            }
+            json.append("]");
+            sendResponse(os, 200, json.toString(), "application/json");
         }
 
         private void handleSubscriptions(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {

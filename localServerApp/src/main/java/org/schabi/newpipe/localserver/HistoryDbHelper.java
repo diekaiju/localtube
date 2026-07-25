@@ -19,7 +19,7 @@ import java.util.List;
 public class HistoryDbHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "history.db";
-    private static final int DATABASE_VERSION = 6;
+    private static final int DATABASE_VERSION = 7;
 
     private static final String TABLE_HISTORY = "watch_history";
     private static final String KEY_ID = "id";
@@ -52,6 +52,9 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
 
     private static final String TABLE_WATCH_LATER = "watch_later";
     private static final String KEY_WATCH_LATER_TYPE = "watch_later_type"; // "video" or "playlist"
+
+    private static final String TABLE_SEARCH_HISTORY = "search_history";
+    private static final String KEY_QUERY = "search_query";
 
     private static HistoryDbHelper instance;
 
@@ -126,6 +129,13 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
                 + KEY_TIMESTAMP + " INTEGER"
                 + ")";
         db.execSQL(CREATE_WATCH_LATER_TABLE);
+
+        String CREATE_SEARCH_HISTORY_TABLE = "CREATE TABLE " + TABLE_SEARCH_HISTORY + "("
+                + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + KEY_QUERY + " TEXT UNIQUE,"
+                + KEY_TIMESTAMP + " INTEGER"
+                + ")";
+        db.execSQL(CREATE_SEARCH_HISTORY_TABLE);
     }
 
     @Override
@@ -183,6 +193,14 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
                     + KEY_TIMESTAMP + " INTEGER"
                     + ")";
             db.execSQL(CREATE_WATCH_LATER_TABLE);
+        }
+        if (oldVersion < 7) {
+            String CREATE_SEARCH_HISTORY_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_SEARCH_HISTORY + "("
+                    + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + KEY_QUERY + " TEXT UNIQUE,"
+                    + KEY_TIMESTAMP + " INTEGER"
+                    + ")";
+            db.execSQL(CREATE_SEARCH_HISTORY_TABLE);
         }
     }
 
@@ -783,5 +801,43 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public void addSearchQuery(String query) {
+        if (query == null || query.trim().isEmpty()) return;
+        query = query.trim();
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_QUERY, query);
+        values.put(KEY_TIMESTAMP, System.currentTimeMillis());
+        db.replace(TABLE_SEARCH_HISTORY, null, values);
+    }
+
+    public List<String> getSearchHistory() {
+        List<String> history = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.query(TABLE_SEARCH_HISTORY, new String[]{KEY_QUERY}, null, null, null, null, KEY_TIMESTAMP + " DESC", "10");
+            if (cursor != null && cursor.moveToFirst()) {
+                int queryIdx = cursor.getColumnIndex(KEY_QUERY);
+                do {
+                    if (queryIdx != -1) {
+                        history.add(cursor.getString(queryIdx));
+                    }
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return history;
+    }
+
+    public void deleteSearchQuery(String query) {
+        if (query == null) return;
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_SEARCH_HISTORY, KEY_QUERY + "=?", new String[]{query.trim()});
     }
 }

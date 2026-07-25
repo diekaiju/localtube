@@ -27,118 +27,120 @@ public class HtmlRenderer {
     private static final String CSS = 
             "@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');\n" +
             ":root {\n" +
-            "  --bg-color: #ffffff;\n" +
-            "  --text-color: #0f0f0f;\n" +
-            "  --header-bg: #ffffff;\n" +
-            "  --header-border: rgba(0, 0, 0, 0.1);\n" +
-            "  --logo-color: #0f0f0f;\n" +
-            "  --search-input-border: #cccccc;\n" +
-            "  --search-input-bg: #ffffff;\n" +
-            "  --search-input-color: #0f0f0f;\n" +
-            "  --search-btn-bg: #f8f8f8;\n" +
-            "  --search-btn-hover: #f0f0f0;\n" +
-            "  --service-tab-bg: #f2f2f2;\n" +
-            "  --service-tab-color: #0f0f0f;\n" +
-            "  --service-tab-hover-bg: #e5e5e5;\n" +
-            "  --service-tab-hover-color: #0f0f0f;\n" +
-            "  --card-bg: transparent;\n" +
+            "  --bg-color: #fbfafe;\n" +
+            "  --text-color: #1d1b20;\n" +
+            "  --header-bg: #f3f4f9;\n" +
+            "  --header-border: transparent;\n" +
+            "  --logo-color: #6750A4;\n" +
+            "  --search-input-border: transparent;\n" +
+            "  --search-input-bg: #ece6f0;\n" +
+            "  --search-input-color: #1d1b20;\n" +
+            "  --search-btn-bg: #ece6f0;\n" +
+            "  --search-btn-hover: #e8def8;\n" +
+            "  --service-tab-bg: #ece6f0;\n" +
+            "  --service-tab-color: #49454f;\n" +
+            "  --service-tab-hover-bg: #e8def8;\n" +
+            "  --service-tab-hover-color: #1d1b20;\n" +
+            "  --card-bg: #ffffff;\n" +
             "  --card-border: transparent;\n" +
-            "  --card-thumbnail-bg: #e5e5e5;\n" +
-            "  --card-title-color: #0f0f0f;\n" +
-            "  --card-meta-color: #606060;\n" +
+            "  --card-thumbnail-bg: #ece6f0;\n" +
+            "  --card-title-color: #1d1b20;\n" +
+            "  --card-meta-color: #49454f;\n" +
             "  --media-info-bg: transparent;\n" +
-            "  --media-info-border: rgba(0, 0, 0, 0.1);\n" +
-            "  --media-title-color: #0f0f0f;\n" +
-            "  --media-stats-color: #606060;\n" +
-            "  --uploader-name-color: #0f0f0f;\n" +
-            "  --uploader-subs-color: #606060;\n" +
-            "  --media-desc-color: #0f0f0f;\n" +
-            "  --media-desc-bg: #f2f2f2;\n" +
+            "  --media-info-border: rgba(0, 0, 0, 0.05);\n" +
+            "  --media-title-color: #1d1b20;\n" +
+            "  --media-stats-color: #49454f;\n" +
+            "  --uploader-name-color: #1d1b20;\n" +
+            "  --uploader-subs-color: #49454f;\n" +
+            "  --media-desc-color: #1d1b20;\n" +
+            "  --media-desc-bg: #f3f4f9;\n" +
             "  --media-desc-border: transparent;\n" +
             "  --comments-bg: transparent;\n" +
-            "  --comments-border: rgba(0, 0, 0, 0.1);\n" +
-            "  --comment-count-color: #0f0f0f;\n" +
-            "  --comment-border: rgba(0, 0, 0, 0.05);\n" +
-            "  --comment-author-color: #0f0f0f;\n" +
-            "  --comment-time-color: #606060;\n" +
-            "  --comment-text-color: #0f0f0f;\n" +
+            "  --comments-border: rgba(0, 0, 0, 0.05);\n" +
+            "  --comment-count-color: #1d1b20;\n" +
+            "  --comment-border: rgba(0, 0, 0, 0.03);\n" +
+            "  --comment-author-color: #1d1b20;\n" +
+            "  --comment-time-color: #49454f;\n" +
+            "  --comment-text-color: #1d1b20;\n" +
             "  --channel-header-bg: transparent;\n" +
-            "  --channel-header-border: rgba(0, 0, 0, 0.1);\n" +
-            "  --channel-name-color: #0f0f0f;\n" +
-            "  --channel-desc-color: #606060;\n" +
-            "  --bottom-nav-bg: #ffffff;\n" +
-            "  --bottom-nav-border: rgba(0, 0, 0, 0.1);\n" +
-            "  --bottom-nav-item-color: #606060;\n" +
-            "  --bottom-nav-item-active-color: #0f0f0f;\n" +
+            "  --channel-header-border: rgba(0, 0, 0, 0.05);\n" +
+            "  --channel-name-color: #1d1b20;\n" +
+            "  --channel-desc-color: #49454f;\n" +
+            "  --bottom-nav-bg: #f3f4f9;\n" +
+            "  --bottom-nav-border: transparent;\n" +
+            "  --bottom-nav-item-color: #49454f;\n" +
+            "  --bottom-nav-item-active-color: #21005d;\n" +
+            "  --bottom-nav-active-pill-bg: #e8def8;\n" +
             "  --settings-card-bg: #ffffff;\n" +
-            "  --settings-card-border: rgba(0, 0, 0, 0.1);\n" +
-            "  --settings-title-color: #0f0f0f;\n" +
-            "  --settings-section-border: rgba(0, 0, 0, 0.1);\n" +
-            "  --settings-section-title-color: #0f0f0f;\n" +
-            "  --setting-label-color: #0f0f0f;\n" +
-            "  --setting-desc-color: #606060;\n" +
-            "  --textarea-label-color: #0f0f0f;\n" +
-            "  --textarea-border: #cccccc;\n" +
+            "  --settings-card-border: transparent;\n" +
+            "  --settings-title-color: #1d1b20;\n" +
+            "  --settings-section-border: rgba(0, 0, 0, 0.05);\n" +
+            "  --settings-section-title-color: #6750A4;\n" +
+            "  --setting-label-color: #1d1b20;\n" +
+            "  --setting-desc-color: #49454f;\n" +
+            "  --textarea-label-color: #1d1b20;\n" +
+            "  --textarea-border: #79747e;\n" +
             "  --textarea-bg: #ffffff;\n" +
-            "  --textarea-color: #0f0f0f;\n" +
-            "  --slider-bg: #ccc;\n" +
+            "  --textarea-color: #1d1b20;\n" +
+            "  --slider-bg: #e8def8;\n" +
             "}\n" +
             "[data-theme=\"dark\"] {\n" +
-            "  --bg-color: #0f0f0f;\n" +
-            "  --text-color: #f1f1f1;\n" +
-            "  --header-bg: #0f0f0f;\n" +
-            "  --header-border: rgba(255, 255, 255, 0.1);\n" +
-            "  --logo-color: #ffffff;\n" +
-            "  --search-input-border: #303030;\n" +
-            "  --search-input-bg: #121212;\n" +
-            "  --search-input-color: #ffffff;\n" +
-            "  --search-btn-bg: #222222;\n" +
-            "  --search-btn-hover: #272727;\n" +
-            "  --service-tab-bg: #272727;\n" +
-            "  --service-tab-color: #f1f1f1;\n" +
-            "  --service-tab-hover-bg: #3f3f3f;\n" +
-            "  --service-tab-hover-color: #ffffff;\n" +
-            "  --card-bg: transparent;\n" +
+            "  --bg-color: #141218;\n" +
+            "  --text-color: #e6e1e5;\n" +
+            "  --header-bg: #1d1b20;\n" +
+            "  --header-border: transparent;\n" +
+            "  --logo-color: #d0bcff;\n" +
+            "  --search-input-border: transparent;\n" +
+            "  --search-input-bg: #2b2930;\n" +
+            "  --search-input-color: #e6e1e5;\n" +
+            "  --search-btn-bg: #2b2930;\n" +
+            "  --search-btn-hover: #4a4458;\n" +
+            "  --service-tab-bg: #2b2930;\n" +
+            "  --service-tab-color: #cac4d0;\n" +
+            "  --service-tab-hover-bg: #4a4458;\n" +
+            "  --service-tab-hover-color: #e8def8;\n" +
+            "  --card-bg: #1d1b20;\n" +
             "  --card-border: transparent;\n" +
-            "  --card-thumbnail-bg: #272727;\n" +
-            "  --card-title-color: #f1f1f1;\n" +
-            "  --card-meta-color: #aaaaaa;\n" +
+            "  --card-thumbnail-bg: #2b2930;\n" +
+            "  --card-title-color: #e6e1e5;\n" +
+            "  --card-meta-color: #cac4d0;\n" +
             "  --media-info-bg: transparent;\n" +
-            "  --media-info-border: rgba(255, 255, 255, 0.1);\n" +
-            "  --media-title-color: #f1f1f1;\n" +
-            "  --media-stats-color: #aaaaaa;\n" +
-            "  --uploader-name-color: #f1f1f1;\n" +
-            "  --uploader-subs-color: #aaaaaa;\n" +
-            "  --media-desc-color: #f1f1f1;\n" +
-            "  --media-desc-bg: #272727;\n" +
+            "  --media-info-border: rgba(255, 255, 255, 0.05);\n" +
+            "  --media-title-color: #e6e1e5;\n" +
+            "  --media-stats-color: #cac4d0;\n" +
+            "  --uploader-name-color: #e6e1e5;\n" +
+            "  --uploader-subs-color: #cac4d0;\n" +
+            "  --media-desc-color: #e6e1e5;\n" +
+            "  --media-desc-bg: #2b2930;\n" +
             "  --media-desc-border: transparent;\n" +
             "  --comments-bg: transparent;\n" +
-            "  --comments-border: rgba(255, 255, 255, 0.1);\n" +
-            "  --comment-count-color: #f1f1f1;\n" +
-            "  --comment-border: rgba(255, 255, 255, 0.1);\n" +
-            "  --comment-author-color: #f1f1f1;\n" +
-            "  --comment-time-color: #aaaaaa;\n" +
-            "  --comment-text-color: #f1f1f1;\n" +
+            "  --comments-border: rgba(255, 255, 255, 0.05);\n" +
+            "  --comment-count-color: #e6e1e5;\n" +
+            "  --comment-border: rgba(255, 255, 255, 0.03);\n" +
+            "  --comment-author-color: #e6e1e5;\n" +
+            "  --comment-time-color: #cac4d0;\n" +
+            "  --comment-text-color: #e6e1e5;\n" +
             "  --channel-header-bg: transparent;\n" +
-            "  --channel-header-border: rgba(255, 255, 255, 0.1);\n" +
-            "  --channel-name-color: #f1f1f1;\n" +
-            "  --channel-desc-color: #aaaaaa;\n" +
-            "  --bottom-nav-bg: #0f0f0f;\n" +
-            "  --bottom-nav-border: rgba(255, 255, 255, 0.1);\n" +
-            "  --bottom-nav-item-color: #aaaaaa;\n" +
-            "  --bottom-nav-item-active-color: #ffffff;\n" +
-            "  --settings-card-bg: #0f0f0f;\n" +
-            "  --settings-card-border: rgba(255, 255, 255, 0.1);\n" +
-            "  --settings-title-color: #f1f1f1;\n" +
-            "  --settings-section-border: rgba(255, 255, 255, 0.1);\n" +
-            "  --settings-section-title-color: #f1f1f1;\n" +
-            "  --setting-label-color: #f1f1f1;\n" +
-            "  --setting-desc-color: #aaaaaa;\n" +
-            "  --textarea-label-color: #f1f1f1;\n" +
-            "  --textarea-border: #303030;\n" +
-            "  --textarea-bg: #121212;\n" +
-            "  --textarea-color: #f1f1f1;\n" +
-            "  --slider-bg: #374151;\n" +
+            "  --channel-header-border: rgba(255, 255, 255, 0.05);\n" +
+            "  --channel-name-color: #e6e1e5;\n" +
+            "  --channel-desc-color: #cac4d0;\n" +
+            "  --bottom-nav-bg: #1d1b20;\n" +
+            "  --bottom-nav-border: transparent;\n" +
+            "  --bottom-nav-item-color: #cac4d0;\n" +
+            "  --bottom-nav-item-active-color: #e8def8;\n" +
+            "  --bottom-nav-active-pill-bg: #4a4458;\n" +
+            "  --settings-card-bg: #1d1b20;\n" +
+            "  --settings-card-border: transparent;\n" +
+            "  --settings-title-color: #e6e1e5;\n" +
+            "  --settings-section-border: rgba(255, 255, 255, 0.05);\n" +
+            "  --settings-section-title-color: #d0bcff;\n" +
+            "  --setting-label-color: #e6e1e5;\n" +
+            "  --setting-desc-color: #cac4d0;\n" +
+            "  --textarea-label-color: #e6e1e5;\n" +
+            "  --textarea-border: #938f99;\n" +
+            "  --textarea-bg: #1d1b20;\n" +
+            "  --textarea-color: #e6e1e5;\n" +
+            "  --slider-bg: #4a4458;\n" +
             "}\n" +
             "* { box-sizing: border-box; margin: 0; padding: 0; }\n" +
             "body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); -webkit-font-smoothing: antialiased; transition: background-color 0.2s, color 0.2s; }\n" +
@@ -146,30 +148,31 @@ public class HtmlRenderer {
             "header { display: flex; align-items: center; justify-content: space-between; background: var(--header-bg); padding: 0 16px; position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 1000; border-bottom: 1px solid var(--header-border); transition: background 0.2s, border-bottom 0.2s; }\n" +
             ".top-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 100%; gap: 16px; }\n" +
             ".logo { font-size: 20px; font-weight: 700; color: var(--logo-color); display: flex; align-items: center; gap: 4px; letter-spacing: -0.8px; transition: color 0.2s; font-family: 'Roboto', sans-serif; }\n" +
-            ".search-form { display: flex; flex-grow: 1; max-width: 640px; position: relative; margin: 0 16px; }\n" +
-            ".search-input { width: 100%; padding: 0 16px; height: 40px; border-radius: 40px 0 0 40px; border: 1px solid var(--search-input-border); background-color: var(--search-input-bg); color: var(--search-input-color); font-size: 16px; outline: none; transition: border-color 0.2s; }\n" +
-            ".search-input:focus { border-color: #1a73e8; }\n" +
-            ".search-btn { height: 40px; width: 64px; padding: 0; border-radius: 0 40px 40px 0; border: 1px solid var(--search-input-border); border-left: none; background-color: var(--search-btn-bg); color: var(--text-color); cursor: pointer; font-size: 16px; transition: background-color 0.2s; display: flex; align-items: center; justify-content: center; }\n" +
+            ".search-form { display: flex; flex-grow: 1; max-width: 640px; position: relative; margin: 0 16px; border-radius: 28px; background-color: var(--search-input-bg); overflow: hidden; height: 48px; align-items: center; padding-left: 8px; }\n" +
+            ".search-input { flex-grow: 1; height: 100%; border: none; background: transparent; color: var(--search-input-color); padding: 0 16px; font-size: 16px; outline: none; }\n" +
+            ".search-input:focus { border: none; }\n" +
+            ".search-btn { height: 40px; width: 48px; border-radius: 24px; border: none; background: transparent; color: var(--text-color); cursor: pointer; display: flex; align-items: center; justify-content: center; margin-right: 4px; }\n" +
             ".search-btn:hover { background-color: var(--search-btn-hover); }\n" +
             ".service-selector { display: none; }\n" +
             ".container { transition: all 0.2s ease; }\n" +
             ".grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 40px 16px; }\n" +
-            ".card { display: flex; flex-direction: column; cursor: pointer; }\n" +
-            ".card-thumbnail { width: 100%; aspect-ratio: 16/9; background-color: var(--card-thumbnail-bg); object-fit: cover; border-radius: 12px; transition: border-radius 0.2s; }\n" +
+            ".card { display: flex; flex-direction: column; cursor: pointer; background-color: var(--card-bg); border-radius: 24px; padding: 12px; border: 1px solid var(--card-border); transition: transform 0.2s, box-shadow 0.2s; }\n" +
+            ".card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }\n" +
+            ".card-thumbnail { width: 100%; aspect-ratio: 16/9; background-color: var(--card-thumbnail-bg); object-fit: cover; border-radius: 16px; transition: border-radius 0.2s; }\n" +
             ".card-details { display: flex; gap: 12px; padding: 12px 0 0 0; }\n" +
-            ".card-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 14px; flex-shrink: 0; }\n" +
+            ".card-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 15px; flex-shrink: 0; }\n" +
             ".card-info { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; }\n" +
-            ".card-title { font-size: 14px; font-weight: 500; line-height: 1.4; max-height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 4px; color: var(--card-title-color); }\n" +
-            ".card-meta { font-size: 12px; color: var(--card-meta-color); display: flex; flex-direction: column; gap: 2px; }\n" +
-            ".card-uploader { font-weight: 400; color: var(--card-meta-color); text-decoration: none; }\n" +
+            ".card-title { font-size: 15px; font-weight: 500; line-height: 1.4; max-height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 4px; color: var(--card-title-color); }\n" +
+            ".card-meta { font-size: 13px; color: var(--card-meta-color); display: flex; flex-direction: column; gap: 2px; }\n" +
+            ".card-uploader { font-weight: 500; color: var(--card-meta-color); text-decoration: none; }\n" +
             ".card-uploader:hover { color: var(--text-color); }\n" +
             ".pagination { display: flex; justify-content: center; margin: 32px 0; }\n" +
-            ".btn-page { display: inline-block; padding: 10px 24px; border-radius: 20px; font-weight: 500; font-size: 14px; background-color: var(--service-tab-bg); color: var(--text-color); border: none; cursor: pointer; transition: background-color 0.2s; }\n" +
+            ".btn-page { display: inline-block; padding: 10px 24px; border-radius: 100px; font-weight: 500; font-size: 14px; background-color: var(--service-tab-bg); color: var(--text-color); border: none; cursor: pointer; transition: background-color 0.2s; }\n" +
             ".btn-page:hover { background-color: var(--service-tab-hover-bg); }\n" +
             ".sidebar-nav { position: fixed; top: 56px; left: 0; bottom: 0; width: 240px; background-color: var(--bg-color); padding: 12px 4px; display: flex; flex-direction: column; gap: 4px; z-index: 99; overflow-y: auto; }\n" +
-            ".sidebar-item { display: flex; align-items: center; gap: 24px; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 400; color: var(--text-color); transition: background-color 0.2s; cursor: pointer; }\n" +
+            ".sidebar-item { display: flex; align-items: center; gap: 24px; padding: 12px 24px; border-radius: 100px; font-size: 14px; font-weight: 500; color: var(--text-color); transition: background-color 0.2s; cursor: pointer; margin: 0 12px; }\n" +
             ".sidebar-item:hover { background-color: var(--service-tab-hover-bg); }\n" +
-            ".sidebar-item.active { font-weight: 600; background-color: var(--service-tab-hover-bg); }\n" +
+            ".sidebar-item.active { font-weight: 700; background-color: var(--bottom-nav-active-pill-bg); color: var(--bottom-nav-item-active-color); }\n" +
             ".sidebar-icon { font-size: 18px; }\n" +
             "@media (min-width: 769px) {\n" +
             "  .bottom-nav { display: none !important; }\n" +
@@ -178,14 +181,31 @@ public class HtmlRenderer {
             "}\n" +
             "@media (max-width: 768px) {\n" +
             "  .sidebar-nav { display: none !important; }\n" +
-            "  .bottom-nav { display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; height: 48px; background: var(--bottom-nav-bg); border-top: 1px solid var(--bottom-nav-border); justify-content: space-around; align-items: center; z-index: 1000; }\n" +
-            "  .container { margin-left: 0; max-width: 100%; padding: 12px; margin-top: 56px; padding-bottom: 70px; }\n" +
-            "  .grid { grid-template-columns: 1fr; gap: 24px; }\n" +
-            "  .card-thumbnail { border-radius: 0; }\n" +
-            "  .card-details { padding: 12px; }\n" +
-            "  .bottom-nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--bottom-nav-item-color); font-size: 10px; text-decoration: none; }\n" +
-            "  .bottom-nav-item.active { color: var(--bottom-nav-item-active-color); font-weight: 500; }\n" +
-            "  .bottom-nav-icon { font-size: 20px; }\n" +
+            "  .bottom-nav { display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; height: 80px; background: var(--bottom-nav-bg); border-top: none; box-shadow: 0 -1px 3px rgba(0,0,0,0.05); justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: 8px; }\n" +
+            "  .container { margin-left: 0; max-width: 100%; padding: 0 12px; margin-top: 56px; padding-bottom: 96px; }\n" +
+            "  .container h2 { padding: 16px 4px 0 4px; margin: 0 !important; }\n" +
+            "  .grid { grid-template-columns: 1fr; gap: 20px; }\n" +
+            "  .card { padding: 0; }\n" +
+            "  .card-thumbnail { border-radius: 16px; }\n" +
+            "  .card-details { padding: 12px 4px; }\n" +
+            "  .bottom-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--bottom-nav-item-color); font-size: 12px; font-weight: 500; text-decoration: none; flex-grow: 1; justify-content: center; }\n" +
+            "  .bottom-nav-item .bottom-nav-icon { display: flex; align-items: center; justify-content: center; width: 64px; height: 32px; border-radius: 16px; transition: background-color 0.2s ease, color 0.2s ease; color: var(--bottom-nav-item-color); }\n" +
+            "  .bottom-nav-item.active .bottom-nav-icon { background-color: var(--bottom-nav-active-pill-bg); color: var(--bottom-nav-item-active-color); }\n" +
+            "  .bottom-nav-item.active { color: var(--text-color); }\n" +
+            "  #theme-toggle { display: none !important; }\n" +
+            "  #mobile-theme-row { display: flex !important; }\n" +
+            "  .search-form { max-width: 40px; margin: 0; overflow: hidden; transition: max-width 0.3s ease; border-radius: 40px; }\n" +
+            "  .search-form.search-active { max-width: 100%; width: 100%; margin-left: 8px; }\n" +
+            "  .search-input { width: 0; padding: 0; border: none; transition: width 0.3s ease, opacity 0.3s ease; opacity: 0; }\n" +
+            "  .search-form.search-active .search-input { width: calc(100% - 48px); padding: 0 16px; border: 1px solid var(--search-input-border); opacity: 1; }\n" +
+            "  .search-btn { border-radius: 40px; border: none; background: transparent; }\n" +
+            "  .search-form.search-active .search-btn { border-radius: 0 40px 40px 0; border: 1px solid var(--search-input-border); border-left: none; background-color: var(--search-btn-bg); }\n" +
+            "  .top-bar.search-active div:first-child, .top-bar.search-active div:last-child { display: none !important; }\n" +
+            "  .uploader-profile { display: grid !important; grid-template-columns: 40px 1fr auto; grid-template-areas: 'avatar info sub' 'actions actions actions'; gap: 8px 12px; align-items: center; }\n" +
+            "  .uploader-avatar { grid-area: avatar; }\n" +
+            "  .uploader-info { grid-area: info; min-width: 0; }\n" +
+            "  .uploader-profile > .subscribe-btn:not(#cache-btn) { grid-area: sub; margin-left: 0 !important; margin-right: 0 !important; padding: 6px 16px !important; font-size: 13px !important; }\n" +
+            "  .uploader-profile > #cache-btn { grid-area: actions; width: 100%; margin-top: 4px; padding: 8px 16px !important; font-size: 13px !important; }\n" +
             "}\n" +
             ".player-container { display: flex; flex-direction: column; gap: 20px; margin-top: 16px; }\n" +
             ".player-layout { display: flex; flex-direction: column; gap: 24px; }\n" +
@@ -203,8 +223,20 @@ public class HtmlRenderer {
             ".uploader-info { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; }\n" +
             ".uploader-name { font-size: 16px; font-weight: 500; color: var(--uploader-name-color); text-decoration: none; }\n" +
             ".uploader-subs { font-size: 12px; color: var(--uploader-subs-color); }\n" +
-            ".subscribe-btn { padding: 8px 16px; border-radius: 18px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; text-decoration: none; text-align: center; color: #ffffff; background-color: #cc0000; }\n" +
+            ".subscribe-btn { padding: 8px 24px; border-radius: 100px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; text-decoration: none; text-align: center; color: #ffffff; background-color: #6750A4; }\n" +
+            ".settings-card { background-color: var(--settings-card-bg); border-radius: 24px; padding: 24px; border: 1px solid var(--settings-card-border); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }\n" +
             ".subscribe-btn:hover { opacity: 0.9; }\n" +
+            ".video-js { font-family: inherit; color: #ffffff; border-radius: 16px; overflow: hidden; }\n" +
+            ".video-js .vjs-big-play-button { background-color: var(--logo-color); border: none; width: 64px; height: 64px; line-height: 64px; border-radius: 50%; margin-top: -32px; margin-left: -32px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: background-color 0.2s, transform 0.2s; }\n" +
+            ".video-js:hover .vjs-big-play-button, .video-js .vjs-big-play-button:focus { background-color: var(--bottom-nav-active-pill-bg); color: var(--bottom-nav-item-active-color); transform: scale(1.1); }\n" +
+            ".video-js .vjs-control-bar { background-color: rgba(29, 27, 32, 0.85); backdrop-filter: blur(8px); height: 48px; border-radius: 0 0 16px 16px; }\n" +
+            ".video-js .vjs-slider { background-color: rgba(255,255,255,0.2); }\n" +
+            ".video-js .vjs-load-progress { background-color: rgba(255,255,255,0.3); }\n" +
+            ".video-js .vjs-play-progress { background: var(--logo-color); }\n" +
+            ".video-js .vjs-play-progress:before { color: var(--logo-color); font-size: 14px; top: 50% !important; transform: translateY(-50%) !important; }\n" +
+            ".video-js.vjs-fullscreen .vjs-control-bar { height: 64px !important; padding: 0 48px !important; font-size: 16px !important; }\n" +
+            ".video-js.vjs-fullscreen .vjs-button { font-size: 22px !important; width: 56px !important; }\n" +
+            ".video-js.vjs-fullscreen .vjs-time-control { font-size: 14px !important; line-height: 64px !important; }\n" +
             ".media-description { font-size: 14px; line-height: 1.5; color: var(--media-desc-color); white-space: pre-wrap; background-color: var(--media-desc-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--media-desc-border); margin-top: 12px; }\n" +
             ".comments-section { padding-top: 16px; }\n" +
             ".comment-count { font-size: 16px; font-weight: 500; margin-bottom: 16px; color: var(--comment-count-color); }\n" +
@@ -227,7 +259,9 @@ public class HtmlRenderer {
             ".channel-tab-btn:hover { color: var(--text-color); }\n" +
             ".channel-tab-btn.active { color: var(--text-color); border-bottom-color: #0f0f0f; }\n" +
             "[data-theme=\"dark\"] .channel-tab-btn.active { border-bottom-color: #ffffff; }\n" +
-            ".loading-placeholder { text-align: center; font-size: 14px; padding: 40px 0; color: var(--card-meta-color); }\n" +
+            ".loading-placeholder { text-align: center; font-size: 15px; padding: 48px 16px; color: var(--card-meta-color); background-color: var(--card-bg); border-radius: 16px; border: 1px solid var(--media-info-border); margin: 16px 0; }\n" +
+            ".m3-spinner { width: 40px; height: 40px; border: 4px solid var(--search-input-bg); border-top: 4px solid var(--logo-color); border-radius: 50%; animation: m3-spin 0.8s linear infinite; margin: 24px auto; }\n" +
+            "@keyframes m3-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }\n" +
             ".settings-card { background-color: var(--settings-card-bg); padding: 24px; border-radius: 12px; border: 1px solid var(--settings-card-border); max-width: 600px; margin: 0 auto; }\n" +
             ".settings-title { font-size: 20px; font-weight: 700; margin-bottom: 24px; color: var(--settings-title-color); }\n" +
             ".settings-section { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--settings-section-border); }\n" +
@@ -273,7 +307,13 @@ public class HtmlRenderer {
             "  body.sidebar-collapsed .sidebar-nav .sidebar-item { justify-content: center; padding: 12px; }\n" +
             "  body.sidebar-collapsed .container { margin-left: 72px; max-width: calc(100% - 72px); }\n" +
             "}\n" +
-            ".sidebar-nav, .container { transition: width 0.2s ease, margin-left 0.2s ease, max-width 0.2s ease; }";
+            ".sidebar-nav, .container { transition: width 0.2s ease, margin-left 0.2s ease, max-width 0.2s ease; }\n" +
+            ".search-suggestions { position: absolute; top: 42px; left: 0; right: 0; background-color: var(--bg-color); border: 1px solid var(--search-input-border); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10000; display: none; flex-direction: column; padding: 8px 0; max-height: 350px; overflow-y: auto; }\n" +
+            ".search-suggestion-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; cursor: pointer; font-size: 14px; color: var(--text-color); }\n" +
+            ".search-suggestion-item:hover { background-color: var(--service-tab-hover-bg); }\n" +
+            ".search-suggestion-text { display: flex; align-items: center; gap: 12px; flex-grow: 1; }\n" +
+            ".search-suggestion-delete { color: #cc0000; font-size: 12px; cursor: pointer; padding: 4px 8px; border-radius: 4px; }\n" +
+            ".search-suggestion-delete:hover { background-color: rgba(204,0,0,0.1); }";
 
     // Supported platform details
     public static final String[] SERVICE_NAMES = {"YouTube"};
@@ -332,6 +372,7 @@ public class HtmlRenderer {
           .append("      <input type=\"text\" name=\"q\" class=\"search-input\" placeholder=\"Search\" value=\"")
           .append(query != null ? query.replace("\"", "&quot;") : "").append("\" required>\n")
           .append("      <button type=\"submit\" class=\"search-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"20\" height=\"20\"><path d=\"M20.87 20.17l-5.59-5.59C16.31 13.33 17 11.75 17 10c0-3.87-3.13-7-7-7s-7 3.13-7 7 3.13 7 7 7c1.75 0 3.33-.69 4.58-1.72l5.59 5.59.7-.71zM10 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z\"/></svg></button>\n")
+          .append("      <div class=\"search-suggestions\" id=\"search-suggestions-box\"></div>\n")
           .append("    </form>\n")
           .append("    <div style=\"display:flex; align-items:center; gap:10px;\">\n")
           .append("      <button id=\"connect-remote-btn\" onclick=\"playOnTV(window.location.href, document.title)\" aria-label=\"Connect Remote\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"22\" height=\"22\"><path d=\"M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.9-.9 1.9-2l.01-12c0-1.1-.9-2-2-2zm0 14H3V5h18v12zm-10 7v-2h2v2h-2z\"/></svg></button>\n")
@@ -824,6 +865,128 @@ public class HtmlRenderer {
                 "                    pollListDownloadProgress(videoUrl, label);\n" +
                 "                }\n" +
                 "            });\n" +
+                "            \n" +
+                "            const settingsThemeToggle = document.getElementById('settings-theme-toggle');\n" +
+                "            if (settingsThemeToggle) {\n" +
+                "                const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';\n" +
+                "                settingsThemeToggle.checked = (currentTheme === 'dark');\n" +
+                "                settingsThemeToggle.addEventListener('change', function() {\n" +
+                "                    const newTheme = settingsThemeToggle.checked ? 'dark' : 'light';\n" +
+                "                    document.documentElement.setAttribute('data-theme', newTheme);\n" +
+                "                    localStorage.setItem('theme', newTheme);\n" +
+                "                });\n" +
+                "            }\n" +
+                "            \n" +
+                "            const searchForm = document.querySelector('.search-form');\n" +
+                "            const searchInput = document.querySelector('.search-input');\n" +
+                "            const searchBtn = document.querySelector('.search-btn');\n" +
+                "            const topBar = document.querySelector('.top-bar');\n" +
+                "            const suggestionsBox = document.getElementById('search-suggestions-box');\n" +
+                "            \n" +
+                "            if (searchForm && searchInput && searchBtn) {\n" +
+                "                if (window.innerWidth <= 768) {\n" +
+                "                    searchBtn.addEventListener('click', function(e) {\n" +
+                "                        if (!searchForm.classList.contains('search-active')) {\n" +
+                "                            e.preventDefault();\n" +
+                "                            searchForm.classList.add('search-active');\n" +
+                "                            if (topBar) topBar.classList.add('search-active');\n" +
+                "                            searchInput.focus();\n" +
+                "                            window.history.pushState({ searchActive: true }, '');\n" +
+                "                        }\n" +
+                "                    });\n" +
+                "                    \n" +
+                "                    window.addEventListener('popstate', function(e) {\n" +
+                "                        if (searchForm.classList.contains('search-active')) {\n" +
+                "                            searchForm.classList.remove('search-active');\n" +
+                "                            if (topBar) topBar.classList.remove('search-active');\n" +
+                "                            if (suggestionsBox) suggestionsBox.style.display = 'none';\n" +
+                "                        }\n" +
+                "                    });\n" +
+                "                    \n" +
+                "                    searchInput.addEventListener('blur', function() {\n" +
+                "                        setTimeout(() => {\n" +
+                "                            if (document.activeElement !== searchInput && searchInput.value.trim() === '') {\n" +
+                "                                searchForm.classList.remove('search-active');\n" +
+                "                                if (topBar) topBar.classList.remove('search-active');\n" +
+                "                                if (window.history.state && window.history.state.searchActive) {\n" +
+                "                                    window.history.back();\n" +
+                "                                }\n" +
+                "                            }\n" +
+                "                        }, 250);\n" +
+                "                    });\n" +
+                "                    \n" +
+                "                    document.addEventListener('click', function(e) {\n" +
+                "                        if (!searchForm.contains(e.target) && searchForm.classList.contains('search-active')) {\n" +
+                "                            if (searchInput.value.trim() === '') {\n" +
+                "                                searchForm.classList.remove('search-active');\n" +
+                "                                if (topBar) topBar.classList.remove('search-active');\n" +
+                "                                if (window.history.state && window.history.state.searchActive) {\n" +
+                "                                    window.history.back();\n" +
+                "                                }\n" +
+                "                            }\n" +
+                "                        }\n" +
+                "                    });\n" +
+                "                }\n" +
+                "                \n" +
+                "                if (suggestionsBox) {\n" +
+                "                    searchInput.addEventListener('focus', showSuggestions);\n" +
+                "                    searchInput.addEventListener('input', showSuggestions);\n" +
+                "                    searchInput.addEventListener('click', showSuggestions);\n" +
+                "                    \n" +
+                "                    document.addEventListener('click', function(e) {\n" +
+                "                        if (!searchForm.contains(e.target)) {\n" +
+                "                            suggestionsBox.style.display = 'none';\n" +
+                "                        }\n" +
+                "                    });\n" +
+                "                    \n" +
+                "                    function showSuggestions() {\n" +
+                "                        fetch('/search-history')\n" +
+                "                            .then(res => res.json())\n" +
+                "                            .then(data => {\n" +
+                "                                if (data && data.length > 0) {\n" +
+                "                                    const filterVal = searchInput.value.toLowerCase().trim();\n" +
+                "                                    const filtered = filterVal ? data.filter(q => q.toLowerCase().includes(filterVal)) : data;\n" +
+                "                                    if (filtered.length === 0) {\n" +
+                "                                        suggestionsBox.style.display = 'none';\n" +
+                "                                        return;\n" +
+                "                                    }\n" +
+                "                                    suggestionsBox.innerHTML = '';\n" +
+                "                                    filtered.forEach(q => {\n" +
+                "                                        const item = document.createElement('div');\n" +
+                "                                        item.className = 'search-suggestion-item';\n" +
+                "                                        \n" +
+                "                                        const textDiv = document.createElement('div');\n" +
+                "                                        textDiv.className = 'search-suggestion-text';\n" +
+                "                                        textDiv.innerHTML = `<svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"18\" height=\"18\" style=\"color:var(--card-meta-color);\"><path d=\"M11.9 21.1c-4.3 0-8-3.1-8.7-7.4-.1-.7-.1-1.4 0-2.1.8-4.4 4.6-7.5 9-7.5H13V2l5.3 4.2-5.3 4.2V8.1H12.2c-3.1 0-5.7 2.2-6.2 5.2-.1.5-.1 1 0 1.5.5 3 3.1 5.2 6.2 5.2 3.5 0 6.3-2.8 6.3-6.3h2c0 4.6-3.7 8.2-8.6 8.2zm-.4-12.6h1v4.8l4.2 2.5-.5.9-4.7-2.8z\"/></svg><span>${q}</span>`;\n" +
+                "                                        \n" +
+                "                                        textDiv.addEventListener('mousedown', (e) => {\n" +
+                "                                            e.preventDefault();\n" +
+                "                                            searchInput.value = q;\n" +
+                "                                            searchForm.submit();\n" +
+                "                                        });\n" +
+                "                                        \n" +
+                "                                        const delBtn = document.createElement('span');\n" +
+                "                                        delBtn.className = 'search-suggestion-delete';\n" +
+                "                                        delBtn.textContent = 'Remove';\n" +
+                "                                        delBtn.addEventListener('mousedown', (e) => {\n" +
+                "                                            e.preventDefault();\n" +
+                "                                            e.stopPropagation();\n" +
+                "                                            fetch('/search-history?delete=' + encodeURIComponent(q))\n" +
+                "                                                .then(() => showSuggestions());\n" +
+                "                                        });\n" +
+                "                                        \n" +
+                "                                        item.appendChild(textDiv);\n" +
+                "                                        item.appendChild(delBtn);\n" +
+                "                                        suggestionsBox.appendChild(item);\n" +
+                "                                    });\n" +
+                "                                    suggestionsBox.style.display = 'flex';\n" +
+                "                                } else {\n" +
+                "                                    suggestionsBox.style.display = 'none';\n" +
+                "                                }\n" +
+                "                            });\n" +
+                "                    }\n" +
+                "                }\n" +
+                "            }\n" +
                 "        });\n" +
                 "        \n" +
                 "        function toggleSubscribe(event, btn, uploaderUrl, name, avatar) {\n" +
@@ -944,6 +1107,66 @@ public class HtmlRenderer {
                 "</html>";
     }
 
+    public static String renderHomeSkeleton(int serviceId, boolean isTv) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getHeaderHtml(serviceId, ""));
+        sb.append("<div class=\"container\">\n")
+          .append("  <div id=\"home-feed-loader\" style=\"text-align: center; padding: 100px 0;\">\n")
+          .append("    <div style=\"display: inline-block; width: 50px; height: 50px; border: 4px solid var(--search-input-bg); border-top: 4px solid var(--logo-color); border-radius: 50%; animation: spin 0.8s linear infinite;\"></div>\n")
+          .append("    <div style=\"margin-top: 24px; font-size: 16px; font-weight: 500; color: var(--text-color);\">Loading Home Feed...</div>\n")
+          .append("  </div>\n")
+          .append("  <div id=\"home-feed-content\" style=\"display: none;\"></div>\n")
+          .append("</div>\n")
+          .append("<style>\n")
+          .append("  @keyframes spin {\n")
+          .append("    0% { transform: rotate(0deg); }\n")
+          .append("    100% { transform: rotate(360deg); }\n")
+          .append("  }\n")
+          .append("</style>\n")
+          .append("<script>\n")
+          .append("  document.addEventListener('DOMContentLoaded', () => {\n")
+          .append("      const urlParams = new URLSearchParams(window.location.search);\n")
+          .append("      const nextPage = urlParams.get('nextPage') || '';\n")
+          .append("      let url = '/?feed=ajax&serviceId=' + ").append(serviceId).append(";\n")
+          .append("      if (nextPage) url += '&nextPage=' + encodeURIComponent(nextPage);\n")
+          .append("      \n")
+          .append("      fetch(url)\n")
+          .append("          .then(res => res.text())\n")
+          .append("          .then(html => {\n")
+          .append("              const loader = document.getElementById('home-feed-loader');\n")
+          .append("              const content = document.getElementById('home-feed-content');\n")
+          .append("              if (content) {\n")
+          .append("                  content.innerHTML = html;\n")
+          .append("                  content.style.display = 'block';\n")
+          .append("              }\n")
+          .append("              if (loader) loader.style.display = 'none';\n")
+          .append("          })\n")
+          .append("          .catch(err => {\n")
+          .append("              const loader = document.getElementById('home-feed-loader');\n")
+          .append("              if (loader) loader.innerHTML = '<div class=\"loading-placeholder\" style=\"color: #ff4b5c; border-color: rgba(255, 75, 92, 0.2);\">Failed to load home feed: ' + err.message + '</div>';\n")
+          .append("          });\n")
+          .append("  });\n")
+          .append("</script>\n");
+        return wrapInTemplate(SERVICE_NAMES[serviceId] + " - LocalTube", sb.toString(), isTv);
+    }
+
+    public static String renderHomeFeed(int serviceId, List<InfoItem> items, Page nextPage) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("  <h2 style=\"margin-bottom: 20px; font-weight: 700;\">🔥 Trending</h2>\n");
+        renderGrid(sb, serviceId, items);
+
+        if (nextPage != null) {
+            String serializedPage = serializePage(nextPage);
+            if (serializedPage != null) {
+                sb.append("  <div class=\"pagination\">\n")
+                  .append("    <a href=\"/?serviceId=").append(serviceId).append("&nextPage=").append(serializedPage)
+                  .append("\" class=\"btn-page\">Load More</a>\n")
+                  .append("  </div>\n");
+            }
+        }
+        return sb.toString();
+    }
+
     public static String renderHome(int serviceId, List<InfoItem> items, Page nextPage, boolean isTv) {
         StringBuilder sb = new StringBuilder();
         sb.append(getHeaderHtml(serviceId, ""));
@@ -1026,7 +1249,7 @@ public class HtmlRenderer {
         StringBuilder sb = new StringBuilder();
         sb.append(getHeaderHtml(serviceId, ""));
         sb.append("  <div id=\"watch-container-loader\" style=\"text-align: center; padding: 100px 0; font-family: inherit;\">\n")
-          .append("    <div style=\"display: inline-block; width: 60px; height: 60px; border: 4px solid rgba(124, 58, 237, 0.1); border-top: 4px solid #7c3aed; border-radius: 50%; animation: spin 1.5s linear infinite;\"></div>\n")
+          .append("    <div style=\"display: inline-block; width: 50px; height: 50px; border: 4px solid var(--search-input-bg); border-top: 4px solid var(--logo-color); border-radius: 50%; animation: spin 0.8s linear infinite;\"></div>\n")
           .append("    <div style=\"margin-top: 24px; font-size: 16px; font-weight: 500; color: var(--text-color);\">Loading video streams...</div>\n")
           .append("  </div>\n")
           .append("  <div id=\"watch-content\" style=\"display: none;\"></div>\n")
@@ -1100,10 +1323,27 @@ public class HtmlRenderer {
             boolean isCached = cachedVideo != null && "COMPLETED".equals(cachedVideo.getStatus());
             String defaultQuality = targetQuality != null ? targetQuality : "720p";
             
+            List<SubtitlesStream> subtitles = info.getSubtitles();
+            StringBuilder trackTags = new StringBuilder();
+            if (subtitles != null) {
+                for (SubtitlesStream sub : subtitles) {
+                    String lang = sub.getLanguageTag();
+                    String label = sub.getDisplayLanguageName();
+                    boolean isAuto = sub.isAutoGenerated();
+                    trackTags.append("            <track kind=\"captions\" src=\"/subtitles?serviceId=").append(serviceId)
+                             .append("&id=").append(encodeUrl(info.getUrl()))
+                             .append("&lang=").append(lang)
+                             .append("&auto=").append(isAuto)
+                             .append("\" srclang=\"").append(lang)
+                             .append("\" label=\"").append(escapeJs(label)).append("\">\n");
+                }
+            }
+
             if (isCached) {
                 sb.append("        <div style=\"width:100%; border-radius:12px; overflow:hidden; background:#000;\">\n")
                   .append("          <video id=\"player\" class=\"video-js vjs-default-skin vjs-big-play-centered\" controls autoplay preload=\"auto\" style=\"width:100%; height:auto; aspect-ratio:16/9; display:block;\" poster=\"/thumbnail?id=").append(encodeUrl(info.getUrl())).append("\">\n")
                   .append("            <source src=\"/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" type=\"video/mp4\">\n")
+                  .append(trackTags.toString())
                   .append("          </video>\n")
                   .append("        </div>\n");
 
@@ -1113,6 +1353,17 @@ public class HtmlRenderer {
                   .append("                    playbackRates: [0.5, 1, 1.25, 1.5, 2]\n")
                   .append("                });\n")
                   .append("                window.videoPlayer = player;\n")
+                  .append("                player.on('fullscreenchange', () => {\n")
+                  .append("                    if (player.isFullscreen()) {\n")
+                  .append("                        if (screen.orientation && screen.orientation.lock) {\n")
+                  .append("                            screen.orientation.lock('landscape').catch(e => {});\n")
+                  .append("                        }\n")
+                  .append("                    } else {\n")
+                  .append("                        if (screen.orientation && screen.orientation.unlock) {\n")
+                  .append("                            screen.orientation.unlock();\n")
+                  .append("                        }\n")
+                  .append("                    }\n")
+                  .append("                });\n")
                   .append("                player.ready(() => {\n")
                   .append("                    player.play().catch(err => console.error(err));\n")
                   .append("                });\n")
@@ -1125,6 +1376,7 @@ public class HtmlRenderer {
                 sb.append("        <div style=\"width:100%; border-radius:12px; overflow:hidden; background:#000;\">\n")
                   .append("          <video id=\"player\" class=\"video-js vjs-default-skin vjs-big-play-centered\" controls autoplay preload=\"auto\" style=\"width:100%; height:auto; aspect-ratio:16/9; display:block;\">\n")
                   .append("            <source src=\"/manifest?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" type=\"application/dash+xml\">\n")
+                  .append(trackTags.toString())
                   .append("            Your browser does not support HTML5 video.\n")
                   .append("          </video>\n")
                   .append("        </div>\n");
@@ -1255,6 +1507,17 @@ public class HtmlRenderer {
                   .append("                    controlBar: { audioTrackButton: false }\n")
                   .append("                });\n")
                   .append("                window.videoPlayer = player;\n")
+                  .append("                player.on('fullscreenchange', () => {\n")
+                  .append("                    if (player.isFullscreen()) {\n")
+                  .append("                        if (screen.orientation && screen.orientation.lock) {\n")
+                  .append("                            screen.orientation.lock('landscape').catch(e => {});\n")
+                  .append("                        }\n")
+                  .append("                    } else {\n")
+                  .append("                        if (screen.orientation && screen.orientation.unlock) {\n")
+                  .append("                            screen.orientation.unlock();\n")
+                  .append("                        }\n")
+                  .append("                    }\n")
+                  .append("                });\n")
                   .append("                player.ready(() => {\n")
                   .append("                    player.play().catch(err => console.error(err));\n")
                   .append("                });\n")
@@ -1451,7 +1714,7 @@ public class HtmlRenderer {
               .append("            <img src=\"").append(getThumbnailUrl(related.getThumbnails())).append("\" style=\"width:100%; height:100%; object-fit:cover;\">\n")
               .append("          </a>\n")
               .append("          <div class=\"card-details\" style=\"padding:0; display:flex; flex-direction:column; justify-content:flex-start; min-width:0; flex-grow:1;\">\n")
-              .append("            <a href=\"/watch?serviceId=\"").append(serviceId).append("&id=").append(related.getUrl()).append("\" class=\"card-title\" style=\"font-size:14px; font-weight:500; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.2; margin-bottom:4px;\">")
+              .append("            <a href=\"/watch?serviceId=").append(serviceId).append("&id=").append(related.getUrl()).append("\" class=\"card-title\" style=\"font-size:14px; font-weight:500; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.2; margin-bottom:4px;\">")
               .append(related.getName()).append("</a>\n")
               .append("            <span class=\"card-meta\" style=\"font-size:12px; line-height:1.4;\">\n")
               .append("              <span class=\"card-uploader\">").append(uploader).append("</span>\n");
@@ -1576,7 +1839,7 @@ public class HtmlRenderer {
         return sb.toString();
     }
 
-    private static void renderGrid(StringBuilder sb, int serviceId, List<InfoItem> items) {
+    public static void renderGrid(StringBuilder sb, int serviceId, List<InfoItem> items) {
         sb.append("  <div class=\"grid\">\n");
         for (InfoItem item : items) {
             String clickUrl;
@@ -1694,7 +1957,6 @@ public class HtmlRenderer {
           .append("              <span class=\"uploader-name\">").append(video.getUploader()).append("</span>\n")
           .append("            </div>\n")
           .append("            <a href=\"/cache?action=delete&id=").append(encodeUrl(video.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:#c00c0c; color:#ffffff;\">Delete Download</a>\n")
-          .append("            <button onclick=\"playOnTV('").append(escapeJs(video.getUrl())).append("', '").append(escapeJs(video.getTitle())).append("')\" class=\"subscribe-btn\" style=\"background-color:var(--text-color); color:var(--bg-color); border:none; margin-left:8px; cursor:pointer;\">Play on TV</button>\n")
           .append("          </div>\n");
 
         sb.append("          <div class=\"media-description\">")
@@ -1923,6 +2185,16 @@ public class HtmlRenderer {
           .append("          </div>\n")
           .append("          <label class=\"switch\">\n")
           .append("            <input type=\"checkbox\" name=\"hide_shorts\" value=\"on\" ").append(hideShorts ? "checked" : "").append(">\n")
+          .append("            <span class=\"slider\"></span>\n")
+          .append("          </label>\n")
+          .append("        </div>\n")
+          .append("        <div class=\"setting-row\" id=\"mobile-theme-row\" style=\"display: none;\">\n")
+          .append("          <div class=\"setting-label-group\">\n")
+          .append("            <span class=\"setting-label\">Dark Theme</span>\n")
+          .append("            <span class=\"setting-desc\">Toggle between dark and light appearance.</span>\n")
+          .append("          </div>\n")
+          .append("          <label class=\"switch\">\n")
+          .append("            <input type=\"checkbox\" id=\"settings-theme-toggle\">\n")
           .append("            <span class=\"slider\"></span>\n")
           .append("          </label>\n")
           .append("        </div>\n")
