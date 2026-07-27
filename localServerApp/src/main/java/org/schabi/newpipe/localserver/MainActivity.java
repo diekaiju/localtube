@@ -11,40 +11,46 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
+
+import com.google.android.material.color.MaterialColors;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements LocalHttpServer.LogListener {
+public class MainActivity extends AppCompatActivity {
 
     private TextView textStatus;
     private TextView textIpAddress;
     private TextView textUrls;
-    private TextView textLogs;
-    private android.widget.ScrollView scrollLogs;
     private Button btnToggle;
     private Button btnOpenBrowser;
     private Button btnSettings;
     private com.google.android.material.card.MaterialCardView cardStatus;
     private TextView statusIndicator;
-    private TextView textLogsTitle;
-    private View cardLogs;
     private TextView textLockStatus;
     private Button btnForceRelease;
     private com.google.android.material.card.MaterialCardView cardPlayLock;
-
     private Button btnLaunchRemote;
+
+    private View cardGettingStarted;
+    private View btnToggleGuide;
+    private View layoutGuideContent;
+    private TextView textGuideSummary;
+    private TextView textGuideArrow;
+
+    private ServerService serverService;
+    private boolean isBound = false;
 
     private final LocalHttpServer.LockStatusListener lockStatusListener = new LocalHttpServer.LockStatusListener() {
         @Override
@@ -57,11 +63,6 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
             });
         }
     };
-
-    private ServerService serverService;
-    private boolean isBound = false;
-    private final java.util.ArrayList<String> htmlLogLines = new java.util.ArrayList<>();
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
@@ -124,23 +125,120 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        textStatus = findViewById(R.id.text_status);
-        textIpAddress = findViewById(R.id.text_ip_address);
-        textUrls = findViewById(R.id.text_urls);
-        textLogs = findViewById(R.id.text_logs);
-        scrollLogs = findViewById(R.id.scroll_logs);
-        btnToggle = findViewById(R.id.btn_toggle);
-        btnOpenBrowser = findViewById(R.id.btn_open_browser);
-        btnSettings = findViewById(R.id.btn_settings);
-        cardStatus = findViewById(R.id.card_status);
-        statusIndicator = findViewById(R.id.status_indicator);
-        textLogsTitle = findViewById(R.id.text_logs_title);
-        cardLogs = findViewById(R.id.card_logs);
-        textLockStatus = findViewById(R.id.text_lock_status);
-        btnForceRelease = findViewById(R.id.btn_force_release);
-        cardPlayLock = findViewById(R.id.card_play_lock);
+        // Initialize LogRepository (begins listening/buffering logs in background)
+        LogRepository.getInstance();
 
-        btnLaunchRemote = findViewById(R.id.btn_launch_remote);
+        // Bind toolbar elements
+        View btnOpenLogs = findViewById(R.id.btn_open_logs);
+        if (btnOpenLogs != null) {
+            btnOpenLogs.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(MainActivity.this, LogActivity.class);
+                    startActivity(intent);
+                }
+            });
+        }
+
+        // Setup ViewPager2 and TabLayout
+        ViewPager2 viewPager = findViewById(R.id.view_pager);
+        TabLayout tabLayout = findViewById(R.id.tab_layout);
+
+        if (viewPager != null && tabLayout != null) {
+            viewPager.setAdapter(new ViewPagerAdapter());
+            viewPager.setOffscreenPageLimit(1); // Keep pages active in memory
+            new TabLayoutMediator(tabLayout, viewPager, new TabLayoutMediator.TabConfigurationStrategy() {
+                @Override
+                public void onConfigureTab(@NonNull TabLayout.Tab tab, int position) {
+                    if (position == 0) {
+                        tab.setText("Control");
+                    } else {
+                        tab.setText("Casting");
+                    }
+                }
+            }).attach();
+        }
+
+        // Bind to Service
+        Intent intent = new Intent(this, ServerService.class);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void bindControlPage(View view) {
+        textStatus = view.findViewById(R.id.text_status);
+        textIpAddress = view.findViewById(R.id.text_ip_address);
+        textUrls = view.findViewById(R.id.text_urls);
+        btnToggle = view.findViewById(R.id.btn_toggle);
+        btnOpenBrowser = view.findViewById(R.id.btn_open_browser);
+        cardStatus = view.findViewById(R.id.card_status);
+        statusIndicator = view.findViewById(R.id.status_indicator);
+
+        cardGettingStarted = view.findViewById(R.id.card_getting_started);
+        btnToggleGuide = view.findViewById(R.id.btn_toggle_guide);
+        layoutGuideContent = view.findViewById(R.id.layout_guide_content);
+        textGuideSummary = view.findViewById(R.id.text_guide_summary);
+        textGuideArrow = view.findViewById(R.id.text_guide_arrow);
+
+        if (btnToggleGuide != null && layoutGuideContent != null) {
+            btnToggleGuide.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (layoutGuideContent.getVisibility() == View.VISIBLE) {
+                        layoutGuideContent.setVisibility(View.GONE);
+                        if (textGuideSummary != null) textGuideSummary.setVisibility(View.VISIBLE);
+                        if (textGuideArrow != null) textGuideArrow.setText("▶");
+                    } else {
+                        layoutGuideContent.setVisibility(View.VISIBLE);
+                        if (textGuideSummary != null) textGuideSummary.setVisibility(View.GONE);
+                        if (textGuideArrow != null) textGuideArrow.setText("▼");
+                    }
+                }
+            });
+        }
+
+        if (btnToggle != null) {
+            btnToggle.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (isBound && serverService != null) {
+                        if (serverService.isRunning()) {
+                            serverService.stopServer();
+                        } else {
+                            startServerService();
+                        }
+                        updateUi();
+                    }
+                }
+            });
+        }
+
+        if (btnOpenBrowser != null) {
+            btnOpenBrowser.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (isBound && serverService != null && serverService.isRunning()) {
+                        String url = serverService.getLocalAddress();
+                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        try {
+                            startActivity(browserIntent);
+                        } catch (android.content.ActivityNotFoundException e) {
+                            Toast.makeText(MainActivity.this, "No browser found to open link", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                }
+            });
+        }
+
+        updateUi();
+    }
+
+    private void bindIntegrationPage(View view) {
+        textLockStatus = view.findViewById(R.id.text_lock_status);
+        btnForceRelease = view.findViewById(R.id.btn_force_release);
+        cardPlayLock = view.findViewById(R.id.card_play_lock);
+        btnLaunchRemote = view.findViewById(R.id.btn_launch_remote);
+        btnSettings = view.findViewById(R.id.btn_settings);
+
         if (btnLaunchRemote != null) {
             btnLaunchRemote.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -162,77 +260,17 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
             });
         }
 
-
-
-        if (textLogsTitle != null && cardLogs != null) {
-            textLogsTitle.setOnClickListener(new View.OnClickListener() {
+        if (btnSettings != null) {
+            btnSettings.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (cardLogs.getVisibility() == View.VISIBLE) {
-                        cardLogs.setVisibility(View.GONE);
-                        textLogsTitle.setText("Console logs (tap to expand)");
-                    } else {
-                        cardLogs.setVisibility(View.VISIBLE);
-                        textLogsTitle.setText("Console logs (tap to collapse)");
-                    }
+                    Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                    startActivity(intent);
                 }
             });
         }
 
-        // Fix scrolling inside nested ScrollView
-        if (scrollLogs != null) {
-            scrollLogs.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, android.view.MotionEvent event) {
-                    v.getParent().requestDisallowInterceptTouchEvent(true);
-                    return false;
-                }
-            });
-        }
-
-        // Bind log callback
-        LocalHttpServer.setLogListener(this);
-
-        btnToggle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (isBound && serverService != null) {
-                    if (serverService.isRunning()) {
-                        serverService.stopServer();
-                    } else {
-                        startServerService();
-                    }
-                    updateUi();
-                }
-            }
-        });
-
-        btnOpenBrowser.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (isBound && serverService != null && serverService.isRunning()) {
-                    String url = serverService.getLocalAddress();
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    try {
-                        startActivity(browserIntent);
-                    } catch (android.content.ActivityNotFoundException e) {
-                        Toast.makeText(MainActivity.this, "No browser found to open link", Toast.LENGTH_LONG).show();
-                    }
-                }
-            }
-        });
-
-        btnSettings.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        // Bind to Service
-        Intent intent = new Intent(this, ServerService.class);
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        updateLockUi();
     }
 
     private void startServerService() {
@@ -247,14 +285,18 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
     private void updateUi() {
         if (cardStatus == null || statusIndicator == null) return;
         if (isBound && serverService != null && serverService.isRunning()) {
-            cardStatus.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#132D1B")));
-            cardStatus.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#2E7D32")));
+            int colorPrimary = MaterialColors.getColor(this, com.google.android.material.R.attr.colorPrimary, Color.parseColor("#4CAF50"));
+            int colorPrimaryContainer = MaterialColors.getColor(this, com.google.android.material.R.attr.colorPrimaryContainer, Color.parseColor("#132D1B"));
+            
+            cardStatus.setCardBackgroundColor(ColorStateList.valueOf(colorPrimaryContainer));
+            cardStatus.setStrokeColor(ColorStateList.valueOf(colorPrimary));
             textStatus.setText("Status: Running");
-            textStatus.setTextColor(Color.parseColor("#4CAF50"));
+            textStatus.setTextColor(colorPrimary);
             statusIndicator.setText("🟢");
 
             btnToggle.setText("Stop Server");
-            btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#E53935"))); // Red
+            int colorError = MaterialColors.getColor(this, com.google.android.material.R.attr.colorError, Color.parseColor("#E53935"));
+            btnToggle.setBackgroundTintList(ColorStateList.valueOf(colorError));
             btnOpenBrowser.setEnabled(true);
 
             String localIp = ServerService.getLocalIpAddress();
@@ -263,14 +305,18 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
                     (localIp != null ? "Network Link: http://" + localIp + ":8080" : "");
             textUrls.setText(addressText);
         } else {
-            cardStatus.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#2D1313")));
-            cardStatus.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#C62828")));
+            int colorError = MaterialColors.getColor(this, com.google.android.material.R.attr.colorError, Color.parseColor("#E53935"));
+            int colorErrorContainer = MaterialColors.getColor(this, com.google.android.material.R.attr.colorErrorContainer, Color.parseColor("#2D1313"));
+            
+            cardStatus.setCardBackgroundColor(ColorStateList.valueOf(colorErrorContainer));
+            cardStatus.setStrokeColor(ColorStateList.valueOf(colorError));
             textStatus.setText("Status: Stopped");
-            textStatus.setTextColor(Color.parseColor("#E53935"));
+            textStatus.setTextColor(colorError);
             statusIndicator.setText("🔴");
 
             btnToggle.setText("Start Server");
-            btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#4CAF50"))); // Green
+            int colorPrimary = MaterialColors.getColor(this, com.google.android.material.R.attr.colorPrimary, Color.parseColor("#4CAF50"));
+            btnToggle.setBackgroundTintList(ColorStateList.valueOf(colorPrimary));
             btnOpenBrowser.setEnabled(false);
             textIpAddress.setText("IP Address: Not Available");
             textUrls.setText("Server is not running.");
@@ -283,125 +329,34 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
         
         boolean locked = LocalHttpServer.isLocked();
         if (locked) {
-            cardPlayLock.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#2D1E13"))); // Dark orange/amber
-            cardPlayLock.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#E67E22")));
+            int colorTertiary = MaterialColors.getColor(this, com.google.android.material.R.attr.colorTertiary, Color.parseColor("#E67E22"));
+            int colorTertiaryContainer = MaterialColors.getColor(this, com.google.android.material.R.attr.colorTertiaryContainer, Color.parseColor("#2D1E13"));
+            
+            cardPlayLock.setCardBackgroundColor(ColorStateList.valueOf(colorTertiaryContainer));
+            cardPlayLock.setStrokeColor(ColorStateList.valueOf(colorTertiary));
             
             String status = "Locked by: " + LocalHttpServer.getActiveClientIp();
             if (LocalHttpServer.getActiveVideoTitle() != null) {
                 status += "\nPlaying: " + LocalHttpServer.getActiveVideoTitle();
             }
             textLockStatus.setText(status);
-            textLockStatus.setTextColor(Color.parseColor("#E67E22"));
+            textLockStatus.setTextColor(colorTertiary);
             btnForceRelease.setEnabled(true);
         } else {
-            cardPlayLock.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#1E1E1E")));
-            cardPlayLock.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#2C2C2C")));
+            int colorSurfaceContainerLow = MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurfaceContainerLow, Color.parseColor("#1E1E1E"));
+            int colorOutlineVariant = MaterialColors.getColor(this, com.google.android.material.R.attr.colorOutlineVariant, Color.parseColor("#2C2C2C"));
+            int colorOnSurfaceVariant = MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurfaceVariant, Color.parseColor("#888888"));
+            
+            cardPlayLock.setCardBackgroundColor(ColorStateList.valueOf(colorSurfaceContainerLow));
+            cardPlayLock.setStrokeColor(ColorStateList.valueOf(colorOutlineVariant));
             textLockStatus.setText("Status: Unlocked / Idle");
-            textLockStatus.setTextColor(Color.parseColor("#888888"));
+            textLockStatus.setTextColor(colorOnSurfaceVariant);
             btnForceRelease.setEnabled(false);
         }
 
         if (btnLaunchRemote != null) {
             btnLaunchRemote.setEnabled(true);
         }
-    }
-
-
-
-    private String escapeHtml(String text) {
-        if (text == null) return "";
-        return text.replace("&", "&amp;")
-                   .replace("<", "&lt;")
-                   .replace(">", "&gt;")
-                   .replace("\"", "&quot;")
-                   .replace("'", "&#x27;");
-    }
-
-    private String formatLogToHtml(String time, String message) {
-        String displayMessage = message;
-        boolean isTruncated = false;
-        if (message.length() > 200 || message.contains("\n")) {
-            int newlineIdx = message.indexOf("\n");
-            if (newlineIdx > 0 && newlineIdx < 120) {
-                displayMessage = message.substring(0, newlineIdx);
-            } else {
-                displayMessage = message.substring(0, Math.min(message.length(), 120));
-            }
-            isTruncated = true;
-        }
-
-        String escapedMessage = escapeHtml(displayMessage);
-        if (isTruncated) {
-            escapedMessage += " <font color='#64748B'><b>[Truncated: " + message.length() + " chars]</b></font>";
-        }
-
-        String colorTime = "#64748B"; // Slate-400
-        String colorMessage = "#E2E8F0"; // Slate-200 (default)
-
-        String lowerMsg = displayMessage.toLowerCase(Locale.US);
-        if (lowerMsg.contains("error") || lowerMsg.contains("exception") || lowerMsg.contains("failed")) {
-            colorMessage = "#F87171"; // Red-400
-        } else if (lowerMsg.contains("started") || lowerMsg.contains("completed")) {
-            colorMessage = "#4ADE80"; // Green-400
-        } else if (lowerMsg.contains("stopped")) {
-            colorMessage = "#FB923C"; // Orange-400
-        } else if (lowerMsg.startsWith("request:")) {
-            colorMessage = "#E2E8F0";
-            if (escapedMessage.contains(" GET ")) {
-                escapedMessage = escapedMessage.replace("Request:", "<font color='#F472B6'><b>REQ</b></font>") // Pink-400
-                                               .replace(" GET ", " <font color='#4ADE80'><b>GET</b></font> <font color='#38BDF8'>"); // LightBlue-400
-                escapedMessage += "</font>";
-            } else if (escapedMessage.contains(" POST ")) {
-                escapedMessage = escapedMessage.replace("Request:", "<font color='#F472B6'><b>REQ</b></font>")
-                                               .replace(" POST ", " <font color='#FB923C'><b>POST</b></font> <font color='#38BDF8'>");
-                escapedMessage += "</font>";
-            }
-        } else if (lowerMsg.contains("proxying stream") || lowerMsg.contains("serving local")) {
-            colorMessage = "#C084FC"; // Purple-400
-        }
-
-        if (lowerMsg.startsWith("request:")) {
-            return "<font color='" + colorTime + "'>[" + time + "]</font> " + escapedMessage + "<br/>";
-        } else {
-            return "<font color='" + colorTime + "'>[" + time + "]</font> <font color='" + colorMessage + "'>" + escapedMessage + "</font><br/>";
-        }
-    }
-
-    @Override
-    public void onLog(final String message) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                String time = dateFormat.format(new Date());
-                String formattedLine = formatLogToHtml(time, message);
-                htmlLogLines.add(formattedLine);
-                if (htmlLogLines.size() > 200) { // Limit buffer to 200 lines
-                    htmlLogLines.remove(0);
-                }
-
-                StringBuilder sb = new StringBuilder();
-                for (String line : htmlLogLines) {
-                    sb.append(line);
-                }
-
-                if (textLogs != null) {
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                        textLogs.setText(android.text.Html.fromHtml(sb.toString(), android.text.Html.FROM_HTML_MODE_LEGACY));
-                    } else {
-                        textLogs.setText(android.text.Html.fromHtml(sb.toString()));
-                    }
-                }
-
-                if (scrollLogs != null) {
-                    scrollLogs.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            scrollLogs.fullScroll(View.FOCUS_DOWN);
-                        }
-                    });
-                }
-            }
-        });
     }
 
     @Override
@@ -426,8 +381,44 @@ public class MainActivity extends AppCompatActivity implements LocalHttpServer.L
             unbindService(serviceConnection);
             isBound = false;
         }
-        LocalHttpServer.setLogListener(null);
         super.onDestroy();
     }
 
+    private class ViewPagerAdapter extends RecyclerView.Adapter<ViewPagerAdapter.ViewHolder> {
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view;
+            if (viewType == 0) {
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.page_control, parent, false);
+                bindControlPage(view);
+            } else {
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.page_integration, parent, false);
+                bindIntegrationPage(view);
+            }
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            // Static views are bound in onCreateViewHolder
+        }
+
+        @Override
+        public int getItemCount() {
+            return 2;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            return position;
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            ViewHolder(View itemView) {
+                super(itemView);
+            }
+        }
+    }
 }

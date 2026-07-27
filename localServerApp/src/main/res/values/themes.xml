@@ -1,14 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.LocalMediaServer" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">#4CAF50</item>
-        <item name="colorPrimaryDark">#388E3C</item>
-        <item name="colorAccent">#4CAF50</item>
+    <!-- Base application theme. -->
+    <style name="Theme.LocalMediaServer" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Baseline Material 3 Colors (fallback if Dynamic Color is not active/available) -->
+        <item name="colorPrimary">#2E7D32</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#A5D6A7</item>
+        <item name="colorOnPrimaryContainer">#1B5E20</item>
+
+        <item name="colorSecondary">#388E3C</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorSecondaryContainer">#C8E6C9</item>
+        <item name="colorOnSecondaryContainer">#2E7D32</item>
+
+        <item name="colorTertiary">#7C3AED</item>
+        <item name="colorOnTertiary">#FFFFFF</item>
+        <item name="colorTertiaryContainer">#DDD6FE</item>
+        <item name="colorOnTertiaryContainer">#5B21B6</item>
+
+        <!-- System UI Properties -->
+        <item name="android:statusBarColor">?attr/colorSurfaceContainer</item>
+        <item name="android:navigationBarColor">?attr/colorSurfaceContainer</item>
     </style>
 
-    <style name="Theme.LocalMediaServer.Settings" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">#4CAF50</item>
-        <item name="colorPrimaryDark">#388E3C</item>
-        <item name="colorAccent">#4CAF50</item>
+    <style name="Theme.LocalMediaServer.Settings" parent="Theme.LocalMediaServer">
+        <!-- Settings activity specific overrides if needed -->
     </style>
 </resources>

@@ -4,11 +4,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardBackgroundColor="#1A1A1A"
-    app:strokeColor="#2C2C2C"
+    app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+    app:strokeColor="?attr/colorOutlineVariant"
     app:strokeWidth="1dp"
-    app:cardCornerRadius="12dp"
-    android:layout_marginBottom="10dp">
+    app:cardCornerRadius="16dp"
+    android:layout_marginBottom="10dp"
+    app:cardElevation="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -21,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="14dp"
+            android:padding="16dp"
             android:gravity="center_vertical"
             android:background="?android:attr/selectableItemBackground">
 
@@ -38,8 +39,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Gaming"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
+                style="@style/TextAppearance.Material3.TitleSmall"
+                android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold"/>
 
             <View
@@ -52,8 +53,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=""
-                android:textColor="#4CAF50"
-                android:textSize="12sp"
+                android:textColor="?attr/colorPrimary"
+                style="@style/TextAppearance.Material3.LabelLarge"
                 android:textStyle="bold"
                 android:layout_marginEnd="10dp"/>
 
@@ -62,7 +63,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="▼"
-                android:textColor="#666666"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="12sp"/>
         </LinearLayout>
 
@@ -77,7 +78,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#2C2C2C"/>
+                android:background="?attr/colorOutlineVariant"/>
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/cg_category_topics"

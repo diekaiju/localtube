@@ -60,6 +60,10 @@ public class ServerService extends Service {
     }
 
     private void startServer() {
+        // Query wallpaper dynamic colors and supply to HtmlRenderer for web client theme mapping
+        HtmlRenderer.lightColors = DynamicColorHelper.getThemeColors(this, false);
+        HtmlRenderer.darkColors = DynamicColorHelper.getThemeColors(this, true);
+
         // Setup foreground notification
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(

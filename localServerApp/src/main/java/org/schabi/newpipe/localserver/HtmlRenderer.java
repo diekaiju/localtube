@@ -23,6 +23,9 @@ import java.util.List;
 
 public class HtmlRenderer {
 
+    public static java.util.Map<String, String> lightColors = new java.util.HashMap<>();
+    public static java.util.Map<String, String> darkColors = new java.util.HashMap<>();
+
     // Global CSS stylesheet for a premium, themeable, responsive user experience
     private static final String CSS = 
             "@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');\n" +
@@ -521,7 +524,7 @@ public class HtmlRenderer {
                 "    <link href=\"https://vjs.zencdn.net/8.10.0/video-js.css\" rel=\"stylesheet\" />\n" +
                 "    <script src=\"https://vjs.zencdn.net/8.10.0/video.min.js\"></script>\n" +
                 "    <script src=\"https://unpkg.com/videojs-contrib-quality-levels@4.1.0/dist/videojs-contrib-quality-levels.min.js\"></script>\n" +
-                "    <style>\n" + CSS + "\n" +
+                "    <style>\n" + CSS + "\n" + getCustomThemeCss() + "\n" +
                 "        /* Glow border outline style for selected/focused interactive elements */\n" +
                 "        a:focus, button:focus, input:focus, select:focus, textarea:focus, [tabindex=\"0\"]:focus {\n" +
                 "            outline: none !important;\n" +
@@ -2614,5 +2617,54 @@ public class HtmlRenderer {
     private static String escapeJs(String str) {
         if (str == null) return "";
         return str.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private static String getCustomThemeCss() {
+        StringBuilder sb = new StringBuilder();
+        if (lightColors != null && !lightColors.isEmpty()) {
+            sb.append(":root {\n")
+              .append("  --bg-color: ").append(lightColors.getOrDefault("surface", "#fbfafe")).append(";\n")
+              .append("  --text-color: ").append(lightColors.getOrDefault("onSurface", "#1d1b20")).append(";\n")
+              .append("  --header-bg: ").append(lightColors.getOrDefault("surfaceContainer", "#f3f4f9")).append(";\n")
+              .append("  --logo-color: ").append(lightColors.getOrDefault("primary", "#6750A4")).append(";\n")
+              .append("  --search-input-bg: ").append(lightColors.getOrDefault("surfaceContainerHigh", "#ece6f0")).append(";\n")
+              .append("  --search-btn-bg: ").append(lightColors.getOrDefault("surfaceContainerHigh", "#ece6f0")).append(";\n")
+              .append("  --search-btn-hover: ").append(lightColors.getOrDefault("secondaryContainer", "#e8def8")).append(";\n")
+              .append("  --service-tab-bg: ").append(lightColors.getOrDefault("surfaceContainerHigh", "#ece6f0")).append(";\n")
+              .append("  --service-tab-hover-bg: ").append(lightColors.getOrDefault("secondaryContainer", "#e8def8")).append(";\n")
+              .append("  --card-bg: ").append(lightColors.getOrDefault("surfaceContainerLow", "#ffffff")).append(";\n")
+              .append("  --bottom-nav-bg: ").append(lightColors.getOrDefault("surfaceContainer", "#f3f4f9")).append(";\n")
+              .append("  --bottom-nav-active-pill-bg: ").append(lightColors.getOrDefault("secondaryContainer", "#e8def8")).append(";\n")
+              .append("  --bottom-nav-item-active-color: ").append(lightColors.getOrDefault("primary", "#21005d")).append(";\n")
+              .append("  --settings-card-bg: ").append(lightColors.getOrDefault("surfaceContainerLow", "#ffffff")).append(";\n")
+              .append("  --settings-section-title-color: ").append(lightColors.getOrDefault("primary", "#6750A4")).append(";\n")
+              .append("  --textarea-border: ").append(lightColors.getOrDefault("outline", "#79747e")).append(";\n")
+              .append("  --textarea-bg: ").append(lightColors.getOrDefault("surfaceContainerLow", "#ffffff")).append(";\n")
+              .append("  --slider-bg: ").append(lightColors.getOrDefault("secondaryContainer", "#e8def8")).append(";\n")
+              .append("}\n");
+        }
+        if (darkColors != null && !darkColors.isEmpty()) {
+            sb.append("[data-theme=\"dark\"] {\n")
+              .append("  --bg-color: ").append(darkColors.getOrDefault("surface", "#141218")).append(";\n")
+              .append("  --text-color: ").append(darkColors.getOrDefault("onSurface", "#e6e1e5")).append(";\n")
+              .append("  --header-bg: ").append(darkColors.getOrDefault("surfaceContainer", "#1d1b20")).append(";\n")
+              .append("  --logo-color: ").append(darkColors.getOrDefault("primary", "#d0bcff")).append(";\n")
+              .append("  --search-input-bg: ").append(darkColors.getOrDefault("surfaceContainerHigh", "#2b2930")).append(";\n")
+              .append("  --search-btn-bg: ").append(darkColors.getOrDefault("surfaceContainerHigh", "#2b2930")).append(";\n")
+              .append("  --search-btn-hover: ").append(darkColors.getOrDefault("secondaryContainer", "#4a4458")).append(";\n")
+              .append("  --service-tab-bg: ").append(darkColors.getOrDefault("surfaceContainerHigh", "#2b2930")).append(";\n")
+              .append("  --service-tab-hover-bg: ").append(darkColors.getOrDefault("secondaryContainer", "#4a4458")).append(";\n")
+              .append("  --card-bg: ").append(darkColors.getOrDefault("surfaceContainerLow", "#1d1b20")).append(";\n")
+              .append("  --bottom-nav-bg: ").append(darkColors.getOrDefault("surfaceContainer", "#1d1b20")).append(";\n")
+              .append("  --bottom-nav-active-pill-bg: ").append(darkColors.getOrDefault("secondaryContainer", "#4a4458")).append(";\n")
+              .append("  --bottom-nav-item-active-color: ").append(darkColors.getOrDefault("primary", "#e8def8")).append(";\n")
+              .append("  --settings-card-bg: ").append(darkColors.getOrDefault("surfaceContainerLow", "#1d1b20")).append(";\n")
+              .append("  --settings-section-title-color: ").append(darkColors.getOrDefault("primary", "#d0bcff")).append(";\n")
+              .append("  --textarea-border: ").append(darkColors.getOrDefault("outline", "#938f99")).append(";\n")
+              .append("  --textarea-bg: ").append(darkColors.getOrDefault("surfaceContainerLow", "#1d1b20")).append(";\n")
+              .append("  --slider-bg: ").append(darkColors.getOrDefault("secondaryContainer", "#4a4458")).append(";\n")
+              .append("}\n");
+        }
+        return sb.toString();
     }
 }

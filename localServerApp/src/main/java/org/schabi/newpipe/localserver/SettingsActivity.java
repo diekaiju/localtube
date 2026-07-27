@@ -17,13 +17,16 @@ import android.widget.Spinner;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
 
-
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -171,40 +174,7 @@ public class SettingsActivity extends AppCompatActivity {
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
 
         TabLayout tabLayout = findViewById(R.id.tab_layout);
-        tabLayout.addTab(tabLayout.newTab().setText("Interests"));
-        tabLayout.addTab(tabLayout.newTab().setText("Blocked"));
-        tabLayout.addTab(tabLayout.newTab().setText("Backup"));
-
-        LinearLayout layoutInterests = findViewById(R.id.layout_interests);
-        LinearLayout layoutBlocked = findViewById(R.id.layout_blocked);
-        LinearLayout layoutBackup = findViewById(R.id.layout_backup);
-
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                if (tab.getPosition() == 0) {
-                    layoutInterests.setVisibility(View.VISIBLE);
-                    layoutBlocked.setVisibility(View.GONE);
-                    layoutBackup.setVisibility(View.GONE);
-                } else if (tab.getPosition() == 1) {
-                    layoutInterests.setVisibility(View.GONE);
-                    layoutBlocked.setVisibility(View.VISIBLE);
-                    layoutBackup.setVisibility(View.GONE);
-                } else {
-                    layoutInterests.setVisibility(View.GONE);
-                    layoutBlocked.setVisibility(View.GONE);
-                    layoutBackup.setVisibility(View.VISIBLE);
-                }
-            }
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {}
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {}
-        });
-
-        // Setup Video Quality Spinner and final variables for reload
-        final Spinner spinnerVideoQuality = findViewById(R.id.spinner_video_quality);
-        final ArrayAdapter<String> qualityAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, new String[]{"144p", "240p", "360p", "480p", "720p", "1080p", "1440p (2K)", "2160p (4K)"});
+        ViewPager2 viewPager = findViewById(R.id.view_pager);
 
         // Initialize Backup & Restore launch intents
         exportLauncher = registerForActivityResult(
@@ -252,22 +222,14 @@ public class SettingsActivity extends AppCompatActivity {
                                         blockedChannels.clear();
                                         blockedChannels.addAll(db.getBlockedChannels());
                                         
-                                        buildPreferredChips();
-                                        buildCategories();
-                                        buildBlockedChips();
-                                        buildBlockedChannelChips();
-                                        buildBlockedSuggestions();
-                                        buildBlockedCategories();
-                                        swHideWatched.setChecked(db.getHideWatched());
-                                        swHideShorts.setChecked(db.getHideShorts());
-                                        
-                                        String curQuality = db.getVideoQuality();
-                                        for (int i = 0; i < qualityAdapter.getCount(); i++) {
-                                            if (qualityAdapter.getItem(i).startsWith(curQuality)) {
-                                                spinnerVideoQuality.setSelection(i);
-                                                break;
-                                            }
-                                        }
+                                        if (cgPreferredTopics != null) buildPreferredChips();
+                                        if (layoutCategoriesContainer != null) buildCategories();
+                                        if (cgBlockedKeywords != null) buildBlockedChips();
+                                        if (cgBlockedChannels != null) buildBlockedChannelChips();
+                                        if (cgBlockedSuggestions != null) buildBlockedSuggestions();
+                                        if (layoutBlockedCategoriesContainer != null) buildBlockedCategories();
+                                        if (swHideWatched != null) swHideWatched.setChecked(db.getHideWatched());
+                                        if (swHideShorts != null) swHideShorts.setChecked(db.getHideShorts());
                                     } else {
                                         Toast.makeText(this, "Import failed: Invalid JSON or database error", Toast.LENGTH_LONG).show();
                                     }
@@ -280,98 +242,174 @@ public class SettingsActivity extends AppCompatActivity {
                     }
                 });
 
-        Button btnExportDb = findViewById(R.id.btn_export_db);
-        btnExportDb.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            intent.setType("application/json");
-            intent.putExtra(Intent.EXTRA_TITLE, "localtube_backup.json");
-            exportLauncher.launch(intent);
-        });
+        if (viewPager != null && tabLayout != null) {
+            viewPager.setAdapter(new ViewPagerAdapter());
+            viewPager.setOffscreenPageLimit(2); // Keep all 3 pages active in memory to avoid rebuilding chips
+            new TabLayoutMediator(tabLayout, viewPager, new TabLayoutMediator.TabConfigurationStrategy() {
+                @Override
+                public void onConfigureTab(@NonNull TabLayout.Tab tab, int position) {
+                    if (position == 0) {
+                        tab.setText("Interests");
+                    } else if (position == 1) {
+                        tab.setText("Blocked");
+                    } else {
+                        tab.setText("Settings");
+                    }
+                }
+            }).attach();
+        }
+    }
 
-        Button btnImportDb = findViewById(R.id.btn_import_db);
-        btnImportDb.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            intent.setType("application/json");
-            importLauncher.launch(intent);
-        });
+    private void bindInterestsPage(View view) {
+        cgPreferredTopics = view.findViewById(R.id.cg_preferred_topics);
+        tvPreferredEmpty = view.findViewById(R.id.tv_preferred_empty);
+        etCustomInterest = view.findViewById(R.id.et_custom_interest);
+        layoutCategoriesContainer = view.findViewById(R.id.layout_categories_container);
+        Button btnAddCustomInterest = view.findViewById(R.id.btn_add_custom_interest);
 
-        // Interests views
-        cgPreferredTopics = findViewById(R.id.cg_preferred_topics);
-        tvPreferredEmpty = findViewById(R.id.tv_preferred_empty);
-        etCustomInterest = findViewById(R.id.et_custom_interest);
-        layoutCategoriesContainer = findViewById(R.id.layout_categories_container);
-        Button btnAddCustomInterest = findViewById(R.id.btn_add_custom_interest);
+        if (btnAddCustomInterest != null) {
+            btnAddCustomInterest.setOnClickListener(v -> addCustomPreferredTopic());
+        }
 
-        btnAddCustomInterest.setOnClickListener(v -> addCustomPreferredTopic());
-
-        // Blocked views
-        etCustomBlocked = findViewById(R.id.et_custom_blocked);
-        cgBlockedSuggestions = findViewById(R.id.cg_blocked_suggestions);
-        cgBlockedKeywords = findViewById(R.id.cg_blocked_keywords);
-        tvBlockedEmpty = findViewById(R.id.tv_blocked_empty);
-        etCustomBlockedChannel = findViewById(R.id.et_custom_blocked_channel);
-        cgBlockedChannels = findViewById(R.id.cg_blocked_channels);
-        tvBlockedChannelsEmpty = findViewById(R.id.tv_blocked_channels_empty);
-        swHideWatched = findViewById(R.id.sw_hide_watched);
-        swHideShorts = findViewById(R.id.sw_hide_shorts);
-        layoutBlockedCategoriesContainer = findViewById(R.id.layout_blocked_categories_container);
-
-        Button btnAddCustomBlocked = findViewById(R.id.btn_add_custom_blocked);
-        btnAddCustomBlocked.setOnClickListener(v -> addCustomBlockedKeyword());
-
-        Button btnAddBlockedChannel = findViewById(R.id.btn_add_blocked_channel);
-        btnAddBlockedChannel.setOnClickListener(v -> addCustomBlockedChannel());
-
-        // Populate Interests
         buildPreferredChips();
         buildCategories();
+    }
 
-        // Populate Blocked
+    private void bindBlockedPage(View view) {
+        etCustomBlocked = view.findViewById(R.id.et_custom_blocked);
+        cgBlockedSuggestions = view.findViewById(R.id.cg_blocked_suggestions);
+        cgBlockedKeywords = view.findViewById(R.id.cg_blocked_keywords);
+        tvBlockedEmpty = view.findViewById(R.id.tv_blocked_empty);
+        etCustomBlockedChannel = view.findViewById(R.id.et_custom_blocked_channel);
+        cgBlockedChannels = view.findViewById(R.id.cg_blocked_channels);
+        tvBlockedChannelsEmpty = view.findViewById(R.id.tv_blocked_channels_empty);
+        layoutBlockedCategoriesContainer = view.findViewById(R.id.layout_blocked_categories_container);
+
+        Button btnAddCustomBlocked = view.findViewById(R.id.btn_add_custom_blocked);
+        if (btnAddCustomBlocked != null) {
+            btnAddCustomBlocked.setOnClickListener(v -> addCustomBlockedKeyword());
+        }
+
+        Button btnAddBlockedChannel = view.findViewById(R.id.btn_add_blocked_channel);
+        if (btnAddBlockedChannel != null) {
+            btnAddBlockedChannel.setOnClickListener(v -> addCustomBlockedChannel());
+        }
+
         buildBlockedChips();
         buildBlockedChannelChips();
         buildBlockedSuggestions();
         buildBlockedCategories();
+    }
 
-        // Setup toggles
-        swHideWatched.setChecked(db.getHideWatched());
-        swHideShorts.setChecked(db.getHideShorts());
+    private void bindGeneralPage(View view) {
+        swHideWatched = view.findViewById(R.id.sw_hide_watched);
+        swHideShorts = view.findViewById(R.id.sw_hide_shorts);
+        final Spinner spinnerVideoQuality = view.findViewById(R.id.spinner_video_quality);
+        final ArrayAdapter<String> qualityAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, new String[]{"144p", "240p", "360p", "480p", "720p", "1080p", "1440p (2K)", "2160p (4K)"});
 
-        swHideWatched.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            db.setSetting("hide_watched", isChecked ? "true" : "false");
-            Toast.makeText(this, "Hide Watched: " + isChecked, Toast.LENGTH_SHORT).show();
-        });
-
-        swHideShorts.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            db.setSetting("hide_shorts", isChecked ? "true" : "false");
-            Toast.makeText(this, "Hide Shorts: " + isChecked, Toast.LENGTH_SHORT).show();
-        });
-
-        // Setup Video Quality Spinner dropdown resource
-        qualityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerVideoQuality.setAdapter(qualityAdapter);
-
-        String currentQuality = db.getVideoQuality();
-        for (int i = 0; i < qualityAdapter.getCount(); i++) {
-            if (qualityAdapter.getItem(i).startsWith(currentQuality)) {
-                spinnerVideoQuality.setSelection(i);
-                break;
-            }
+        Button btnExportDb = view.findViewById(R.id.btn_export_db);
+        if (btnExportDb != null) {
+            btnExportDb.setOnClickListener(v -> {
+                Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("application/json");
+                intent.putExtra(Intent.EXTRA_TITLE, "localtube_backup.json");
+                exportLauncher.launch(intent);
+            });
         }
 
-        spinnerVideoQuality.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selected = (String) parent.getItemAtPosition(position);
-                String quality = selected.split(" ")[0]; // "1440p (2K)" -> "1440p"
-                db.setSetting("video_quality", quality);
+        Button btnImportDb = view.findViewById(R.id.btn_import_db);
+        if (btnImportDb != null) {
+            btnImportDb.setOnClickListener(v -> {
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("application/json");
+                importLauncher.launch(intent);
+            });
+        }
+
+        if (swHideWatched != null) {
+            swHideWatched.setChecked(db.getHideWatched());
+            swHideWatched.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                db.setSetting("hide_watched", isChecked ? "true" : "false");
+                Toast.makeText(this, "Hide Watched: " + isChecked, Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        if (swHideShorts != null) {
+            swHideShorts.setChecked(db.getHideShorts());
+            swHideShorts.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                db.setSetting("hide_shorts", isChecked ? "true" : "false");
+                Toast.makeText(this, "Hide Shorts: " + isChecked, Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        if (spinnerVideoQuality != null) {
+            qualityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerVideoQuality.setAdapter(qualityAdapter);
+
+            String currentQuality = db.getVideoQuality();
+            for (int i = 0; i < qualityAdapter.getCount(); i++) {
+                if (qualityAdapter.getItem(i).startsWith(currentQuality)) {
+                    spinnerVideoQuality.setSelection(i);
+                    break;
+                }
             }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+            spinnerVideoQuality.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    String selected = (String) parent.getItemAtPosition(position);
+                    String quality = selected.split(" ")[0]; // "1440p (2K)" -> "1440p"
+                    db.setSetting("video_quality", quality);
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                }
+            });
+        }
+    }
+
+    private class ViewPagerAdapter extends RecyclerView.Adapter<ViewPagerAdapter.ViewHolder> {
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view;
+            if (viewType == 0) {
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.settings_page_interests, parent, false);
+                bindInterestsPage(view);
+            } else if (viewType == 1) {
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.settings_page_blocked, parent, false);
+                bindBlockedPage(view);
+            } else {
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.settings_page_general, parent, false);
+                bindGeneralPage(view);
             }
-        });
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            // Static content bound in onCreateViewHolder
+        }
+
+        @Override
+        public int getItemCount() {
+            return 3;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            return position;
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            ViewHolder(View itemView) {
+                super(itemView);
+            }
+        }
     }
 
 
@@ -380,6 +418,7 @@ public class SettingsActivity extends AppCompatActivity {
     // ==========================================
 
     private void buildPreferredChips() {
+        if (cgPreferredTopics == null) return;
         cgPreferredTopics.removeAllViews();
         if (preferredTopics.isEmpty()) {
             tvPreferredEmpty.setVisibility(View.VISIBLE);
@@ -403,6 +442,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void buildCategories() {
+        if (layoutCategoriesContainer == null) return;
         layoutCategoriesContainer.removeAllViews();
         categoryChipsMap.clear();
         categoryCountViewsMap.clear();
@@ -564,6 +604,7 @@ public class SettingsActivity extends AppCompatActivity {
     // ==========================================
 
     private void buildBlockedChips() {
+        if (cgBlockedKeywords == null) return;
         cgBlockedKeywords.removeAllViews();
         if (blockedKeywords.isEmpty()) {
             tvBlockedEmpty.setVisibility(View.VISIBLE);
@@ -587,6 +628,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void buildBlockedChannelChips() {
+        if (cgBlockedChannels == null) return;
         cgBlockedChannels.removeAllViews();
         if (blockedChannels.isEmpty()) {
             tvBlockedChannelsEmpty.setVisibility(View.VISIBLE);
@@ -612,6 +654,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void buildBlockedSuggestions() {
+        if (cgBlockedSuggestions == null) return;
         cgBlockedSuggestions.removeAllViews();
         for (String keyword : BLOCKED_SUGGESTIONS) {
             // Only show suggestions that are not currently blocked
@@ -715,6 +758,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void buildBlockedCategories() {
+        if (layoutBlockedCategoriesContainer == null) return;
         layoutBlockedCategoriesContainer.removeAllViews();
         blockedCategoryChipsMap.clear();
         blockedCategoryCountViewsMap.clear();

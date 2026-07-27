@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?attr/colorSurface">
+
+    <!-- Header Toolbar with Actions -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="?android:attr/actionBarSize"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:background="?attr/colorSurfaceContainer">
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="?android:attr/homeAsUpIndicator"
+            android:tint="?attr/colorOnSurface"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Go Back"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Console Logs"
+            style="@style/TextAppearance.Material3.TitleLarge"
+            android:textStyle="bold"
+            android:textColor="?attr/colorOnSurface"
+            android:layout_marginStart="8dp"/>
+
+        <!-- Copy Action Button -->
+        <ImageButton
+            android:id="@+id/btn_copy_logs"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_save"
+            android:tint="?attr/colorOnSurface"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Copy Logs"
+            android:layout_marginEnd="4dp"/>
+
+        <!-- Clear Action Button -->
+        <ImageButton
+            android:id="@+id/btn_clear_logs"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_delete"
+            android:tint="?attr/colorError"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Clear Logs"/>
+    </LinearLayout>
+
+    <!-- Console Log Display Window -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:cardBackgroundColor="#0B0F19"
+        app:strokeWidth="0dp"
+        app:cardCornerRadius="0dp">
+
+        <ScrollView
+            android:id="@+id/scroll_logs"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:fillViewport="true">
+
+            <TextView
+                android:id="@+id/text_logs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Console terminal initialized...\n"
+                android:textColor="#E2E8F0"
+                android:textSize="12sp"
+                android:typeface="monospace"
+                android:lineSpacingMultiplier="1.2"
+                android:textIsSelectable="true"/>
+        </ScrollView>
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>
