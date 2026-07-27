@@ -230,6 +230,29 @@ public class MainActivity extends AppCompatActivity {
         }
 
         updateUi();
+
+        // Ask to import YouTube subscriptions once
+        final HistoryDbHelper db = HistoryDbHelper.getInstance(this);
+        if ("false".equals(db.getSetting("asked_subscription_import", "false"))) {
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Import YouTube Subscriptions")
+                .setMessage("Would you like to sign in and import your YouTube subscriptions? This will customize your personalized feed recommendations.")
+                .setPositiveButton("Import Now", new android.content.DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(android.content.DialogInterface dialog, int which) {
+                        db.setSetting("asked_subscription_import", "true");
+                        YoutubeSubscriptionImportFragment fragment = new YoutubeSubscriptionImportFragment();
+                        fragment.show(getSupportFragmentManager(), "subscription_import");
+                    }
+                })
+                .setNegativeButton("Later", new android.content.DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(android.content.DialogInterface dialog, int which) {
+                        db.setSetting("asked_subscription_import", "true");
+                    }
+                })
+                .show();
+        }
     }
 
     private void bindIntegrationPage(View view) {

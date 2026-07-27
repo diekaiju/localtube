@@ -146,6 +146,17 @@
             android:layout_height="52dp"
             android:text="Import Database (JSON)"
             android:textStyle="bold"
+            android:layout_marginBottom="16dp"
+            app:cornerRadius="12dp"/>
+
+        <!-- Import YouTube Subscriptions via Google Sign In -->
+        <Button
+            android:id="@+id/btn_import_youtube_subs"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Import Subscriptions via Google Login"
+            android:textStyle="bold"
             app:cornerRadius="12dp"/>
 
     </LinearLayout>

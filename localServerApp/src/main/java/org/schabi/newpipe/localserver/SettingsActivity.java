@@ -328,6 +328,14 @@ public class SettingsActivity extends AppCompatActivity {
             });
         }
 
+        Button btnImportYoutubeSubs = view.findViewById(R.id.btn_import_youtube_subs);
+        if (btnImportYoutubeSubs != null) {
+            btnImportYoutubeSubs.setOnClickListener(v -> {
+                YoutubeSubscriptionImportFragment fragment = new YoutubeSubscriptionImportFragment();
+                fragment.show(getSupportFragmentManager(), "subscription_import");
+            });
+        }
+
         if (swHideWatched != null) {
             swHideWatched.setChecked(db.getHideWatched());
             swHideWatched.setOnCheckedChangeListener((buttonView, isChecked) -> {
