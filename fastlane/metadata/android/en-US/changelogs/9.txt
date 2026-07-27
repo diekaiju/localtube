@@ -1,0 +1,5 @@
+Split main interface into a swipeable ViewPager2 (Control Panel and Integration tabs)
+Centralized log repository with a dedicated terminal-style Log Activity
+Dynamic Material You color synchronization to the Client Web UI
+Integrated Google login and YouTube subscriptions auto-scraper import feature
+Made server access endpoints text selectable for easy copying
