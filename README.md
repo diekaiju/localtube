@@ -28,9 +28,20 @@ LocalTube transforms the stateless library core of NewPipe Extractor into a priv
 
 ## 📸 Interface Preview
 
-| Android App Interface | Web Interface Home (Light) | Media Streaming & Details |
+### Android Application
+| Server Control (Main) | Server Settings | Touchpad Remote |
 | :---: | :---: | :---: |
-| ![Android App Interface](screenshots/app_interface.jpg) | ![Web Interface Home](screenshots/web_interface_home.jpg) | ![Streaming Interface](screenshots/web_interface_watch.jpg) |
+| ![Android App Interface](screenshots/app_interface.jpg) | ![App Settings](screenshots/settings.jpg) | ![Touchpad Remote](screenshots/touchpad.jpg) |
+
+### Web Interface (Desktop & TV)
+| Home (Dark Theme) | Home (Light Theme) | Web Player & Details |
+| :---: | :---: | :---: |
+| ![Home Dark](screenshots/homepage-black.png) | ![Home Light](screenshots/homepage-white.png) | ![Web Player](screenshots/videoplayer.png) |
+
+### Web Interface (Mobile)
+| Mobile Web Home | Mobile Web Player |
+| :---: | :---: |
+| ![Mobile Home](screenshots/homepage_mobile.png) | ![Mobile Player](screenshots/videoplayer_mobile.png) |
 
 ---
 
