@@ -14,5 +14,12 @@ dependencyResolutionManagement {
         maven(url = "https://jitpack.io")
     }
 }
-include("extractor", "timeago-generator", "localServerApp")
+include("localServerApp")
+
+include("extractor")
+project(":extractor").projectDir = file("NewPipeExtractor/extractor")
+
+include("timeago-generator")
+project(":timeago-generator").projectDir = file("NewPipeExtractor/timeago-generator")
+
 rootProject.name = "NewPipeExtractor"
