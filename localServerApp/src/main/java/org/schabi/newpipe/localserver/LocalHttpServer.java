@@ -50,6 +50,9 @@ public class LocalHttpServer {
     private static LockStatusListener lockStatusListener;
     private static RemoteWebSocketServer wsServer = null;
     private static final java.util.Queue<String> pendingCommands = new java.util.concurrent.LinkedBlockingQueue<>();
+    private static final List<StreamInfoItem> shortsCache = java.util.Collections.synchronizedList(new ArrayList<>());
+    private static boolean isCacheWorkerRunning = false;
+    private static long lastCacheTime = 0;
 
     public static class ClientInfo {
         public final String name;
@@ -201,6 +204,13 @@ public class LocalHttpServer {
             wsServer.start();
         }
 
+        // Pre-fill Shorts cache in background immediately on server start
+        final int defaultServiceId = 0; // YouTube
+        threadPool.submit(() -> {
+            log("Pre-filling Shorts cache on server start...");
+            refillingCache(defaultServiceId, dbHelper, threadPool);
+        });
+
         threadPool.execute(new Runnable() {
             @Override
             public void run() {
@@ -236,6 +246,212 @@ public class LocalHttpServer {
         }
         threadPool.shutdownNow();
         log("Local server stopped.");
+    }
+
+    public static String getVideoId(String url) {
+        if (url == null) return "";
+        if (url.contains("v=")) {
+            int start = url.indexOf("v=") + 2;
+            int end = url.indexOf("&", start);
+            return end == -1 ? url.substring(start) : url.substring(start, end);
+        }
+        if (url.contains("/shorts/")) {
+            int start = url.indexOf("/shorts/") + 8;
+            int end = url.indexOf("?", start);
+            return end == -1 ? url.substring(start) : url.substring(start, end);
+        }
+        if (url.contains("youtu.be/")) {
+            int start = url.indexOf("youtu.be/") + 9;
+            int end = url.indexOf("?", start);
+            return end == -1 ? url.substring(start) : url.substring(start, end);
+        }
+        return url;
+    }
+
+    private static List<InfoItem> fetchChannelUploads(StreamingService service, String channelUrl) {
+        try {
+            ChannelExtractor channelExtractor = service.getChannelExtractor(channelUrl);
+            channelExtractor.fetchPage();
+            ChannelTabExtractor tabExtractor = service.getChannelTabExtractorFromIdAndBaseUrl(
+                    channelExtractor.getId(), "videos", channelExtractor.getBaseUrl());
+            tabExtractor.fetchPage();
+            List<InfoItem> list = new ArrayList<>();
+            if (tabExtractor.getInitialPage() != null && tabExtractor.getInitialPage().getItems() != null) {
+                for (Object item : tabExtractor.getInitialPage().getItems()) {
+                    if (item instanceof InfoItem) {
+                        list.add((InfoItem) item);
+                    }
+                }
+            }
+            return list;
+        } catch (Exception e) {
+            log("Failed to fetch uploads for channel " + channelUrl + ": " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    private static String generateHomeQuery(List<String> preferred) {
+        if (preferred == null || preferred.isEmpty()) return "trending";
+        java.util.Random rand = new java.util.Random();
+        if (preferred.size() >= 2 && rand.nextDouble() < 0.3) {
+            int idx1 = rand.nextInt(preferred.size());
+            int idx2 = rand.nextInt(preferred.size());
+            while (idx1 == idx2) {
+                idx2 = rand.nextInt(preferred.size());
+            }
+            return preferred.get(idx1) + " " + preferred.get(idx2);
+        } else {
+            return preferred.get(rand.nextInt(preferred.size()));
+        }
+    }
+
+    public static List<StreamInfoItem> buildAndScoreShortsPool(int serviceId, HistoryDbHelper dbHelper, ExecutorService executorService) {
+        List<StreamInfoItem> pool = new ArrayList<>();
+        java.util.Set<String> watchedIds = new java.util.HashSet<>();
+        try {
+            for (InfoItem item : dbHelper.getHistory()) {
+                watchedIds.add(getVideoId(item.getUrl()));
+            }
+        } catch (Exception e) {
+            log("Error getting history for shorts ID checking: " + e.getMessage());
+        }
+
+        try {
+            StreamingService service = NewPipe.getService(serviceId);
+            java.util.Set<String> addedIds = new java.util.HashSet<>();
+
+            // Part 1: Fetch from Preferred Keywords search (home feed algorithm)
+            List<String> preferred = dbHelper.getPreferredKeywords();
+            String query = "trending";
+            if (preferred != null && !preferred.isEmpty()) {
+                query = generateHomeQuery(preferred);
+            }
+            log("Shorts feed building with home-feed style query: " + query);
+            try {
+                SearchExtractor extractor = service.getSearchExtractor(query);
+                extractor.fetchPage();
+                InfoItemsPage<InfoItem> page = extractor.getInitialPage();
+                int pageCount = 0;
+                while (page != null && pageCount < 3 && pool.size() < 60) {
+                    List<InfoItem> items = page.getItems();
+                    if (items != null) {
+                        for (InfoItem itemObj : items) {
+                            if (itemObj instanceof StreamInfoItem) {
+                                StreamInfoItem stream = (StreamInfoItem) itemObj;
+                                String vidId = getVideoId(stream.getUrl());
+                                if (!watchedIds.contains(vidId) && !addedIds.contains(vidId)) {
+                                    pool.add(stream);
+                                    addedIds.add(vidId);
+                                }
+                            }
+                        }
+                    }
+                    Page next = page.getNextPage();
+                    page = (next != null) ? extractor.getPage(next) : null;
+                    pageCount++;
+                }
+            } catch (Exception e) {
+                log("Shorts pool keyword fetch error: " + e.getMessage());
+            }
+
+            // Part 2: Fetch from channel uploads (subscriptions)
+            List<InfoItem> subscriptions = dbHelper.getSubscriptions();
+            if (subscriptions != null && !subscriptions.isEmpty()) {
+                List<InfoItem> selectedChannels = new ArrayList<>(subscriptions);
+                java.util.Collections.shuffle(selectedChannels);
+                int limit = Math.min(5, selectedChannels.size());
+                List<java.util.concurrent.Future<List<InfoItem>>> futures = new ArrayList<>();
+                for (int i = 0; i < limit; i++) {
+                    final String url = selectedChannels.get(i).getUrl();
+                    futures.add(executorService.submit(new java.util.concurrent.Callable<List<InfoItem>>() {
+                        @Override
+                        public List<InfoItem> call() throws Exception {
+                            return fetchChannelUploads(service, url);
+                        }
+                    }));
+                }
+                for (java.util.concurrent.Future<List<InfoItem>> future : futures) {
+                    try {
+                        List<InfoItem> res = future.get(6, java.util.concurrent.TimeUnit.SECONDS);
+                        if (res != null) {
+                            for (InfoItem itemObj : res) {
+                                if (itemObj instanceof StreamInfoItem) {
+                                    StreamInfoItem stream = (StreamInfoItem) itemObj;
+                                    String vidId = getVideoId(stream.getUrl());
+                                    if (!watchedIds.contains(vidId) && !addedIds.contains(vidId)) {
+                                        pool.add(stream);
+                                        addedIds.add(vidId);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        log("Shorts pool channel uploads fetch error: " + e.getMessage());
+                    }
+                }
+            }
+
+            // Shuffle the mixed feed
+            java.util.Collections.shuffle(pool);
+
+        } catch (Exception e) {
+            log("Shorts Pool builder global error: " + e.getMessage());
+        }
+        return pool;
+    }
+
+    public static void refillingCache(final int serviceId, final HistoryDbHelper dbHelper, final ExecutorService executorService) {
+        synchronized (shortsCache) {
+            if (isCacheWorkerRunning) return;
+            isCacheWorkerRunning = true;
+        }
+        executorService.submit(() -> {
+            try {
+                log("Starting background Shorts cache refilling...");
+                List<StreamInfoItem> newCandidates = buildAndScoreShortsPool(serviceId, dbHelper, executorService);
+                synchronized (shortsCache) {
+                    java.util.Set<String> existingIds = new java.util.HashSet<>();
+                    for (StreamInfoItem item : shortsCache) {
+                        existingIds.add(getVideoId(item.getUrl()));
+                    }
+                    for (StreamInfoItem item : newCandidates) {
+                        String vidId = getVideoId(item.getUrl());
+                        if (!existingIds.contains(vidId)) {
+                            shortsCache.add(item);
+                            existingIds.add(vidId);
+                        }
+                    }
+                    lastCacheTime = System.currentTimeMillis();
+                    log("Shorts cache refilled. Current size: " + shortsCache.size());
+                }
+            } catch (Exception e) {
+                log("Error refilling Shorts cache: " + e.getMessage());
+            } finally {
+                synchronized (shortsCache) {
+                    isCacheWorkerRunning = false;
+                }
+            }
+        });
+    }
+
+    public static List<StreamInfoItem> fetchQuickFallback(int serviceId) {
+        List<StreamInfoItem> quickList = new ArrayList<>();
+        try {
+            StreamingService service = NewPipe.getService(serviceId);
+            SearchExtractor extractor = service.getSearchExtractor("shorts");
+            extractor.fetchPage();
+            InfoItemsPage<InfoItem> page = extractor.getInitialPage();
+            if (page != null && page.getItems() != null) {
+                for (InfoItem itemObj : page.getItems()) {
+                    if (itemObj instanceof StreamInfoItem) {
+                        quickList.add((StreamInfoItem) itemObj);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log("Quick fallback fetch error: " + e.getMessage());
+        }
+        return quickList;
     }
 
     private static class ClientHandler implements Runnable {
@@ -413,6 +629,8 @@ public class LocalHttpServer {
                         handleShortsPage(os, params, isTv);
                     } else if (path.equals("/api/shorts/feed")) {
                         handleShortsApiFeed(os, params);
+                    } else if (path.equals("/api/shorts/refresh")) {
+                        handleShortsApiRefresh(os, params);
                     } else if (path.equals("/settings")) {
                         handleSettings(os, params, isTv);
                     } else if (path.equals("/watch-later")) {
@@ -1895,132 +2113,51 @@ public class LocalHttpServer {
             sendResponse(os, 200, html, "text/html; charset=UTF-8");
         }
 
+        private void handleShortsApiRefresh(OutputStream os, Map<String, String> params) throws Exception {
+            int serviceId = getServiceId(params);
+            synchronized (shortsCache) {
+                shortsCache.clear();
+                lastCacheTime = 0; // force refill
+            }
+            log("Shorts cache cleared by user refresh request.");
+            LocalHttpServer.refillingCache(serviceId, dbHelper, executorService);
+            sendResponse(os, 200, "{\"status\":\"refreshing\"}", "application/json; charset=UTF-8");
+        }
+
         private void handleShortsApiFeed(OutputStream os, Map<String, String> params) throws Exception {
             int serviceId = getServiceId(params);
-            // Parse page index — each page does search queries
             int pageIndex = 0;
             try { pageIndex = Integer.parseInt(params.getOrDefault("page", "0")); } catch (Exception ignored) {}
             final int PAGE_SIZE = 5;
 
-            List<StreamInfoItem> shortsItems = new ArrayList<>();
-            java.util.Set<String> watchedUrls = new java.util.HashSet<>();
-            for (InfoItem item : dbHelper.getHistory()) {
-                watchedUrls.add(item.getUrl());
+            // If cache is nearly exhausted, trigger a background refill (non-blocking)
+            synchronized (shortsCache) {
+                if (shortsCache.size() < (pageIndex + 2) * PAGE_SIZE
+                        || System.currentTimeMillis() - lastCacheTime > 600_000) {
+                    LocalHttpServer.refillingCache(serviceId, dbHelper, executorService);
+                }
             }
 
-            try {
-                StreamingService service = NewPipe.getService(serviceId);
+            // If the cache is still empty (background fetch hasn't finished yet), tell the UI to show a spinner
+            boolean isLoading;
+            synchronized (shortsCache) {
+                isLoading = shortsCache.isEmpty();
+            }
+            if (isLoading) {
+                sendResponse(os, 200, "{\"items\":[],\"loading\":true}", "application/json; charset=UTF-8");
+                return;
+            }
 
-                // Build ordered list of queries: subscriptions first, then topics
-                List<String> queries = new ArrayList<>();
-                List<InfoItem> subs = dbHelper.getSubscriptions();
-                if (subs != null) {
-                    for (InfoItem sub : subs) {
-                        String name = sub.getName();
-                        if (name != null && !name.isEmpty()) queries.add(name + " shorts");
+            // Serve items from the cache at the requested page offset
+            List<StreamInfoItem> shortsItems = new ArrayList<>();
+            synchronized (shortsCache) {
+                int start = pageIndex * PAGE_SIZE;
+                int end = Math.min(start + PAGE_SIZE, shortsCache.size());
+                if (start < shortsCache.size()) {
+                    for (int i = start; i < end; i++) {
+                        shortsItems.add(shortsCache.get(i));
                     }
                 }
-                List<String> userTopics = dbHelper.getPreferredKeywords();
-                if (userTopics != null && !userTopics.isEmpty()) {
-                    for (String t : userTopics) queries.add(t + " shorts");
-                }
-                if (queries.isEmpty()) queries.add("shorts");
-
-                // Pick exactly one query using round-robin by page index, but try up to 3 queries if empty
-                int queryIdx = pageIndex % queries.size();
-                int queriesTried = 0;
-                final StreamingService finalService = service;
-                final java.util.Set<String> finalWatched = watchedUrls;
-
-                while (shortsItems.isEmpty() && queriesTried < Math.min(3, queries.size())) {
-                    String query = queries.get((queryIdx + queriesTried) % queries.size());
-                    log("Shorts feed page=" + pageIndex + " attempt=" + queriesTried + " query=" + query);
-
-                    final String finalQuery = query;
-                    java.util.concurrent.Future<List<StreamInfoItem>> future = executorService.submit(
-                        new java.util.concurrent.Callable<List<StreamInfoItem>>() {
-                            @Override
-                            public List<StreamInfoItem> call() {
-                                List<StreamInfoItem> results = new ArrayList<>();
-                                try {
-                                    SearchExtractor ext = finalService.getSearchExtractor(finalQuery);
-                                    ext.fetchPage();
-                                    if (ext.getInitialPage() != null && ext.getInitialPage().getItems() != null) {
-                                        for (InfoItem itemObj : ext.getInitialPage().getItems()) {
-                                            if (results.size() >= PAGE_SIZE) break;
-                                            if (itemObj instanceof StreamInfoItem) {
-                                                StreamInfoItem stream = (StreamInfoItem) itemObj;
-                                                if (!finalWatched.contains(stream.getUrl())) {
-                                                    long duration = stream.getDuration();
-                                                    if (duration <= 0 || duration <= 180) {
-                                                        results.add(stream);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    log("Shorts search thread error: " + e.getMessage());
-                                }
-                                return results;
-                            }
-                        }
-                    );
-                    try {
-                        shortsItems.addAll(future.get(10, java.util.concurrent.TimeUnit.SECONDS));
-                    } catch (java.util.concurrent.TimeoutException e) {
-                        future.cancel(true);
-                        log("Shorts search timed out for query: " + query);
-                    } catch (Exception e) {
-                        log("Shorts future error: " + e.getMessage());
-                    }
-                    queriesTried++;
-                }
-
-                // If still empty and we haven't tried the generic "shorts" query, try it as fallback
-                if (shortsItems.isEmpty() && !queries.contains("shorts")) {
-                    log("Shorts feed page=" + pageIndex + " falling back to generic 'shorts' query");
-                    java.util.concurrent.Future<List<StreamInfoItem>> future = executorService.submit(
-                        new java.util.concurrent.Callable<List<StreamInfoItem>>() {
-                            @Override
-                            public List<StreamInfoItem> call() {
-                                List<StreamInfoItem> results = new ArrayList<>();
-                                try {
-                                    SearchExtractor ext = finalService.getSearchExtractor("shorts");
-                                    ext.fetchPage();
-                                    if (ext.getInitialPage() != null && ext.getInitialPage().getItems() != null) {
-                                        for (InfoItem itemObj : ext.getInitialPage().getItems()) {
-                                            if (results.size() >= PAGE_SIZE) break;
-                                            if (itemObj instanceof StreamInfoItem) {
-                                                StreamInfoItem stream = (StreamInfoItem) itemObj;
-                                                if (!finalWatched.contains(stream.getUrl())) {
-                                                    long duration = stream.getDuration();
-                                                    if (duration <= 0 || duration <= 180) {
-                                                        results.add(stream);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    log("Shorts fallback search thread error: " + e.getMessage());
-                                }
-                                return results;
-                            }
-                        }
-                    );
-                    try {
-                        shortsItems.addAll(future.get(10, java.util.concurrent.TimeUnit.SECONDS));
-                    } catch (java.util.concurrent.TimeoutException e) {
-                        future.cancel(true);
-                        log("Shorts fallback search timed out");
-                    } catch (Exception e) {
-                        log("Shorts fallback future error: " + e.getMessage());
-                    }
-                }
-
-            } catch (Exception e) {
-                log("Shorts API Feed error: " + e.getMessage());
             }
 
             StringBuilder json = new StringBuilder();
@@ -2032,7 +2169,10 @@ public class LocalHttpServer {
                     .append("\"name\":\"").append(escapeJson(item.getName())).append("\",")
                     .append("\"uploaderName\":\"").append(escapeJson(item.getUploaderName())).append("\",")
                     .append("\"uploaderUrl\":\"").append(escapeJson(item.getUploaderUrl())).append("\",")
-                    .append("\"thumbnailUrl\":\"").append(escapeJson(item.getThumbnails() != null && !item.getThumbnails().isEmpty() ? item.getThumbnails().get(0).getUrl() : "")).append("\"")
+                    .append("\"duration\":").append(item.getDuration()).append(",")
+                    .append("\"thumbnailUrl\":\"").append(escapeJson(
+                            item.getThumbnails() != null && !item.getThumbnails().isEmpty()
+                                ? item.getThumbnails().get(0).getUrl() : "")).append("\"")
                     .append("}");
                 if (i < shortsItems.size() - 1) json.append(",");
             }
@@ -2045,6 +2185,8 @@ public class LocalHttpServer {
             return input.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
         }
     }
+
+
 
     private static final class CacheData {
         final String value;
