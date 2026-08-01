@@ -409,6 +409,10 @@ public class LocalHttpServer {
                         handleThumbnail(os, params);
                     } else if (path.equals("/subtitles")) {
                         handleSubtitlesProxy(os, params);
+                    } else if (path.equals("/shorts")) {
+                        handleShortsPage(os, params, isTv);
+                    } else if (path.equals("/api/shorts/feed")) {
+                        handleShortsApiFeed(os, params);
                     } else if (path.equals("/settings")) {
                         handleSettings(os, params, isTv);
                     } else if (path.equals("/watch-later")) {
@@ -1883,6 +1887,162 @@ public class LocalHttpServer {
                 }
             }
             os.flush();
+        }
+
+        private void handleShortsPage(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
+            int serviceId = getServiceId(params);
+            String html = HtmlRenderer.renderShortsPage(serviceId, isTv);
+            sendResponse(os, 200, html, "text/html; charset=UTF-8");
+        }
+
+        private void handleShortsApiFeed(OutputStream os, Map<String, String> params) throws Exception {
+            int serviceId = getServiceId(params);
+            // Parse page index — each page does search queries
+            int pageIndex = 0;
+            try { pageIndex = Integer.parseInt(params.getOrDefault("page", "0")); } catch (Exception ignored) {}
+            final int PAGE_SIZE = 5;
+
+            List<StreamInfoItem> shortsItems = new ArrayList<>();
+            java.util.Set<String> watchedUrls = new java.util.HashSet<>();
+            for (InfoItem item : dbHelper.getHistory()) {
+                watchedUrls.add(item.getUrl());
+            }
+
+            try {
+                StreamingService service = NewPipe.getService(serviceId);
+
+                // Build ordered list of queries: subscriptions first, then topics
+                List<String> queries = new ArrayList<>();
+                List<InfoItem> subs = dbHelper.getSubscriptions();
+                if (subs != null) {
+                    for (InfoItem sub : subs) {
+                        String name = sub.getName();
+                        if (name != null && !name.isEmpty()) queries.add(name + " shorts");
+                    }
+                }
+                List<String> userTopics = dbHelper.getPreferredKeywords();
+                if (userTopics != null && !userTopics.isEmpty()) {
+                    for (String t : userTopics) queries.add(t + " shorts");
+                }
+                if (queries.isEmpty()) queries.add("shorts");
+
+                // Pick exactly one query using round-robin by page index, but try up to 3 queries if empty
+                int queryIdx = pageIndex % queries.size();
+                int queriesTried = 0;
+                final StreamingService finalService = service;
+                final java.util.Set<String> finalWatched = watchedUrls;
+
+                while (shortsItems.isEmpty() && queriesTried < Math.min(3, queries.size())) {
+                    String query = queries.get((queryIdx + queriesTried) % queries.size());
+                    log("Shorts feed page=" + pageIndex + " attempt=" + queriesTried + " query=" + query);
+
+                    final String finalQuery = query;
+                    java.util.concurrent.Future<List<StreamInfoItem>> future = executorService.submit(
+                        new java.util.concurrent.Callable<List<StreamInfoItem>>() {
+                            @Override
+                            public List<StreamInfoItem> call() {
+                                List<StreamInfoItem> results = new ArrayList<>();
+                                try {
+                                    SearchExtractor ext = finalService.getSearchExtractor(finalQuery);
+                                    ext.fetchPage();
+                                    if (ext.getInitialPage() != null && ext.getInitialPage().getItems() != null) {
+                                        for (InfoItem itemObj : ext.getInitialPage().getItems()) {
+                                            if (results.size() >= PAGE_SIZE) break;
+                                            if (itemObj instanceof StreamInfoItem) {
+                                                StreamInfoItem stream = (StreamInfoItem) itemObj;
+                                                if (!finalWatched.contains(stream.getUrl())) {
+                                                    long duration = stream.getDuration();
+                                                    if (duration <= 0 || duration <= 180) {
+                                                        results.add(stream);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    log("Shorts search thread error: " + e.getMessage());
+                                }
+                                return results;
+                            }
+                        }
+                    );
+                    try {
+                        shortsItems.addAll(future.get(10, java.util.concurrent.TimeUnit.SECONDS));
+                    } catch (java.util.concurrent.TimeoutException e) {
+                        future.cancel(true);
+                        log("Shorts search timed out for query: " + query);
+                    } catch (Exception e) {
+                        log("Shorts future error: " + e.getMessage());
+                    }
+                    queriesTried++;
+                }
+
+                // If still empty and we haven't tried the generic "shorts" query, try it as fallback
+                if (shortsItems.isEmpty() && !queries.contains("shorts")) {
+                    log("Shorts feed page=" + pageIndex + " falling back to generic 'shorts' query");
+                    java.util.concurrent.Future<List<StreamInfoItem>> future = executorService.submit(
+                        new java.util.concurrent.Callable<List<StreamInfoItem>>() {
+                            @Override
+                            public List<StreamInfoItem> call() {
+                                List<StreamInfoItem> results = new ArrayList<>();
+                                try {
+                                    SearchExtractor ext = finalService.getSearchExtractor("shorts");
+                                    ext.fetchPage();
+                                    if (ext.getInitialPage() != null && ext.getInitialPage().getItems() != null) {
+                                        for (InfoItem itemObj : ext.getInitialPage().getItems()) {
+                                            if (results.size() >= PAGE_SIZE) break;
+                                            if (itemObj instanceof StreamInfoItem) {
+                                                StreamInfoItem stream = (StreamInfoItem) itemObj;
+                                                if (!finalWatched.contains(stream.getUrl())) {
+                                                    long duration = stream.getDuration();
+                                                    if (duration <= 0 || duration <= 180) {
+                                                        results.add(stream);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    log("Shorts fallback search thread error: " + e.getMessage());
+                                }
+                                return results;
+                            }
+                        }
+                    );
+                    try {
+                        shortsItems.addAll(future.get(10, java.util.concurrent.TimeUnit.SECONDS));
+                    } catch (java.util.concurrent.TimeoutException e) {
+                        future.cancel(true);
+                        log("Shorts fallback search timed out");
+                    } catch (Exception e) {
+                        log("Shorts fallback future error: " + e.getMessage());
+                    }
+                }
+
+            } catch (Exception e) {
+                log("Shorts API Feed error: " + e.getMessage());
+            }
+
+            StringBuilder json = new StringBuilder();
+            json.append("{\"items\":[");
+            for (int i = 0; i < shortsItems.size(); i++) {
+                StreamInfoItem item = shortsItems.get(i);
+                json.append("{")
+                    .append("\"url\":\"").append(escapeJson(item.getUrl())).append("\",")
+                    .append("\"name\":\"").append(escapeJson(item.getName())).append("\",")
+                    .append("\"uploaderName\":\"").append(escapeJson(item.getUploaderName())).append("\",")
+                    .append("\"uploaderUrl\":\"").append(escapeJson(item.getUploaderUrl())).append("\",")
+                    .append("\"thumbnailUrl\":\"").append(escapeJson(item.getThumbnails() != null && !item.getThumbnails().isEmpty() ? item.getThumbnails().get(0).getUrl() : "")).append("\"")
+                    .append("}");
+                if (i < shortsItems.size() - 1) json.append(",");
+            }
+            json.append("]}");
+            sendResponse(os, 200, json.toString(), "application/json; charset=UTF-8");
+        }
+
+        private String escapeJson(String input) {
+            if (input == null) return "";
+            return input.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
         }
     }
 
