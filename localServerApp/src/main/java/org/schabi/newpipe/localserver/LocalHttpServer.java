@@ -1723,8 +1723,9 @@ public class LocalHttpServer {
             int serviceId = getServiceId(params);
             List<InfoItem> channels = dbHelper.getSubscriptions();
             List<InfoItem> playlists = dbHelper.getBookmarkedPlaylists();
+            List<InfoItem> watchLater = dbHelper.getWatchLaterItems();
             String activeTab = params.getOrDefault("tab", "channels");
-            String html = HtmlRenderer.renderSubscriptions(serviceId, channels, playlists, activeTab, isTv);
+            String html = HtmlRenderer.renderSubscriptions(serviceId, channels, playlists, watchLater, activeTab, isTv);
             sendResponse(os, 200, html, "text/html; charset=UTF-8");
         }
 
@@ -2109,6 +2110,11 @@ public class LocalHttpServer {
 
         private void handleShortsPage(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
             int serviceId = getServiceId(params);
+            synchronized (shortsCache) {
+                shortsCache.clear();
+                lastCacheTime = 0;
+            }
+            LocalHttpServer.refillingCache(serviceId, dbHelper, executorService);
             String html = HtmlRenderer.renderShortsPage(serviceId, isTv);
             sendResponse(os, 200, html, "text/html; charset=UTF-8");
         }
