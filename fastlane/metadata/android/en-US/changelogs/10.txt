@@ -1,0 +1,6 @@
+1: Introduced the new Shorts feed page for viewing vertical short videos
+2: Integrated Shorts save button with the local Watch Later database
+3: Added a dedicated Watch Later tab on the Subscriptions page for saved items
+4: Implemented horizontal touch swiping and Arrow Right/Left keys to seek active Shorts
+5: Enabled Arrow Up/Down keyboard keys to scroll between Short videos
+6: Added direct link to open Shorts in the full player view and share original links

@@ -19,8 +19,8 @@ android {
         applicationId = "org.schabi.newpipe.localserver"
         minSdk = 28
         targetSdk = 34
-        versionCode = 9
-        versionName = "3.4"
+        versionCode = 10
+        versionName = "3.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -46,7 +46,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
