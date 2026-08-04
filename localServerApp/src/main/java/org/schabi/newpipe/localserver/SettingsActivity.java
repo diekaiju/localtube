@@ -271,6 +271,31 @@ public class SettingsActivity extends AppCompatActivity {
             btnAddCustomInterest.setOnClickListener(v -> addCustomPreferredTopic());
         }
 
+        Button btnImportYoutubeInterests = view.findViewById(R.id.btn_import_youtube_interests);
+        if (btnImportYoutubeInterests != null) {
+            btnImportYoutubeInterests.setOnClickListener(v -> {
+                YoutubeInterestsImportFragment fragment = new YoutubeInterestsImportFragment();
+                fragment.setOnImportCompleteListener(() -> {
+                    preferredTopics.clear();
+                    preferredTopics.addAll(db.getPreferredKeywords());
+                    buildPreferredChips();
+                    buildCategories();
+                });
+                fragment.show(getSupportFragmentManager(), "interests_import");
+            });
+        }
+
+        Button btnClearInterests = view.findViewById(R.id.btn_clear_interests);
+        if (btnClearInterests != null) {
+            btnClearInterests.setOnClickListener(v -> {
+                preferredTopics.clear();
+                savePreferredTopics();
+                buildPreferredChips();
+                buildCategories();
+                Toast.makeText(this, "Cleared all interests", Toast.LENGTH_SHORT).show();
+            });
+        }
+
         buildPreferredChips();
         buildCategories();
     }

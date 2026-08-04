@@ -115,6 +115,14 @@
                         android:layout_height="wrap_content"
                         android:text="3. Browse videos, tap casting, and open the Wireless TV Remote card in this app to interact with the TV cursor."
                         style="@style/TextAppearance.Material3.BodyMedium"
+                        android:textColor="?attr/colorOnSecondaryContainer"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="4. Go to Settings to log in and import your YouTube subscriptions and preferred interests."
+                        style="@style/TextAppearance.Material3.BodyMedium"
                         android:textColor="?attr/colorOnSecondaryContainer"/>
                 </LinearLayout>
             </LinearLayout>
@@ -199,7 +207,7 @@
                         android:layout_width="0dp"
                         android:layout_height="54dp"
                         android:layout_weight="1.2"
-                        android:text="Start Server"
+                        android:text="start"
                         android:textStyle="bold"
                         android:layout_marginEnd="8dp"
                         app:cornerRadius="12dp"/>
@@ -210,7 +218,7 @@
                         android:layout_width="0dp"
                         android:layout_height="54dp"
                         android:layout_weight="1"
-                        android:text="Open Link"
+                        android:text="open"
                         android:textStyle="bold"
                         android:enabled="false"
                         app:cornerRadius="12dp"/>

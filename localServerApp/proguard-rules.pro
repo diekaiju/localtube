@@ -12,3 +12,11 @@
 -dontwarn javax.script.**
 -dontwarn jdk.dynalink.**
 -dontwarn org.slf4j.**
+
+## Rules for Protobuf
+-keep class com.google.protobuf.** { *; }
+-dontwarn com.google.protobuf.**
+-keep class org.schabi.newpipe.extractor.services.youtube.protos.** { *; }
+-keep class * extends com.google.protobuf.GeneratedMessageLite { *; }
+-keep class * extends com.google.protobuf.GeneratedMessage { *; }
+

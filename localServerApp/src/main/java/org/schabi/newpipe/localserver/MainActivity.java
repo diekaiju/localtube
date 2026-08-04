@@ -317,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
             textStatus.setTextColor(colorPrimary);
             statusIndicator.setText("🟢");
 
-            btnToggle.setText("Stop Server");
+            btnToggle.setText("stop");
             int colorError = MaterialColors.getColor(this, com.google.android.material.R.attr.colorError, Color.parseColor("#E53935"));
             btnToggle.setBackgroundTintList(ColorStateList.valueOf(colorError));
             btnOpenBrowser.setEnabled(true);
@@ -337,7 +337,7 @@ public class MainActivity extends AppCompatActivity {
             textStatus.setTextColor(colorError);
             statusIndicator.setText("🔴");
 
-            btnToggle.setText("Start Server");
+            btnToggle.setText("start");
             int colorPrimary = MaterialColors.getColor(this, com.google.android.material.R.attr.colorPrimary, Color.parseColor("#4CAF50"));
             btnToggle.setBackgroundTintList(ColorStateList.valueOf(colorPrimary));
             btnOpenBrowser.setEnabled(false);

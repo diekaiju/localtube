@@ -401,6 +401,10 @@ public class LocalHttpServer {
     }
 
     public static void refillingCache(final int serviceId, final HistoryDbHelper dbHelper, final ExecutorService executorService) {
+        refillingCache(serviceId, dbHelper, executorService, null);
+    }
+
+    public static void refillingCache(final int serviceId, final HistoryDbHelper dbHelper, final ExecutorService executorService, final String initialId) {
         synchronized (shortsCache) {
             if (isCacheWorkerRunning) return;
             isCacheWorkerRunning = true;
@@ -408,7 +412,25 @@ public class LocalHttpServer {
         executorService.submit(() -> {
             try {
                 log("Starting background Shorts cache refilling...");
-                List<StreamInfoItem> newCandidates = buildAndScoreShortsPool(serviceId, dbHelper, executorService);
+                List<StreamInfoItem> newCandidates = new ArrayList<>();
+                
+                if (initialId != null && !initialId.isEmpty()) {
+                    try {
+                        StreamingService service = NewPipe.getService(serviceId);
+                        org.schabi.newpipe.extractor.stream.StreamInfo info = org.schabi.newpipe.extractor.stream.StreamInfo.getInfo(service, initialId);
+                        StreamInfoItem item = new StreamInfoItem(serviceId, info.getUrl(), info.getName(), info.getStreamType());
+                        item.setUploaderName(info.getUploaderName());
+                        item.setUploaderUrl(info.getUploaderUrl());
+                        item.setDuration(info.getDuration());
+                        item.setThumbnails(info.getThumbnails());
+                        newCandidates.add(item);
+                    } catch (Exception e) {
+                        log("Error pre-populating specific short: " + e.getMessage());
+                    }
+                }
+                
+                newCandidates.addAll(buildAndScoreShortsPool(serviceId, dbHelper, executorService));
+                
                 synchronized (shortsCache) {
                     java.util.Set<String> existingIds = new java.util.HashSet<>();
                     for (StreamInfoItem item : shortsCache) {
@@ -842,6 +864,24 @@ public class LocalHttpServer {
         private void handleWatch(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
             int serviceId = getServiceId(params);
             String mediaUrl = params.get("id");
+
+            if (mediaUrl != null && (mediaUrl.contains("/shorts/") || mediaUrl.contains("youtube.com/shorts"))) {
+                String videoId = mediaUrl;
+                if (mediaUrl.contains("/shorts/")) {
+                    int idx = mediaUrl.indexOf("/shorts/");
+                    videoId = mediaUrl.substring(idx + 8);
+                    if (videoId.contains("?")) {
+                        videoId = videoId.substring(0, videoId.indexOf("?"));
+                    }
+                }
+                String redirectHeader = "HTTP/1.1 302 Found\r\n" +
+                                        "Location: /shorts?id=" + android.net.Uri.encode(videoId) + "\r\n" +
+                                        "Content-Length: 0\r\n" +
+                                        "Connection: close\r\n\r\n";
+                os.write(redirectHeader.getBytes("UTF-8"));
+                os.flush();
+                return;
+            }
 
             CachedVideo cachedVideo = dbHelper.getCachedVideo(mediaUrl);
             if (cachedVideo != null && "COMPLETED".equals(cachedVideo.getStatus())) {
@@ -2110,11 +2150,12 @@ public class LocalHttpServer {
 
         private void handleShortsPage(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
             int serviceId = getServiceId(params);
+            String initialId = params.get("id");
             synchronized (shortsCache) {
                 shortsCache.clear();
                 lastCacheTime = 0;
             }
-            LocalHttpServer.refillingCache(serviceId, dbHelper, executorService);
+            LocalHttpServer.refillingCache(serviceId, dbHelper, executorService, initialId);
             String html = HtmlRenderer.renderShortsPage(serviceId, isTv);
             sendResponse(os, 200, html, "text/html; charset=UTF-8");
         }

@@ -1,0 +1,5 @@
+1: Added a new "Import YouTube Interests" button to scrape and extract personalized interests from YouTube Home recommendations
+2: Implemented a unique keywords extraction system, filtering and saving only single-occurrence tags from recommended videos to generate distinct followed categories
+3: Added a red "Clear All" button to easily clear all preferred interests list at once
+4: Integrated Shorts watch-later support, automatically routing Shorts clicked in Watch Later, Search, and History directly to the dedicated vertical Shorts player
+5: Added step 4 to the getting started guide to help users locate login options for subscriptions and interest importing

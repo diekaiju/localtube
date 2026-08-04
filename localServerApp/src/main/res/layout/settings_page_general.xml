@@ -133,7 +133,7 @@
             style="@style/Widget.Material3.Button"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:text="Export Database (JSON)"
+            android:text="export"
             android:textStyle="bold"
             android:layout_marginBottom="16dp"
             app:cornerRadius="12dp"/>
@@ -144,7 +144,7 @@
             style="@style/Widget.Material3.Button.TonalButton"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:text="Import Database (JSON)"
+            android:text="import"
             android:textStyle="bold"
             android:layout_marginBottom="16dp"
             app:cornerRadius="12dp"/>
@@ -155,7 +155,7 @@
             style="@style/Widget.Material3.Button.TonalButton"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:text="Import Subscriptions via Google Login"
+            android:text="login"
             android:textStyle="bold"
             app:cornerRadius="12dp"/>
 

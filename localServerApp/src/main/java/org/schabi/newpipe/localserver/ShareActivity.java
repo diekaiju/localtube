@@ -26,6 +26,7 @@ public class ShareActivity extends AppCompatActivity {
         // Ensure NewPipe is initialized
         try {
             NewPipe.init(new ServerDownloader());
+            org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor.setFetchIosClient(true);
         } catch (Exception e) {
             // Already initialized or failed
         }

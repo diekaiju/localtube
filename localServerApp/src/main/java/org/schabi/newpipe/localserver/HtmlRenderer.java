@@ -389,7 +389,8 @@ public class HtmlRenderer {
             ".up-next-circle svg { transform: rotate(-90deg); }\n" +
             ".up-next-circle circle { fill: none; stroke-width: 4; }\n" +
             ".up-next-circle-bg { stroke: rgba(255,255,255,0.2); }\n" +
-            ".up-next-circle-val { stroke: #7c3aed; stroke-dasharray: 138; stroke-dashoffset: 0; transition: stroke-dashoffset 0.1s linear; }";
+            ".up-next-circle-val { stroke: #7c3aed; stroke-dasharray: 138; stroke-dashoffset: 0; transition: stroke-dashoffset 0.1s linear; }\n" +
+            "video, .video-js video { object-fit: fill !important; }";
 
     // Supported platform details
     public static final String[] SERVICE_NAMES = {"YouTube"};
@@ -2225,7 +2226,17 @@ public class HtmlRenderer {
                     break;
                 case STREAM:
                 default:
-                    clickUrl = "/watch?serviceId=" + serviceId + "&id=" + item.getUrl();
+                    if (item instanceof StreamInfoItem) {
+                        StreamInfoItem stream = (StreamInfoItem) item;
+                        if (stream.getDuration() > 0 && stream.getDuration() <= 120) {
+                            String vidId = org.schabi.newpipe.localserver.LocalHttpServer.getVideoId(stream.getUrl());
+                            clickUrl = "/shorts?serviceId=" + serviceId + "&id=" + vidId;
+                        } else {
+                            clickUrl = "/watch?serviceId=" + serviceId + "&id=" + item.getUrl();
+                        }
+                    } else {
+                        clickUrl = "/watch?serviceId=" + serviceId + "&id=" + item.getUrl();
+                    }
                     break;
             }
 

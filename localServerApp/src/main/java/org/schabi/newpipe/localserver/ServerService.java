@@ -91,6 +91,7 @@ public class ServerService extends Service {
         try {
             // 1. Initialize NewPipe Extractor
             NewPipe.init(new ServerDownloader());
+            org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor.setFetchIosClient(true);
 
             // 2. Start HTTP Server
             server = new LocalHttpServer(this, PORT);
