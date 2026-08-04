@@ -1,28 +1,25 @@
 # LocalTube
 
-[![CI Status](https://github.com/TeamNewPipe/NewPipeExtractor/actions/workflows/ci.yml/badge.svg?branch=dev&event=schedule)](https://github.com/TeamNewPipe/NewPipeExtractor/actions/workflows/ci.yml)
-[![JitPack Release](https://jitpack.io/v/teamnewpipe/NewPipeExtractor.svg)](https://jitpack.io/#teamnewpipe/NewPipeExtractor)
-[![API Reference](https://img.shields.io/badge/docs-JDoc-blue)](https://teamnewpipe.github.io/NewPipeExtractor/javadoc/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-**LocalTube** is an enhanced, self-hosted streaming server solution built on top of a specialized fork of [NewPipe Extractor](https://github.com/TeamNewPipe/NewPipeExtractor). By bundling a lightweight and concurrent Java HTTP server inside an Android application (`localServerApp`), LocalTube enables you to browse, search, and stream content from major streaming platforms directly from any device in your local network using a standard web browser.
+**LocalTube** is a high-performance, self-hosted streaming server solution built exclusively for **YouTube**. By bundling a lightweight, concurrent Java HTTP server inside an Android application (`localServerApp`), LocalTube enables you to browse, search, and stream YouTube videos and Shorts directly from any device in your local network using a standard web browser—with absolute privacy.
 
 ---
 
 ## 📺 LocalTube Application (`localServerApp`)
 
-LocalTube transforms the stateless library core of NewPipe Extractor into a private, self-hosted streaming web server.
+LocalTube transforms your Android device into a private, self-hosted YouTube streaming web server.
 
 ### 🌟 Key Features
 - **Decentralized Local Server:** Runs a lightweight, concurrent Java HTTP server directly on your Android device (default port `8080`), serving a modern, responsive web interface.
-- **Cross-Device Playback:** Connect seamlessly to the server from any device on your local network (PC, laptop, smart TV, tablet) by visiting your device's local IP (e.g., `http://192.168.1.100:8080`).
-- **Video.js Media Player Integration:** High-performance, customizable HTML5 media player using Video.js for responsive playback controls, adjustable speeds, and fluid quality switching.
-- **Cross-Device Remote Control:** Remotely control active playback clients on your local network (play, pause, rewind, fast-forward) directly from the server interface.
-- **Database Backup (Import/Export):** Export and restore your SQL database settings and local watch history as simple JSON backups.
-- **Quality & Setting Preferences:** Custom settings tab inside the client and server to manage preferred video resolutions (e.g., 360p, 720p).
-- **Theme Customization:** Toggle between modern Dark and clean Light themes instantly, with preferences preserved locally in browser storage.
-- **Private Watch History:** Tracks your watched videos locally on the host device using a secure SQLite database (`HistoryDbHelper`), maintaining privacy with zero external telemetry or tracking.
-- **Multi-Service Ready:** Ready to stream content across YouTube, SoundCloud, PeerTube, Bandcamp, and media.ccc.de.
+- **Cross-Device Playback:** Connect seamlessly to the server from any device on your local network (Smart TV, PC, laptop, tablet) by visiting your device's local IP (e.g., `http://192.168.1.100:8080`).
+- **Video.js Media Player Integration:** High-performance, customizable HTML5 media player using Video.js for responsive playback controls, adaptive quality switching, and speed adjustment.
+- **Dedicated Vertical Shorts Player**: Experience YouTube Shorts in a customized vertical scrollable player, featuring full swipe gesture support.
+- **Smart Link Routing**: Automatically routes Shorts clicked from Watch Later, History, or Search feeds straight to the dedicated Shorts player, loading the selected video first.
+- **YouTube Interests Importer**: Securely log into YouTube via WebView to scrape homepage recommended videos and automatically extract unique tags to build a personalized feed interests keyword list.
+- **Cross-Device Remote Control:** Control active playback clients on your local network (play, pause, seek) directly from the server interface.
+- **Database Backup (Import/Export):** Export and restore your SQLite database settings, personalized interests, and watch history as simple JSON backups.
+- **Private Watch History & Settings:** Tracks your watch history locally using a secure SQLite database (`HistoryDbHelper`), maintaining absolute privacy with zero external tracking, ads, or telemetry.
 
 ---
 
@@ -49,7 +46,7 @@ LocalTube transforms the stateless library core of NewPipe Extractor into a priv
 
 To compile and launch the local server application:
 
-1. **Build and install** the application on your Android device or emulator:
+1. **Build and install** the application on your Android device:
    ```bash
    ./gradlew :localServerApp:installDebug
    ```
@@ -62,72 +59,19 @@ To compile and launch the local server application:
 
 ---
 
-## 📦 Extractor Library Integration
-
-The underlying extractor core can be used independently in other Gradle projects via JitPack.
-
-### 1. Repository Configuration
-Add the JitPack repository to your `settings.gradle` or root `build.gradle` file:
-```groovy
-repositories {
-    maven { url 'https://jitpack.io' }
-}
-```
-
-### 2. Dependency Declaration
-Add the dependency to your application's `build.gradle`:
-```groovy
-dependencies {
-    implementation 'com.github.teamnewpipe:NewPipeExtractor:RELEASE_VERSION'
-}
-```
-
-> [!NOTE]  
-> If target SDK compatibility requires a `minSdk` below 33, configure [Core Library Desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring) utilizing the `desugar_jdk_libs_nio` artifact.
-
----
-
-## 🧪 Advanced Library Testing
-
-For development and debugging, you can build and test the extractor library locally.
-
-### Option A: Gradle Composite Build (Recommended)
-Add the following configuration block to your client project's `settings.gradle` to substitute the published library with your local codebase:
-```groovy
-includeBuild('../NewPipeExtractor') {
-    dependencySubstitution {
-        substitute module('com.github.teamnewpipe:NewPipeExtractor') with project(':extractor')
-    }
-}
-```
-
-### Option B: Local Maven Repository Publish
-1. Add `mavenLocal()` to your project's repository list (usually as the first entry to prioritize local builds).
-2. Run the build wrapper's install task to deploy to your local `.m2` repository:
-   ```bash
-   ./gradlew install
-   ```
-3. Reference your local version in your project dependencies (e.g., `com.github.teamnewpipe:NewPipeExtractor:LOCAL-SNAPSHOT`).
-
----
-
-## 🌐 Supported Sites
-The extractor core natively fetches streaming data from:
-- YouTube
-- SoundCloud
-- PeerTube (Non-P2P playback)
-- Bandcamp
-- media.ccc.de
+## 🌐 Supported Platforms
+This project is dedicated exclusively to:
+- **YouTube** (Videos, Shorts, and Subscriptions)
 
 ---
 
 ## 📄 License
 This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.
 
-[![GNU GPLv3](https://www.gnu.org/graphics/gplv3-127x51.png)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+---
 
-## Buy me a coffee
+## Support the Project
 
-If you want to support the developer:
+If you would like to support the developer:
 
- [![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/diekaiju)
+[![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/diekaiju)
