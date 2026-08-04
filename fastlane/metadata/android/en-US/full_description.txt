@@ -9,6 +9,8 @@ Key Features:
 - Picture-in-Picture & Subtitles: Native floating Picture-in-Picture window support, and fully fixed WebVTT captions/subtitles rendering.
 - Remote Playback Control: Remotely control other active clients on your network (play, pause, fast-forward, rewind) from the web interface.
 - Database Backup Import/Export: Back up and restore your settings and SQLite watch history as JSON files.
+- YouTube Interests & Subscriptions Importer: Log in securely via WebView to scrape and import subscription lists, as well as personalize followed interest keywords using unique homepage recommendation tags.
+- Dedicated Shorts Player Integration: Open YouTube Shorts directly in a specialized vertical scrolling Shorts player (supporting swipe controls) from your Watch Later, History, or Search feeds.
 - Custom Quality Preferences: Easily manage preferred video streaming resolutions directly inside the client and server settings.
 - Theme Customization: Toggle between modern Dark and clean Light themes instantly.
 - Material 3 User Interface: Beautifully updated UI with cohesive Material Design 3 tokens, color harmonies, and responsive layouts.
