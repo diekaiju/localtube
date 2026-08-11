@@ -417,7 +417,8 @@ public class LocalHttpServer {
                 if (initialId != null && !initialId.isEmpty()) {
                     try {
                         StreamingService service = NewPipe.getService(serviceId);
-                        org.schabi.newpipe.extractor.stream.StreamInfo info = org.schabi.newpipe.extractor.stream.StreamInfo.getInfo(service, initialId);
+                        String fullVideoUrl = "https://www.youtube.com/watch?v=" + initialId;
+                        org.schabi.newpipe.extractor.stream.StreamInfo info = org.schabi.newpipe.extractor.stream.StreamInfo.getInfo(service, fullVideoUrl);
                         StreamInfoItem item = new StreamInfoItem(serviceId, info.getUrl(), info.getName(), info.getStreamType());
                         item.setUploaderName(info.getUploaderName());
                         item.setUploaderUrl(info.getUploaderUrl());

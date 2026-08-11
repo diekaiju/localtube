@@ -218,12 +218,9 @@ public class MainActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     if (isBound && serverService != null && serverService.isRunning()) {
                         String url = serverService.getLocalAddress();
-                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                        try {
-                            startActivity(browserIntent);
-                        } catch (android.content.ActivityNotFoundException e) {
-                            Toast.makeText(MainActivity.this, "No browser found to open link", Toast.LENGTH_LONG).show();
-                        }
+                        Intent intent = new Intent(MainActivity.this, WebPlayerActivity.class);
+                        intent.putExtra("url", url);
+                        startActivity(intent);
                     }
                 }
             });

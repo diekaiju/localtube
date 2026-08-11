@@ -137,10 +137,22 @@ public class YoutubeSubscriptionImportFragment extends DialogFragment {
                 "                        }\n" +
                 "                        var avatar = '';\n" +
                 "                        var img = a.querySelector('img');\n" +
-                "                        if (img && img.src) {\n" +
-                "                            avatar = img.src;\n" +
+                "                        if (img) {\n" +
+                "                            avatar = img.src || '';\n" +
+                "                            if (avatar.startsWith('data:image') || avatar.indexOf('clear.png') !== -1) {\n" +
+                "                                avatar = img.getAttribute('data-thumb') \n" +
+                "                                      || img.getAttribute('data-src') \n" +
+                "                                      || img.getAttribute('thumb') \n" +
+                "                                      || '';\n" +
+                "                            }\n" +
                 "                        }\n" +
-                "                        var absoluteUrl = a.href;\n" +
+                "                        var absoluteUrl = a.href || '';\n" +
+                "                        if (absoluteUrl && absoluteUrl.indexOf('m.youtube.com') !== -1) {\n" +
+                "                            absoluteUrl = absoluteUrl.replace('m.youtube.com', 'www.youtube.com');\n" +
+                "                        }\n" +
+                "                        if (absoluteUrl.endsWith('/')) {\n" +
+                "                            absoluteUrl = absoluteUrl.substring(0, absoluteUrl.length - 1);\n" +
+                "                        }\n" +
                 "                        if (absoluteUrl && name && !channels.some(function(c) { return c.url === absoluteUrl; })) {\n" +
                 "                            if (name !== 'Home' && name !== 'Subscriptions' && name !== 'Library' && name !== 'Trending') {\n" +
                 "                                channels.push({\n" +

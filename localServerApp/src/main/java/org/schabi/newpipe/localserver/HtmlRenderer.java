@@ -146,7 +146,7 @@ public class HtmlRenderer {
             "  --slider-bg: #4a4458;\n" +
             "}\n" +
             "* { box-sizing: border-box; margin: 0; padding: 0; }\n" +
-            "body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); -webkit-font-smoothing: antialiased; transition: background-color 0.2s, color 0.2s; }\n" +
+            "body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); -webkit-font-smoothing: antialiased; transition: background-color 0.2s, color 0.2s; overflow-x: hidden; overflow-wrap: break-word; word-wrap: break-word; }\n" +
             "a { color: inherit; text-decoration: none; }\n" +
             "header { display: flex; align-items: center; justify-content: space-between; background: var(--header-bg); padding: 0 16px; position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 1000; border-bottom: 1px solid var(--header-border); transition: background 0.2s, border-bottom 0.2s; }\n" +
             ".top-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 100%; gap: 16px; }\n" +
@@ -2021,41 +2021,51 @@ public class HtmlRenderer {
               .append("        </script>\n");
         }
 
-        sb.append("        <div class=\"media-info\">\n")
-          .append("          <h1 class=\"media-title\">").append(info.getName()).append("</h1>\n")
-          .append("          <div class=\"media-stats\">\n")
-          .append("            <span>👁️ ").append(info.getViewCount() >= 0 ? info.getViewCount() + " views" : "Unknown views").append("</span>\n")
-          .append("            <span>📅 ").append(info.getTextualUploadDate() != null ? info.getTextualUploadDate() : "Unknown upload date").append("</span>\n")
-          .append("            <span>👍 ").append(info.getLikeCount() >= 0 ? info.getLikeCount() : "N/A").append(" | 👎 ").append(info.getDislikeCount() >= 0 ? info.getDislikeCount() : "N/A").append("</span>\n")
-          .append("          </div>\n");
+        String formattedViews = info.getViewCount() >= 0 ? java.text.NumberFormat.getInstance().format(info.getViewCount()) + " views" : "Unknown views";
+        String uploadDate = info.getTextualUploadDate() != null ? info.getTextualUploadDate() : "Unknown date";
+        String likesText = info.getLikeCount() >= 0 ? java.text.NumberFormat.getInstance().format(info.getLikeCount()) : "Like";
 
-        sb.append("          <div class=\"uploader-profile\">\n")
-          .append("            <img class=\"uploader-avatar\" src=\"").append(getThumbnailUrl(info.getUploaderAvatars())).append("\">\n")
-          .append("            <div class=\"uploader-info\">\n")
-          .append("              <a href=\"/channel?serviceId=").append(serviceId).append("&id=").append(info.getUploaderUrl()).append("\" class=\"uploader-name\">")
+        sb.append("        <div class=\"media-info\">\n")
+          .append("          <h1 class=\"media-title\">").append(info.getName()).append("</h1>\n");
+
+        sb.append("          <div class=\"uploader-profile\" style=\"display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:16px;\">\n")
+          .append("            <div style=\"display:flex; align-items:center; gap:12px;\">\n")
+          .append("              <img class=\"uploader-avatar\" src=\"").append(getThumbnailUrl(info.getUploaderAvatars())).append("\">\n")
+          .append("              <div class=\"uploader-info\">\n")
+          .append("                <a href=\"/channel?serviceId=\"").append(serviceId).append("&id=").append(info.getUploaderUrl()).append("\" class=\"uploader-name\">")
           .append(info.getUploaderName()).append("</a>\n")
-          .append("              <span class=\"uploader-subs\">").append(info.getUploaderSubscriberCount() >= 0 ? info.getUploaderSubscriberCount() + " subscribers" : "").append("</span>\n")
-          .append("            </div>\n");
+          .append("                <span class=\"uploader-subs\">").append(info.getUploaderSubscriberCount() >= 0 ? info.getUploaderSubscriberCount() + " subscribers" : "").append("</span>\n")
+          .append("              </div>\n");
 
         String uploaderAvatar = getThumbnailUrl(info.getUploaderAvatars());
         if (isSubscribed) {
-            sb.append("            <a href=\"/subscribe?action=unsubscribe&id=").append(encodeUrl(info.getUploaderUrl())).append("&back=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleSubscribe(event, this, '").append(escapeJs(info.getUploaderUrl())).append("', '").append(escapeJs(info.getUploaderName())).append("', '").append(escapeJs(uploaderAvatar)).append("')\" class=\"subscribe-btn subscribed\" style=\"margin-left:auto; margin-right:8px;\">Subscribed</a>\n");
+            sb.append("              <a href=\"/subscribe?action=unsubscribe&id=\"").append(encodeUrl(info.getUploaderUrl())).append("&back=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleSubscribe(event, this, '").append(escapeJs(info.getUploaderUrl())).append("', '").append(escapeJs(info.getUploaderName())).append("', '").append(escapeJs(uploaderAvatar)).append("')\" class=\"subscribe-btn subscribed\" style=\"margin-left:8px;\">Subscribed</a>\n");
         } else {
-            sb.append("            <a href=\"/subscribe?action=subscribe&id=").append(encodeUrl(info.getUploaderUrl())).append("&name=").append(encodeUrl(info.getUploaderName())).append("&avatar=").append(encodeUrl(uploaderAvatar)).append("&back=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleSubscribe(event, this, '").append(escapeJs(info.getUploaderUrl())).append("', '").append(escapeJs(info.getUploaderName())).append("', '").append(escapeJs(uploaderAvatar)).append("')\" class=\"subscribe-btn\" style=\"margin-left:auto; margin-right:8px;\">Subscribe</a>\n");
+            sb.append("              <a href=\"/subscribe?action=subscribe&id=\"").append(encodeUrl(info.getUploaderUrl())).append("&name=").append(encodeUrl(info.getUploaderName())).append("&avatar=").append(encodeUrl(uploaderAvatar)).append("&back=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleSubscribe(event, this, '").append(escapeJs(info.getUploaderUrl())).append("', '").append(escapeJs(info.getUploaderName())).append("', '").append(escapeJs(uploaderAvatar)).append("')\" class=\"subscribe-btn\" style=\"margin-left:8px;\">Subscribe</a>\n");
         }
+        sb.append("            </div>\n");
+
+        sb.append("            <div class=\"action-buttons-group\" style=\"display:flex; align-items:center; gap:8px; margin-left:auto;\">\n")
+          .append("              <div style=\"display:inline-flex; align-items:center; background-color:var(--service-tab-bg); border-radius:100px; height:36px; overflow:hidden;\">\n")
+          .append("                <button style=\"background:none; border:none; padding:0 12px 0 16px; height:100%; color:var(--text-color); font-weight:500; font-size:13px; display:flex; align-items:center; gap:6px; cursor:default;\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\"><path d=\"M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z\"/></svg> ").append(likesText).append("</button>\n")
+          .append("                <div style=\"width:1px; height:20px; background-color:rgba(0,0,0,0.15);\"></div>\n")
+          .append("                <button style=\"background:none; border:none; padding:0 16px 0 12px; height:100%; color:var(--text-color); display:flex; align-items:center; cursor:default;\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"transform:scaleY(-1);\"><path d=\"M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z\"/></svg></button>\n")
+          .append("              </div>\n");
 
         if (cachedVideo == null) {
-            sb.append("            <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"subscribe-btn\" style=\"background-color:var(--service-tab-bg); color:var(--text-color); margin-left:0;\">Download</a>\n");
+            sb.append("              <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"subscribe-btn\" style=\"background-color:var(--service-tab-bg); color:var(--text-color); margin-left:0; height:36px; line-height:36px; padding:0 20px; display:inline-flex; align-items:center;\">Download</a>\n");
         } else if ("COMPLETED".equals(cachedVideo.getStatus())) {
-            sb.append("            <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=delete&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"subscribe-btn\" style=\"background-color:#c00c0c; color:#ffffff; margin-left:0;\">Delete Download</a>\n");
+            sb.append("              <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=delete&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"subscribe-btn\" style=\"background-color:#c00c0c; color:#ffffff; margin-left:0; height:36px; line-height:36px; padding:0 20px; display:inline-flex; align-items:center;\">Delete Download</a>\n");
         } else if ("DOWNLOADING".equals(cachedVideo.getStatus()) || "PENDING".equals(cachedVideo.getStatus())) {
-            sb.append("            <span id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:var(--service-tab-bg); color:var(--text-color); cursor:default; pointer-events:none; margin-left:0;\">Downloading (").append(cachedVideo.getProgress()).append("%)</span>\n");
+            sb.append("              <span id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:var(--service-tab-bg); color:var(--text-color); cursor:default; pointer-events:none; margin-left:0; height:36px; line-height:36px; padding:0 20px; display:inline-flex; align-items:center;\">Downloading (").append(cachedVideo.getProgress()).append("%)</span>\n");
         } else if ("FAILED".equals(cachedVideo.getStatus())) {
-            sb.append("            <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"subscribe-btn\" style=\"background-color:#c00c0c; color:#ffffff; margin-left:0;\">Retry Download</a>\n");
+            sb.append("              <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"subscribe-btn\" style=\"background-color:#c00c0c; color:#ffffff; margin-left:0; height:36px; line-height:36px; padding:0 20px; display:inline-flex; align-items:center;\">Retry Download</a>\n");
         }
-
+        sb.append("            </div>\n");
         sb.append("          </div>\n");
-        sb.append("          <div class=\"media-description\">")
+
+        sb.append("          <div class=\"media-description\">\n")
+          .append("            <div style=\"font-weight:700; font-size:13.5px; margin-bottom:8px; color:var(--text-color);\">").append(formattedViews).append(" &nbsp;•&nbsp; ").append(uploadDate).append("</div>\n")
           .append(info.getDescription() != null ? info.getDescription().getContent() : "No description provided.")
           .append("          </div>\n")
           .append("        </div>\n");
@@ -2889,23 +2899,32 @@ public class HtmlRenderer {
           .append("  let shortObserver = null;\n")
           .append("  function observeNewCards() {\n")
           .append("    if (!shortObserver) {\n")
-          .append("      const options = { root: document.getElementById('shorts-container'), threshold: 0.7 };\n")
+          .append("      const options = { root: document.getElementById('shorts-container'), threshold: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0] };\n")
           .append("      shortObserver = new IntersectionObserver((entries) => {\n")
+          .append("        let bestEntry = null;\n")
+          .append("        let maxRatio = 0.1;\n")
           .append("        entries.forEach(entry => {\n")
-          .append("          const video = entry.target.querySelector('video');\n")
-          .append("          const idx = parseInt(entry.target.dataset.index);\n")
-          .append("          if (entry.isIntersecting) {\n")
-          .append("            activeIndex = idx;\n")
-          .append("            if (video && shortsQueue[idx]) {\n")
+          .append("          if (entry.isIntersecting && entry.intersectionRatio > maxRatio) {\n")
+          .append("            maxRatio = entry.intersectionRatio;\n")
+          .append("            bestEntry = entry;\n")
+          .append("          }\n")
+          .append("        });\n")
+          .append("        if (bestEntry) {\n")
+          .append("          const idx = parseInt(bestEntry.target.dataset.index);\n")
+          .append("          activeIndex = idx;\n")
+          .append("          document.querySelectorAll('.shorts-video').forEach((video, vIdx) => {\n")
+          .append("            if (vIdx === idx) {\n")
           .append("              if (!video.src) {\n")
           .append("                video.src = '/stream?id=' + encodeURIComponent(shortsQueue[idx].url);\n")
           .append("              }\n")
           .append("              video.muted = isMuted;\n")
           .append("              video.play().catch(e => console.log('Autoplay blocked', e));\n")
+          .append("            } else {\n")
+          .append("              video.pause();\n")
           .append("            }\n")
-          .append("            if (idx >= shortsQueue.length - 2) fetchShortsFeed();\n")
-          .append("          } else if (video) { video.pause(); }\n")
-          .append("        });\n")
+          .append("          });\n")
+          .append("          if (idx >= shortsQueue.length - 2) fetchShortsFeed();\n")
+          .append("        }\n")
           .append("      }, options);\n")
           .append("    }\n")
           .append("    document.querySelectorAll('.shorts-card:not([data-observed])').forEach(card => {\n")

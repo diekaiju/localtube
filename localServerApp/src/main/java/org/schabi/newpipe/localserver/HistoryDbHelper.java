@@ -19,7 +19,7 @@ import java.util.List;
 public class HistoryDbHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "history.db";
-    private static final int DATABASE_VERSION = 7;
+    private static final int DATABASE_VERSION = 8;
 
     private static final String TABLE_HISTORY = "watch_history";
     private static final String KEY_ID = "id";
@@ -201,6 +201,40 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
                     + KEY_TIMESTAMP + " INTEGER"
                     + ")";
             db.execSQL(CREATE_SEARCH_HISTORY_TABLE);
+        }
+        if (oldVersion < 8) {
+            try {
+                Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_SUBSCRIPTIONS, null);
+                List<ContentValues> tempSubs = new ArrayList<>();
+                if (cursor != null && cursor.moveToFirst()) {
+                    int urlIdx = cursor.getColumnIndex(KEY_CHANNEL_URL);
+                    int nameIdx = cursor.getColumnIndex(KEY_CHANNEL_NAME);
+                    int avatarIdx = cursor.getColumnIndex(KEY_CHANNEL_AVATAR);
+                    int timeIdx = cursor.getColumnIndex(KEY_TIMESTAMP);
+                    do {
+                        String url = urlIdx != -1 ? cursor.getString(urlIdx) : "";
+                        String name = nameIdx != -1 ? cursor.getString(nameIdx) : "";
+                        String avatar = avatarIdx != -1 ? cursor.getString(avatarIdx) : "";
+                        long timestamp = timeIdx != -1 ? cursor.getLong(timeIdx) : System.currentTimeMillis();
+
+                        String normalizedUrl = normalizeChannelUrl(url);
+                        ContentValues values = new ContentValues();
+                        values.put(KEY_CHANNEL_URL, normalizedUrl);
+                        values.put(KEY_CHANNEL_NAME, name);
+                        values.put(KEY_CHANNEL_AVATAR, avatar);
+                        values.put(KEY_TIMESTAMP, timestamp);
+                        tempSubs.add(values);
+                    } while (cursor.moveToNext());
+                    cursor.close();
+                }
+
+                db.execSQL("DELETE FROM " + TABLE_SUBSCRIPTIONS);
+                for (ContentValues values : tempSubs) {
+                    db.insertWithOnConflict(TABLE_SUBSCRIPTIONS, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -439,10 +473,22 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
         return list;
     }
 
+    public static String normalizeChannelUrl(String url) {
+        if (url == null) return null;
+        String normalized = url.trim();
+        if (normalized.contains("m.youtube.com")) {
+            normalized = normalized.replace("m.youtube.com", "www.youtube.com");
+        }
+        if (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        return normalized;
+    }
+
     public void addSubscription(String channelUrl, String channelName, String channelAvatar) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(KEY_CHANNEL_URL, channelUrl);
+        values.put(KEY_CHANNEL_URL, normalizeChannelUrl(channelUrl));
         values.put(KEY_CHANNEL_NAME, channelName);
         values.put(KEY_CHANNEL_AVATAR, channelAvatar);
         values.put(KEY_TIMESTAMP, System.currentTimeMillis());
@@ -451,13 +497,13 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
 
     public void removeSubscription(String channelUrl) {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_SUBSCRIPTIONS, KEY_CHANNEL_URL + " = ?", new String[]{channelUrl});
+        db.delete(TABLE_SUBSCRIPTIONS, KEY_CHANNEL_URL + " = ?", new String[]{normalizeChannelUrl(channelUrl)});
     }
 
     public boolean isSubscribed(String channelUrl) {
         SQLiteDatabase db = this.getReadableDatabase();
         String selectQuery = "SELECT 1 FROM " + TABLE_SUBSCRIPTIONS + " WHERE " + KEY_CHANNEL_URL + " = ?";
-        try (Cursor cursor = db.rawQuery(selectQuery, new String[]{channelUrl})) {
+        try (Cursor cursor = db.rawQuery(selectQuery, new String[]{normalizeChannelUrl(channelUrl)})) {
             return cursor.moveToFirst();
         } catch (Exception e) {
             e.printStackTrace();
@@ -537,6 +583,7 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
                     PlaylistInfoItem item = new PlaylistInfoItem(0, url, name);
                     item.setUploaderName(uploader);
                     // Add generic fallback thumbnail for playlists
+                    item.setThumbnails(List.of(new Image("https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop", Image.HEIGHT_UNKNOWN, Image.WIDTH_UNKNOWN, Image.ResolutionLevel.UNKNOWN)));
                     list.add(item);
                 } while (cursor.moveToNext());
             }
