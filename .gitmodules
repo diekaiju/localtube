@@ -1,4 +1,4 @@
 [submodule "NewPipeExtractor"]
 	path = NewPipeExtractor
-	url = https://github.com/TeamNewPipe/NewPipeExtractor.git
+	url = https://github.com/diekaiju/NewPipeExtractor.git
 	branch = dev
