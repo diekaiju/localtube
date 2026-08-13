@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212"
+    android:padding="24dp">
+
+    <!-- Header bar -->
+    <RelativeLayout
+        android:id="@+id/player_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginBottom="16dp">
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentLeft="true"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_revert"
+            android:contentDescription="Go Back"
+            android:tint="#FFFFFF" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="🎵 Playing Audio"
+            android:textColor="#CCCCCC"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Cover Art (Album Art) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cover_container"
+        android:layout_width="280dp"
+        android:layout_height="280dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/player_header"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="32dp"
+        android:elevation="8dp"
+        android:cardCornerRadius="16dp"
+        android:cardBackgroundColor="#222222">
+
+        <ImageView
+            android:id="@+id/audio_cover"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@android:drawable/ic_menu_report_image" />
+    </androidx.cardview.widget.CardView>
+
+    <!-- Track metadata (Title and Channel) -->
+    <LinearLayout
+        android:id="@+id/metadata_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/cover_container"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:layout_marginBottom="24dp">
+
+        <TextView
+            android:id="@+id/audio_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Loading Title..."
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/audio_artist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Loading Channel..."
+            android:textColor="#BBBBBB"
+            android:textSize="16sp"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+
+    <!-- Seekbar with timers -->
+    <LinearLayout
+        android:id="@+id/seekbar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/metadata_layout"
+        android:orientation="vertical"
+        android:layout_marginBottom="32dp">
+
+        <SeekBar
+            android:id="@+id/audio_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:progressTint="#D0BCFF"
+            android:thumbTint="#D0BCFF" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                android:id="@+id/audio_time_current"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00:00"
+                android:textColor="#888888"
+                android:textSize="12sp"
+                android:layout_alignParentLeft="true" />
+
+            <TextView
+                android:id="@+id/audio_time_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00:00"
+                android:textColor="#888888"
+                android:textSize="12sp"
+                android:layout_alignParentRight="true" />
+        </RelativeLayout>
+    </LinearLayout>
+
+    <!-- Controller Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/seekbar_layout"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/audio_btn_prev"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_media_rew"
+            android:tint="#FFFFFF"
+            android:contentDescription="Rewind"
+            android:layout_marginRight="24dp" />
+
+        <ImageButton
+            android:id="@+id/audio_btn_play"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_media_play"
+            android:tint="#D0BCFF"
+            android:scaleType="fitCenter"
+            android:contentDescription="Play/Pause" />
+
+        <ImageButton
+            android:id="@+id/audio_btn_next"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_media_ff"
+            android:tint="#FFFFFF"
+            android:contentDescription="Fast Forward"
+            android:layout_marginLeft="24dp" />
+    </LinearLayout>
+
+</RelativeLayout>

@@ -62,12 +62,20 @@ public class WebPlayerActivity extends AppCompatActivity {
         }
     };
 
+    private androidx.swiperefreshlayout.widget.SwipeRefreshLayout swipeRefreshLayout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
         webView = new WebView(this);
-        setContentView(webView);
+        swipeRefreshLayout = new androidx.swiperefreshlayout.widget.SwipeRefreshLayout(this);
+        swipeRefreshLayout.addView(webView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        setContentView(swipeRefreshLayout);
+
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            webView.reload();
+        });
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -81,6 +89,28 @@ public class WebPlayerActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url.contains("/audio")) {
+                    try {
+                        android.net.Uri uri = android.net.Uri.parse(url);
+                        String mediaUrl = uri.getQueryParameter("id");
+                        String serviceIdStr = uri.getQueryParameter("serviceId");
+                        int sId = 0;
+                        if (serviceIdStr != null) {
+                            try {
+                                sId = Integer.parseInt(serviceIdStr);
+                            } catch (Exception ignored) {}
+                        }
+                        if (mediaUrl != null && !mediaUrl.isEmpty()) {
+                            Intent intent = new Intent(WebPlayerActivity.this, NativeAudioPlayerActivity.class);
+                            intent.putExtra("mediaUrl", mediaUrl);
+                            intent.putExtra("serviceId", sId);
+                            startActivity(intent);
+                            return true;
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
                 if (serverService != null && !url.contains("/audio")) {
                     try {
                         serverService.stopNativeAudio();
@@ -95,12 +125,9 @@ public class WebPlayerActivity extends AppCompatActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                view.evaluateJavascript(
-                    "Object.defineProperty(document, 'visibilityState', {get: () => 'visible', configurable: true});\n" +
-                    "Object.defineProperty(document, 'hidden', {get: () => false, configurable: true});\n" +
-                    "window.addEventListener('visibilitychange', (e) => e.stopImmediatePropagation(), true);",
-                    null
-                );
+                if (swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
             }
         });
 
@@ -168,6 +195,21 @@ public class WebPlayerActivity extends AppCompatActivity {
                 serverService.stopNativeAudio();
             }
         }
+
+        @android.webkit.JavascriptInterface
+        public int getNativeAudioPosition() {
+            if (serverService != null) {
+                return serverService.getAudioPosition();
+            }
+            return 0;
+        }
+
+        @android.webkit.JavascriptInterface
+        public void seekNativeAudio(int positionMs) {
+            if (serverService != null) {
+                serverService.seekNativeAudio(positionMs);
+            }
+        }
     }
 
     public void enterPipMode() {
@@ -210,17 +252,11 @@ public class WebPlayerActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (webView != null) {
-            webView.resumeTimers();
-        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if (webView != null) {
-            webView.resumeTimers();
-        }
     }
 
     @Override

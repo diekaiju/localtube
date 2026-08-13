@@ -40,6 +40,12 @@
             android:exported="false" />
 
         <activity
+            android:name=".NativeAudioPlayerActivity"
+            android:label="Audio Player"
+            android:theme="@style/Theme.LocalMediaServer"
+            android:exported="false" />
+
+        <activity
             android:name=".RemoteActivity"
             android:label="Remote Controller"
             android:theme="@style/Theme.LocalMediaServer"

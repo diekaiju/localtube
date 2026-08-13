@@ -260,6 +260,16 @@ public class ServerService extends Service {
         return mediaPlayer != null ? mediaPlayer.getCurrentPosition() : 0;
     }
 
+    public void seekNativeAudio(int positionMs) {
+        if (mediaPlayer != null) {
+            try {
+                mediaPlayer.seekTo(positionMs);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public int getAudioDuration() {
         return mediaPlayer != null ? mediaPlayer.getDuration() : 0;
     }
