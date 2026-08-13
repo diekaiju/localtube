@@ -126,6 +126,11 @@ public class ServerService extends Service {
                     wakeLock = pm.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "LocalTube::BackgroundAudioWakeLock");
                     wakeLock.acquire();
                 }
+                android.net.wifi.WifiManager wm = (android.net.wifi.WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+                if (wm != null && (wifiLock == null || !wifiLock.isHeld())) {
+                    wifiLock = wm.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF, "LocalTube::WifiLock");
+                    wifiLock.acquire();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -148,6 +153,11 @@ public class ServerService extends Service {
         if (wakeLock != null && wakeLock.isHeld()) {
             try {
                 wakeLock.release();
+            } catch (Exception ignored) {}
+        }
+        if (wifiLock != null && wifiLock.isHeld()) {
+            try {
+                wifiLock.release();
             } catch (Exception ignored) {}
         }
         if (server != null) {

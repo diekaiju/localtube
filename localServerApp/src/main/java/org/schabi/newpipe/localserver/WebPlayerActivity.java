@@ -84,6 +84,17 @@ public class WebPlayerActivity extends AppCompatActivity {
                 view.loadUrl(url);
                 return true;
             }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                view.evaluateJavascript(
+                    "Object.defineProperty(document, 'visibilityState', {get: () => 'visible', configurable: true});\n" +
+                    "Object.defineProperty(document, 'hidden', {get: () => false, configurable: true});\n" +
+                    "window.addEventListener('visibilitychange', (e) => e.stopImmediatePropagation(), true);",
+                    null
+                );
+            }
         });
 
         webView.addJavascriptInterface(new AppInterface(), "NewPipeApp");
@@ -91,7 +102,7 @@ public class WebPlayerActivity extends AppCompatActivity {
 
         try {
             Intent serviceIntent = new Intent(this, ServerService.class);
-            bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+            bindService(serviceIntent, serviceConnection, android.content.Context.BIND_AUTO_CREATE);
         } catch (Exception e) {
             e.printStackTrace();
         }
