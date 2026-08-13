@@ -30,6 +30,7 @@ public class ServerService extends Service {
     private boolean isRunning = false;
     private final IBinder binder = new LocalBinder();
     private ServerStatusListener statusListener;
+    private android.os.PowerManager.WakeLock wakeLock;
 
     public interface ServerStatusListener {
         void onStatusChanged(boolean isRunning);
@@ -83,7 +84,7 @@ public class ServerService extends Service {
 
         // Support Android 14 API 34+ foreground service types
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK | ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
         } else {
             startForeground(NOTIFICATION_ID, notification);
         }
@@ -97,6 +98,17 @@ public class ServerService extends Service {
             server = new LocalHttpServer(this, PORT);
             server.startServer();
             isRunning = true;
+
+            try {
+                android.os.PowerManager pm = (android.os.PowerManager) getSystemService(POWER_SERVICE);
+                if (pm != null && (wakeLock == null || !wakeLock.isHeld())) {
+                    wakeLock = pm.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "LocalTube::BackgroundAudioWakeLock");
+                    wakeLock.acquire();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             LocalHttpServer.log("Local server running at: " + getLocalAddress());
             if (statusListener != null) {
                 statusListener.onStatusChanged(true);
@@ -112,6 +124,11 @@ public class ServerService extends Service {
     }
 
     public void stopServer() {
+        if (wakeLock != null && wakeLock.isHeld()) {
+            try {
+                wakeLock.release();
+            } catch (Exception ignored) {}
+        }
         if (server != null) {
             server.stopServer();
         }

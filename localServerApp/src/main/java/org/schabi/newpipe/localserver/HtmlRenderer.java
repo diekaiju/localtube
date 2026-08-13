@@ -2002,6 +2002,12 @@ public class HtmlRenderer {
                   .append("                    });\n")
                   .append("                }\n")
                   .append(advancedJs)
+                  .append("                if ('mediaSession' in navigator) {\n")
+                  .append("                    navigator.mediaSession.metadata = new MediaMetadata({\n")
+                  .append("                        title: '").append(escapeJs(info.getName())).append("',\n")
+                  .append("                        artist: '").append(escapeJs(info.getUploaderName())).append("'\n")
+                  .append("                    });\n")
+                  .append("                }\n")
                   .append("            })();\n")
                   .append("        </script>\n");
             }
