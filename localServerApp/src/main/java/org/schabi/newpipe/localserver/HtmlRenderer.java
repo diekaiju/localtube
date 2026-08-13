@@ -978,6 +978,33 @@ public class HtmlRenderer {
                 "                });\n" +
                 "            }\n" +
                 "            \n" +
+                "            const settingsAudioOnlyToggle = document.getElementById('settings-audio-only-toggle');\n" +
+                "            if (settingsAudioOnlyToggle) {\n" +
+                "                settingsAudioOnlyToggle.checked = (localStorage.getItem('audio_only_default') === 'true');\n" +
+                "                settingsAudioOnlyToggle.addEventListener('change', function() {\n" +
+                "                    localStorage.setItem('audio_only_default', settingsAudioOnlyToggle.checked ? 'true' : 'false');\n" +
+                "                });\n" +
+                "            }\n" +
+                "            \n" +
+                "            document.addEventListener('click', function(e) {\n" +
+                "                const target = e.target.closest('a');\n" +
+                "                if (target && target.href) {\n" +
+                "                    const urlStr = target.href;\n" +
+                "                    if (urlStr.indexOf('/watch?') !== -1 && urlStr.indexOf('force_video=true') === -1) {\n" +
+                "                        if (localStorage.getItem('audio_only_default') === 'true') {\n" +
+                "                            e.preventDefault();\n" +
+                "                            try {\n" +
+                "                                const url = new URL(urlStr);\n" +
+                "                                url.pathname = '/audio';\n" +
+                "                                window.location.href = url.toString();\n" +
+                "                            } catch (err) {\n" +
+                "                                window.location.href = urlStr.replace('/watch?', '/audio?');\n" +
+                "                            }\n" +
+                "                        }\n" +
+                "                    }\n" +
+                "                }\n" +
+                "            });\n" +
+                "            \n" +
                 "            const searchForm = document.querySelector('.search-form');\n" +
                 "            const searchInput = document.querySelector('.search-input');\n" +
                 "            const searchBtn = document.querySelector('.search-btn');\n" +
@@ -2442,7 +2469,7 @@ public class HtmlRenderer {
           .append("            })();\n")
           .append("          </script>\n")
           .append("          <div class=\"action-buttons-group\" style=\"justify-content:center; flex-wrap:wrap; gap:10px;\">\n")
-          .append("            <a href=\"/watch?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" class=\"action-pill-btn\" style=\"background-color:var(--logo-color, #6750A4); color:#fff;\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"margin-right:6px;\"><path d=\"M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM9 8l7 4-7 4V8z\"/></svg>📺 Video Mode</a>\n")
+          .append("            <a href=\"/watch?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("&amp;force_video=true\" class=\"action-pill-btn\" style=\"background-color:var(--logo-color, #6750A4); color:#fff;\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"margin-right:6px;\"><path d=\"M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM9 8l7 4-7 4V8z\"/></svg>📺 Video Mode</a>\n")
           .append("            <div class=\"like-dislike-pill\">\n")
           .append("              <button class=\"pill-btn like-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\"><path d=\"M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z\"/></svg> ").append(likesText).append("</button>\n")
           .append("            </div>\n");
@@ -2777,7 +2804,7 @@ public class HtmlRenderer {
           .append("            <span class=\"slider\"></span>\n")
           .append("          </label>\n")
           .append("        </div>\n")
-          .append("        <div class=\"setting-row\" id=\"mobile-theme-row\" style=\"display: none;\">\n")
+          .append("        <div class=\"setting-row\" id=\"mobile-theme-row\">\n")
           .append("          <div class=\"setting-label-group\">\n")
           .append("            <span class=\"setting-label\">Dark Theme</span>\n")
           .append("            <span class=\"setting-desc\">Toggle between dark and light appearance.</span>\n")
@@ -2787,7 +2814,17 @@ public class HtmlRenderer {
           .append("            <span class=\"slider\"></span>\n")
           .append("          </label>\n")
           .append("        </div>\n")
-          .append("        <div class=\"setting-row\" id=\"mobile-history-row\" style=\"display: none;\">\n")
+          .append("        <div class=\"setting-row\" id=\"settings-audio-only-row\">\n")
+          .append("          <div class=\"setting-label-group\">\n")
+          .append("            <span class=\"setting-label\">Default to Audio Only</span>\n")
+          .append("            <span class=\"setting-desc\">Always play the audio-only version of videos (Shorts are excluded).</span>\n")
+          .append("          </div>\n")
+          .append("          <label class=\"switch\">\n")
+          .append("            <input type=\"checkbox\" id=\"settings-audio-only-toggle\">\n")
+          .append("            <span class=\"slider\"></span>\n")
+          .append("          </label>\n")
+          .append("        </div>\n")
+          .append("        <div class=\"setting-row\" id=\"mobile-history-row\">\n")
           .append("          <div class=\"setting-label-group\">\n")
           .append("            <span class=\"setting-label\">Watch History</span>\n")
           .append("            <span class=\"setting-desc\">View your local watch history.</span>\n")
