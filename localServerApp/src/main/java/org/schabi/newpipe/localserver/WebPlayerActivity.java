@@ -81,6 +81,13 @@ public class WebPlayerActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (serverService != null && !url.contains("/audio")) {
+                    try {
+                        serverService.stopNativeAudio();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
                 view.loadUrl(url);
                 return true;
             }
@@ -252,6 +259,13 @@ public class WebPlayerActivity extends AppCompatActivity {
                 webView.stopLoading();
             } catch (Exception e) {
                 e.printStackTrace();
+            }
+            if (serverService != null) {
+                try {
+                    serverService.stopNativeAudio();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             webView.destroy();
             webView = null;
