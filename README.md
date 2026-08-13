@@ -14,6 +14,9 @@ LocalTube transforms your Android device into a private, self-hosted YouTube str
 - **Decentralized Local Server:** Runs a lightweight, concurrent Java HTTP server directly on your Android device (default port `8080`), serving a modern, responsive web interface.
 - **Cross-Device Playback:** Connect seamlessly to the server from any device on your local network (Smart TV, PC, laptop, tablet) by visiting your device's local IP (e.g., `http://192.168.1.100:8080`).
 - **Video.js Media Player Integration:** High-performance, customizable HTML5 media player using Video.js for responsive playback controls, adaptive quality switching, and speed adjustment.
+- **Pre-Built Native Audio Player:** Dedicated, high-performance native audio player screen for background music, resolving direct streams natively for optimal battery efficiency.
+- **Default to Audio-Only Toggle:** Set preferences to automatically default playback to Audio-Only mode (Shorts excluded) on a client-specific basis.
+- **Swipe-to-Refresh Support:** Integrated SwipeRefreshLayout inside the Android WebView to reload pages seamlessly on a swipe down gesture.
 - **Dedicated Vertical Shorts Player**: Experience YouTube Shorts in a customized vertical scrollable player, featuring full swipe gesture support.
 - **Smart Link Routing**: Automatically routes Shorts clicked from Watch Later, History, or Search feeds straight to the dedicated Shorts player, loading the selected video first.
 - **YouTube Interests Importer**: Securely log into YouTube via WebView to scrape homepage recommended videos and automatically extract unique tags to build a personalized feed interests keyword list.
