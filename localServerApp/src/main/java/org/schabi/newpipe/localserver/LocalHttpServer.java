@@ -595,6 +595,8 @@ public class LocalHttpServer {
                         handleSearch(os, params, isTv);
                     } else if (path.equals("/watch")) {
                         handleWatch(os, params, isTv);
+                    } else if (path.equals("/audio")) {
+                        handleAudioWatch(os, params, isTv);
                     } else if (path.equals("/watch-content")) {
                         handleWatchContent(os, params, isTv);
                     } else if (path.equals("/send-link") || path.equals("/play")) {
@@ -926,6 +928,36 @@ public class LocalHttpServer {
                 } else {
                     sendResponse(os, 500, "Error: " + e.getMessage(), "text/plain; charset=UTF-8");
                 }
+            }
+        }
+
+        private void handleAudioWatch(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
+            int serviceId = getServiceId(params);
+            String mediaUrl = params.get("id");
+            if (mediaUrl == null || mediaUrl.isEmpty()) {
+                sendRedirect(os, "/?serviceId=" + serviceId);
+                return;
+            }
+
+            CachedVideo cachedVideo = dbHelper.getCachedVideo(mediaUrl);
+
+            try {
+                StreamingService service = NewPipe.getService(serviceId);
+                StreamInfo info = StreamInfo.getInfo(service, mediaUrl);
+
+                String thumbUrl = "";
+                if (info.getThumbnails() != null && !info.getThumbnails().isEmpty()) {
+                    thumbUrl = info.getThumbnails().get(info.getThumbnails().size() - 1).getUrl();
+                }
+                dbHelper.saveToHistory(info.getName(), info.getUrl(), info.getUploaderName(), thumbUrl);
+
+                boolean isSubscribed = dbHelper.isSubscribed(info.getUploaderUrl());
+                String html = HtmlRenderer.renderAudioWatch(serviceId, info, cachedVideo, isSubscribed, isTv);
+                sendResponse(os, 200, html, "text/html; charset=UTF-8");
+            } catch (Exception e) {
+                List<CachedVideo> cachedVideos = dbHelper.getCachedVideos();
+                String html = HtmlRenderer.renderOfflineHome(serviceId, "Error loading audio stream: " + e.getMessage(), cachedVideos, isTv);
+                sendResponse(os, 200, html, "text/html; charset=UTF-8");
             }
         }
 

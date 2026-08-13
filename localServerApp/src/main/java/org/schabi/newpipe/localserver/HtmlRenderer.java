@@ -2077,7 +2077,8 @@ public class HtmlRenderer {
           .append("                <div class=\"pill-divider\"></div>\n")
           .append("                <button class=\"pill-btn dislike-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"transform:scaleY(-1);\"><path d=\"M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z\"/></svg></button>\n")
           .append("              </div>\n")
-          .append("              <button type=\"button\" onclick=\"if (window.NewPipeApp &amp;&amp; window.NewPipeApp.enterPip) { window.NewPipeApp.enterPip(); } else if (document.pictureInPictureEnabled &amp;&amp; document.querySelector('video')) { document.querySelector('video').requestPictureInPicture(); }\" class=\"action-pill-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"margin-right:6px;\"><path d=\"M19 11h-8v6h8v-6zm4-8H1c-.55 0-1 .45-1 1v16c0 .55.45 1 1 1h22c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zm-2 16H3V5h18v14z\"/></svg>Pop-up</button>\n");
+          .append("              <button type=\"button\" onclick=\"if (window.NewPipeApp &amp;&amp; window.NewPipeApp.enterPip) { window.NewPipeApp.enterPip(); } else if (document.pictureInPictureEnabled &amp;&amp; document.querySelector('video')) { document.querySelector('video').requestPictureInPicture(); }\" class=\"action-pill-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"margin-right:6px;\"><path d=\"M19 11h-8v6h8v-6zm4-8H1c-.55 0-1 .45-1 1v16c0 .55.45 1 1 1h22c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zm-2 16H3V5h18v14z\"/></svg>Pop-up</button>\n")
+          .append("              <a href=\"/audio?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" class=\"action-pill-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"margin-right:6px;\"><path d=\"M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\"/></svg>Audio Only</a>\n");
 
         if (cachedVideo == null) {
             sb.append("              <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"action-pill-btn\">Download</a>\n");
@@ -2381,6 +2382,124 @@ public class HtmlRenderer {
         } catch (Exception e) {
             return url;
         }
+    }
+
+    public static String renderAudioWatch(int serviceId, StreamInfo info, CachedVideo cachedVideo, boolean isSubscribed, boolean isTv) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getHeaderHtml(serviceId, "", "audio"));
+
+        String formattedViews = info.getViewCount() >= 0 ? formatCount(info.getViewCount()) + " views" : "Unknown views";
+        String uploadDate = info.getTextualUploadDate() != null ? info.getTextualUploadDate() : "Unknown date";
+        String likesText = info.getLikeCount() >= 0 ? formatCount(info.getLikeCount()) : "Like";
+
+        String posterUrl = getThumbnailUrl(info.getThumbnails());
+        String audioMime = "audio/mpeg";
+        if (info.getAudioStreams() != null && !info.getAudioStreams().isEmpty()) {
+            AudioStream stream = info.getAudioStreams().get(0);
+            if (stream.getFormat() != null) {
+                audioMime = stream.getFormat().mimeType;
+            }
+        }
+
+        sb.append("<div class=\"container\">\n")
+          .append("  <div class=\"player-container\">\n")
+          .append("    <div class=\"player-layout\">\n")
+          .append("      <div class=\"main-content\">\n")
+          .append("        <div class=\"audio-player-card\" style=\"display:flex; flex-direction:column; align-items:center; background:var(--card-bg); border-radius:24px; padding:32px 24px; border:1px solid var(--card-border); box-shadow:0 8px 24px rgba(0,0,0,0.12); text-align:center;\">\n")
+          .append("          <div style=\"position:relative; width:240px; height:240px; margin-bottom:24px;\">\n")
+          .append("            <img id=\"audio-cover\" src=\"").append(posterUrl).append("\" style=\"width:100%; height:100%; border-radius:20px; object-fit:cover; box-shadow:0 8px 20px rgba(0,0,0,0.3); transition:transform 0.5s ease;\">\n")
+          .append("            <div style=\"position:absolute; bottom:12px; right:12px; background:rgba(0,0,0,0.7); color:#fff; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600;\">🎵 Audio Only</div>\n")
+          .append("          </div>\n")
+          .append("          <h1 class=\"media-title\" style=\"font-size:22px; font-weight:700; margin-bottom:8px;\">").append(info.getName()).append("</h1>\n")
+          .append("          <a href=\"/channel?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUploaderUrl())).append("\" style=\"font-size:15px; color:var(--logo-color, #6750A4); font-weight:600; margin-bottom:20px;\">").append(info.getUploaderName()).append("</a>\n")
+          .append("          <audio id=\"audio-player\" controls autoplay style=\"width:100%; max-width:540px; height:48px; border-radius:24px; margin-bottom:20px;\">\n")
+          .append("            <source src=\"/stream?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" type=\"").append(audioMime).append("\">\n")
+          .append("            Your browser does not support the HTML5 audio element.\n")
+          .append("          </audio>\n")
+          .append("          <script>\n")
+          .append("            (function() {\n")
+          .append("              const audio = document.getElementById('audio-player');\n")
+          .append("              const cover = document.getElementById('audio-cover');\n")
+          .append("              if (audio) {\n")
+          .append("                audio.addEventListener('play', () => { if(cover) cover.style.transform = 'scale(1.04)'; });\n")
+          .append("                audio.addEventListener('pause', () => { if(cover) cover.style.transform = 'scale(1)'; });\n")
+          .append("                if ('mediaSession' in navigator) {\n")
+          .append("                  navigator.mediaSession.metadata = new MediaMetadata({\n")
+          .append("                    title: '").append(escapeJs(info.getName())).append("',\n")
+          .append("                    artist: '").append(escapeJs(info.getUploaderName())).append("',\n")
+          .append("                    artwork: [{ src: '").append(escapeJs(posterUrl)).append("', sizes: '512x512', type: 'image/png' }]\n")
+          .append("                  });\n")
+          .append("                }\n")
+          .append("              }\n")
+          .append("            })();\n")
+          .append("          </script>\n")
+          .append("          <div class=\"action-buttons-group\" style=\"justify-content:center; flex-wrap:wrap; gap:10px;\">\n")
+          .append("            <a href=\"/watch?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" class=\"action-pill-btn\" style=\"background-color:var(--logo-color, #6750A4); color:#fff;\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"margin-right:6px;\"><path d=\"M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM9 8l7 4-7 4V8z\"/></svg>📺 Video Mode</a>\n")
+          .append("            <div class=\"like-dislike-pill\">\n")
+          .append("              <button class=\"pill-btn like-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\"><path d=\"M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z\"/></svg> ").append(likesText).append("</button>\n")
+          .append("            </div>\n");
+
+        String uploaderAvatar = getThumbnailUrl(info.getUploaderAvatars());
+        if (isSubscribed) {
+            sb.append("            <a href=\"/subscribe?action=unsubscribe&id=").append(encodeUrl(info.getUploaderUrl())).append("&back=").append(encodeUrl("/audio?serviceId=" + serviceId + "&id=" + info.getUrl())).append("\" onclick=\"toggleSubscribe(event, this, '").append(escapeJs(info.getUploaderUrl())).append("', '").append(escapeJs(info.getUploaderName())).append("', '").append(escapeJs(uploaderAvatar)).append("')\" class=\"subscribe-btn subscribed\">Subscribed</a>\n");
+        } else {
+            sb.append("            <a href=\"/subscribe?action=subscribe&id=").append(encodeUrl(info.getUploaderUrl())).append("&name=").append(encodeUrl(info.getUploaderName())).append("&avatar=").append(encodeUrl(uploaderAvatar)).append("&back=").append(encodeUrl("/audio?serviceId=" + serviceId + "&id=" + info.getUrl())).append("\" onclick=\"toggleSubscribe(event, this, '").append(escapeJs(info.getUploaderUrl())).append("', '").append(escapeJs(info.getUploaderName())).append("', '").append(escapeJs(uploaderAvatar)).append("')\" class=\"subscribe-btn\">Subscribe</a>\n");
+        }
+
+        if (cachedVideo == null) {
+            sb.append("            <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"action-pill-btn\">Download</a>\n");
+        } else if ("COMPLETED".equals(cachedVideo.getStatus())) {
+            sb.append("            <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=delete&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"action-pill-btn danger\">Delete Download</a>\n");
+        } else if ("DOWNLOADING".equals(cachedVideo.getStatus()) || "PENDING".equals(cachedVideo.getStatus())) {
+            sb.append("            <span id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:var(--service-tab-bg); color:var(--text-color); cursor:default; pointer-events:none;\">Downloading (").append(cachedVideo.getProgress()).append("%)</span>\n");
+        } else if ("FAILED".equals(cachedVideo.getStatus())) {
+            sb.append("            <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"action-pill-btn danger\">Retry Download</a>\n");
+        }
+        sb.append("          </div>\n");
+        sb.append("        </div>\n");
+
+        sb.append("        <div class=\"media-description\" style=\"margin-top:20px;\">\n")
+          .append("          <div style=\"font-weight:700; font-size:13.5px; margin-bottom:8px; color:var(--text-color);\">").append(formattedViews).append(" &nbsp;•&nbsp; ").append(uploadDate).append("</div>\n")
+          .append(info.getDescription() != null ? info.getDescription().getContent() : "No description provided.")
+          .append("        </div>\n")
+          .append("      </div>\n");
+
+        sb.append("      <div class=\"sidebar\">\n")
+          .append("        <h3 style=\"font-size:16px; font-weight:700; margin-bottom:16px;\">Up Next</h3>\n");
+        for (InfoItem related : info.getRelatedItems()) {
+            String uploader = "";
+            String metaText = "";
+            if (related instanceof StreamInfoItem) {
+                StreamInfoItem stream = (StreamInfoItem) related;
+                uploader = stream.getUploaderName();
+                metaText = (stream.getViewCount() >= 0 ? formatCount(stream.getViewCount()) + " views" : "Live") + " • " + (stream.getTextualUploadDate() != null ? stream.getTextualUploadDate() : "");
+            } else {
+                uploader = related.getName();
+            }
+            if (uploader == null) uploader = "";
+
+            sb.append("        <div class=\"card\" style=\"margin-bottom:8px; flex-direction:row; gap:8px; height:94px; background:transparent; border:none; box-shadow:none;\">\n")
+              .append("          <a href=\"/audio?serviceId=").append(serviceId).append("&id=").append(related.getUrl()).append("\" style=\"flex-shrink:0; width:120px; height:80px; border-radius:12px; overflow:hidden; background:var(--card-thumbnail-bg);\">\n")
+              .append("            <img src=\"").append(getThumbnailUrl(related.getThumbnails())).append("\" style=\"width:100%; height:100%; object-fit:cover;\">\n")
+              .append("          </a>\n")
+              .append("          <div class=\"card-details\" style=\"padding:0; display:flex; flex-direction:column; justify-content:flex-start; min-width:0; flex-grow:1;\">\n")
+              .append("            <a href=\"/audio?serviceId=").append(serviceId).append("&id=").append(related.getUrl()).append("\" class=\"card-title\" style=\"font-size:14px; font-weight:500; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.2; margin-bottom:4px;\">")
+              .append(related.getName()).append("</a>\n")
+              .append("            <span class=\"card-meta\" style=\"font-size:12px; line-height:1.4;\">\n")
+              .append("              <span class=\"card-uploader\">").append(uploader).append("</span>\n");
+            if (!metaText.isEmpty()) {
+                sb.append("              <span>").append(metaText).append("</span>\n");
+            }
+            sb.append("            </span>\n")
+              .append("          </div>\n")
+              .append("        </div>\n");
+        }
+        sb.append("      </div>\n");
+        sb.append("    </div>\n");
+        sb.append("  </div>\n");
+        sb.append("</div>\n");
+
+        return wrapInTemplate("Audio: " + info.getName(), sb.toString(), isTv);
     }
 
     public static String renderCachedWatch(int serviceId, CachedVideo video, List<CachedVideo> otherCached, boolean isTv) {

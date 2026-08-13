@@ -184,7 +184,24 @@ public class WebPlayerActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         if (webView != null) {
+            try {
+                webView.stopLoading();
+                webView.clearCache(true);
+                webView.clearHistory();
+                webView.clearFormData();
+                webView.clearSslPreferences();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             webView.destroy();
+            webView = null;
+        }
+        try {
+            android.webkit.CookieManager.getInstance().removeAllCookies(null);
+            android.webkit.CookieManager.getInstance().flush();
+            android.webkit.WebStorage.getInstance().deleteAllData();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         super.onDestroy();
     }
