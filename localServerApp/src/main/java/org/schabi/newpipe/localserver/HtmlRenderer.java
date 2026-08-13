@@ -254,6 +254,11 @@ public class HtmlRenderer {
             ".video-js.vjs-fullscreen .vjs-control-bar { height: 64px !important; padding: 0 48px !important; font-size: 16px !important; }\n" +
             ".video-js.vjs-fullscreen .vjs-button { font-size: 22px !important; width: 56px !important; }\n" +
             ".video-js.vjs-fullscreen .vjs-time-control { font-size: 14px !important; line-height: 64px !important; }\n" +
+            ".channel-card-avatar { width: 80px !important; height: 80px !important; min-width: 80px !important; min-height: 80px !important; border-radius: 50% !important; object-fit: cover !important; aspect-ratio: 1 / 1 !important; flex-shrink: 0; background-color: var(--service-tab-bg, #2b2930); }\n" +
+            "body.pip-mode header, body.pip-mode .sidebar-nav, body.pip-mode .bottom-nav, body.pip-mode .media-info, body.pip-mode .comments-section, body.pip-mode .sidebar { display: none !important; }\n" +
+            "body.pip-mode .container { margin: 0 !important; padding: 0 !important; max-width: 100% !important; margin-top: 0 !important; }\n" +
+            "body.pip-mode .player-container { margin-top: 0 !important; }\n" +
+            "body.pip-mode .native-player, body.pip-mode .video-js { height: 100vh !important; width: 100vw !important; border-radius: 0 !important; }\n" +
             ".media-description { font-size: 14px; line-height: 1.5; color: var(--media-desc-color); white-space: pre-wrap; background-color: var(--media-desc-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--media-desc-border); margin-top: 12px; }\n" +
             ".comments-section { padding-top: 16px; }\n" +
             ".comment-count { font-size: 16px; font-weight: 500; margin-bottom: 16px; color: var(--comment-count-color); }\n" +
@@ -2035,9 +2040,10 @@ public class HtmlRenderer {
               .append("        </script>\n");
         }
 
-        String formattedViews = info.getViewCount() >= 0 ? java.text.NumberFormat.getInstance().format(info.getViewCount()) + " views" : "Unknown views";
+        String formattedViews = info.getViewCount() >= 0 ? formatCount(info.getViewCount()) + " views" : "Unknown views";
         String uploadDate = info.getTextualUploadDate() != null ? info.getTextualUploadDate() : "Unknown date";
-        String likesText = info.getLikeCount() >= 0 ? java.text.NumberFormat.getInstance().format(info.getLikeCount()) : "Like";
+        String likesText = info.getLikeCount() >= 0 ? formatCount(info.getLikeCount()) : "Like";
+        String subsText = info.getUploaderSubscriberCount() >= 0 ? formatCount(info.getUploaderSubscriberCount()) + " subscribers" : "";
 
         sb.append("        <div class=\"media-info\">\n")
           .append("          <h1 class=\"media-title\">").append(info.getName()).append("</h1>\n");
@@ -2048,7 +2054,7 @@ public class HtmlRenderer {
           .append("              <div class=\"uploader-info\">\n")
           .append("                <a href=\"/channel?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUploaderUrl())).append("\" class=\"uploader-name\">")
           .append(info.getUploaderName()).append("</a>\n")
-          .append("                <span class=\"uploader-subs\">").append(info.getUploaderSubscriberCount() >= 0 ? info.getUploaderSubscriberCount() + " subscribers" : "").append("</span>\n")
+          .append("                <span class=\"uploader-subs\">").append(subsText).append("</span>\n")
           .append("              </div>\n");
 
         String uploaderAvatar = getThumbnailUrl(info.getUploaderAvatars());
@@ -2064,7 +2070,8 @@ public class HtmlRenderer {
           .append("                <button class=\"pill-btn like-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\"><path d=\"M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z\"/></svg> ").append(likesText).append("</button>\n")
           .append("                <div class=\"pill-divider\"></div>\n")
           .append("                <button class=\"pill-btn dislike-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"transform:scaleY(-1);\"><path d=\"M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z\"/></svg></button>\n")
-          .append("              </div>\n");
+          .append("              </div>\n")
+          .append("              <button type=\"button\" onclick=\"if (window.NewPipeApp &amp;&amp; window.NewPipeApp.enterPip) { window.NewPipeApp.enterPip(); } else if (document.pictureInPictureEnabled &amp;&amp; document.querySelector('video')) { document.querySelector('video').requestPictureInPicture(); }\" class=\"action-pill-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"margin-right:6px;\"><path d=\"M19 11h-8v6h8v-6zm4-8H1c-.55 0-1 .45-1 1v16c0 .55.45 1 1 1h22c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zm-2 16H3V5h18v14z\"/></svg>Pop-up</button>\n");
 
         if (cachedVideo == null) {
             sb.append("              <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"action-pill-btn\">Download</a>\n");
@@ -2267,7 +2274,7 @@ public class HtmlRenderer {
             if (item.getInfoType() == org.schabi.newpipe.extractor.InfoItem.InfoType.CHANNEL) {
                 sb.append("    <div class=\"card\" style=\"flex-direction:row; align-items:center; gap:16px; padding:12px 0; min-width:0; max-width:100%; overflow:hidden;\">\n")
                   .append("      <a href=\"").append(clickUrl).append("\" style=\"flex-shrink:0;\">\n")
-                  .append("        <img class=\"card-thumbnail\" src=\"").append(getThumbnailUrl(item.getThumbnails())).append("\" style=\"width:80px; height:80px; border-radius:50%; aspect-ratio:1/1; object-fit:cover;\">\n")
+                  .append("        <img class=\"channel-card-avatar\" src=\"").append(getThumbnailUrl(item.getThumbnails())).append("\">\n")
                   .append("      </a>\n")
                   .append("      <div class=\"card-info\" style=\"min-width:0; flex-grow:1; flex-shrink:1; overflow:hidden;\">\n")
                   .append("        <a href=\"").append(clickUrl).append("\" class=\"card-title\" style=\"font-size:16px; font-weight:600; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;\">").append(item.getName()).append("</a>\n")
@@ -2336,6 +2343,30 @@ public class HtmlRenderer {
             }
         }
         return "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=300&auto=format&fit=crop";
+    }
+
+    public static String formatCount(long count) {
+        if (count < 0) return "";
+        if (count < 1000) {
+            return String.valueOf(count);
+        } else if (count < 1000000) {
+            double val = count / 1000.0;
+            if (val >= 100) {
+                return String.format(java.util.Locale.US, "%.0fK", val);
+            } else {
+                return String.format(java.util.Locale.US, "%.1fK", val).replace(".0K", "K");
+            }
+        } else if (count < 1000000000) {
+            double val = count / 1000000.0;
+            if (val >= 100) {
+                return String.format(java.util.Locale.US, "%.0fM", val);
+            } else {
+                return String.format(java.util.Locale.US, "%.1fM", val).replace(".0M", "M");
+            }
+        } else {
+            double val = count / 1000000000.0;
+            return String.format(java.util.Locale.US, "%.1fB", val).replace(".0B", "B");
+        }
     }
 
     private static String encodeUrl(String url) {

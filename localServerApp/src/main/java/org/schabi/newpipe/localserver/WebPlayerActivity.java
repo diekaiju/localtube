@@ -86,9 +86,54 @@ public class WebPlayerActivity extends AppCompatActivity {
             }
         });
 
+        webView.addJavascriptInterface(new AppInterface(), "NewPipeApp");
         webView.setWebChromeClient(webChromeClient);
 
         handleIntent(getIntent());
+    }
+
+    public class AppInterface {
+        @android.webkit.JavascriptInterface
+        public void enterPip() {
+            runOnUiThread(() -> enterPipMode());
+        }
+    }
+
+    public void enterPipMode() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            try {
+                android.app.PictureInPictureParams.Builder builder = new android.app.PictureInPictureParams.Builder();
+                android.util.Rational aspectRatio = new android.util.Rational(16, 9);
+                builder.setAspectRatio(aspectRatio);
+                enterPictureInPictureMode(builder.build());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            if (webView != null && webView.getUrl() != null && webView.getUrl().contains("/watch")) {
+                enterPipMode();
+            }
+        }
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, android.content.res.Configuration newConfig) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
+        if (isInPictureInPictureMode) {
+            if (webView != null) {
+                webView.evaluateJavascript("document.body.classList.add('pip-mode');", null);
+            }
+        } else {
+            if (webView != null) {
+                webView.evaluateJavascript("document.body.classList.remove('pip-mode');", null);
+            }
+        }
     }
 
     @Override

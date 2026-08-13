@@ -490,6 +490,12 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(KEY_CHANNEL_URL, normalizeChannelUrl(channelUrl));
         values.put(KEY_CHANNEL_NAME, channelName);
+        if (channelAvatar != null) {
+            channelAvatar = channelAvatar.trim();
+            if (channelAvatar.startsWith("//")) {
+                channelAvatar = "https:" + channelAvatar;
+            }
+        }
         values.put(KEY_CHANNEL_AVATAR, channelAvatar);
         values.put(KEY_TIMESTAMP, System.currentTimeMillis());
         db.insertWithOnConflict(TABLE_SUBSCRIPTIONS, null, values, SQLiteDatabase.CONFLICT_REPLACE);
@@ -525,6 +531,12 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
                     String url = urlIdx != -1 ? cursor.getString(urlIdx) : "";
                     String name = nameIdx != -1 ? cursor.getString(nameIdx) : "";
                     String avatar = avatarIdx != -1 ? cursor.getString(avatarIdx) : "";
+                    if (avatar != null) {
+                        avatar = avatar.trim();
+                        if (avatar.startsWith("//")) {
+                            avatar = "https:" + avatar;
+                        }
+                    }
 
                     ChannelInfoItem item = new ChannelInfoItem(0, url, name);
                     if (avatar != null && !avatar.isEmpty()) {
