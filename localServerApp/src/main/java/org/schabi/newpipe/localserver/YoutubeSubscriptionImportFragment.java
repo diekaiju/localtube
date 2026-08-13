@@ -28,7 +28,7 @@ public class YoutubeSubscriptionImportFragment extends DialogFragment {
     private TextView statusText;
     private ProgressBar progressBar;
     private WebView webView;
-    private Button cancelButton;
+    private android.view.View cancelButton;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {

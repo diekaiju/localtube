@@ -38,7 +38,7 @@ public class YoutubeInterestsImportFragment extends DialogFragment {
     private TextView statusText;
     private ProgressBar progressBar;
     private WebView webView;
-    private Button cancelButton;
+    private android.view.View cancelButton;
     private OnImportCompleteListener listener;
 
     private boolean isLoginVerified = false;

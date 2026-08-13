@@ -5,14 +5,33 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <TextView
-        android:id="@+id/import_status_text"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Checking Google login status..."
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:paddingBottom="8dp" />
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/import_status_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/import_cancel_button"
+            android:text="Checking Google login status..."
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/import_cancel_button"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:tint="?android:attr/textColorPrimary"
+            android:contentDescription="Close" />
+    </RelativeLayout>
 
     <ProgressBar
         android:id="@+id/import_progress_bar"
@@ -33,13 +52,5 @@
             android:layout_height="match_parent"
             android:visibility="gone" />
     </FrameLayout>
-
-    <Button
-        android:id="@+id/import_cancel_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:text="@android:string/cancel"
-        android:layout_marginTop="8dp" />
 
 </LinearLayout>

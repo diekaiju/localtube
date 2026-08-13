@@ -86,15 +86,8 @@ public class NativeAudioPlayerActivity extends AppCompatActivity {
                     avatarUrl = info.getThumbnails().get(info.getThumbnails().size() - 1).getUrl();
                 }
 
-                // Extract audio stream URL
-                String audioStreamUrl = "";
-                if (info.getAudioStreams() != null && !info.getAudioStreams().isEmpty()) {
-                    audioStreamUrl = info.getAudioStreams().get(0).getUrl();
-                } else if (info.getVideoStreams() != null && !info.getVideoStreams().isEmpty()) {
-                    audioStreamUrl = info.getVideoStreams().get(0).getUrl();
-                }
-
-                final String finalAudioUrl = audioStreamUrl;
+                // Construct original proxy audio stream URL
+                final String finalAudioUrl = "http://localhost:8080/stream?serviceId=" + serviceId + "&id=" + java.net.URLEncoder.encode(mediaUrl, "UTF-8");
 
                 runOnUiThread(() -> {
                     audioTitle.setText(title);
@@ -102,7 +95,7 @@ public class NativeAudioPlayerActivity extends AppCompatActivity {
                     if (avatarUrl != null && !avatarUrl.isEmpty()) {
                         downloadCoverArt(avatarUrl);
                     }
-                    if (isBound && serverService != null && finalAudioUrl != null && !finalAudioUrl.isEmpty()) {
+                    if (isBound && serverService != null) {
                         serverService.playNativeAudio(finalAudioUrl, title, artist);
                     }
                 });
@@ -266,6 +259,44 @@ public class NativeAudioPlayerActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+
+        // Reset progress bar visibility to visible (loading state)
+        if (audioProgressBar != null) {
+            audioProgressBar.setVisibility(android.view.View.VISIBLE);
+        }
+
+        if (intent != null) {
+            streamUrl = intent.getStringExtra("url");
+            title = intent.getStringExtra("title");
+            artist = intent.getStringExtra("artist");
+            avatarUrl = intent.getStringExtra("avatar");
+            mediaUrl = intent.getStringExtra("mediaUrl");
+            serviceId = intent.getIntExtra("serviceId", 0);
+        }
+
+        if (title != null) audioTitle.setText(title);
+        else audioTitle.setText("Loading Title...");
+
+        if (artist != null) audioArtist.setText(artist);
+        else audioArtist.setText("Loading Channel...");
+
+        audioCover.setImageResource(android.R.drawable.ic_menu_report_image);
+
+        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+            downloadCoverArt(avatarUrl);
+        }
+
+        if (mediaUrl != null && !mediaUrl.isEmpty()) {
+            loadAudioStream(serviceId, mediaUrl);
+        } else if (streamUrl != null && isBound && serverService != null) {
+            serverService.playNativeAudio(streamUrl, title, artist);
+        }
     }
 
     @Override

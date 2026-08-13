@@ -43,6 +43,7 @@
             android:name=".NativeAudioPlayerActivity"
             android:label="Audio Player"
             android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.LocalMediaServer"
             android:exported="false" />
 
