@@ -31,6 +31,7 @@ public class ServerService extends Service {
     private final IBinder binder = new LocalBinder();
     private ServerStatusListener statusListener;
     private android.os.PowerManager.WakeLock wakeLock;
+    private android.net.wifi.WifiManager.WifiLock wifiLock;
 
     public interface ServerStatusListener {
         void onStatusChanged(boolean isRunning);
@@ -52,8 +53,28 @@ public class ServerService extends Service {
         createNotificationChannel();
     }
 
+    public static final String ACTION_PLAY = "org.schabi.newpipe.localserver.ACTION_PLAY";
+    public static final String ACTION_PAUSE = "org.schabi.newpipe.localserver.ACTION_PAUSE";
+    public static final String ACTION_STOP = "org.schabi.newpipe.localserver.ACTION_STOP";
+
+    private android.media.MediaPlayer mediaPlayer;
+    private String currentAudioTitle = "";
+    private String currentAudioArtist = "";
+    private String currentAudioUrl = "";
+    private boolean isAudioPlaying = false;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null && intent.getAction() != null) {
+            String action = intent.getAction();
+            if (ACTION_PAUSE.equals(action)) {
+                pauseNativeAudio();
+            } else if (ACTION_PLAY.equals(action)) {
+                resumeNativeAudio();
+            } else if (ACTION_STOP.equals(action)) {
+                stopNativeAudio();
+            }
+        }
         if (!isRunning) {
             startServer();
         }
@@ -149,8 +170,124 @@ public class ServerService extends Service {
         return localIp != null ? "http://" + localIp + ":" + PORT : "http://127.0.0.1:" + PORT;
     }
 
+    public void playNativeAudio(String url, String title, String artist) {
+        stopNativeAudio();
+        this.currentAudioUrl = url;
+        this.currentAudioTitle = title != null ? title : "Audio Stream";
+        this.currentAudioArtist = artist != null ? artist : "LocalTube";
+
+        try {
+            mediaPlayer = new android.media.MediaPlayer();
+            mediaPlayer.setAudioAttributes(
+                new android.media.AudioAttributes.Builder()
+                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+                    .build()
+            );
+            mediaPlayer.setDataSource(url);
+            mediaPlayer.setOnPreparedListener(mp -> {
+                mp.start();
+                isAudioPlaying = true;
+                updateNotification(currentAudioTitle, "Playing: " + currentAudioArtist);
+            });
+            mediaPlayer.setOnCompletionListener(mp -> {
+                isAudioPlaying = false;
+                updateNotification("LocalTube Running", "Listening on: " + getLocalAddress());
+            });
+            mediaPlayer.setOnErrorListener((mp, what, extra) -> {
+                isAudioPlaying = false;
+                return false;
+            });
+            mediaPlayer.prepareAsync();
+            updateNotification(currentAudioTitle, "Loading audio...");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void pauseNativeAudio() {
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+            isAudioPlaying = false;
+            updateNotification(currentAudioTitle, "Paused: " + currentAudioArtist);
+        }
+    }
+
+    public void resumeNativeAudio() {
+        if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+            mediaPlayer.start();
+            isAudioPlaying = true;
+            updateNotification(currentAudioTitle, "Playing: " + currentAudioArtist);
+        }
+    }
+
+    public void stopNativeAudio() {
+        if (mediaPlayer != null) {
+            try {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.stop();
+                }
+                mediaPlayer.release();
+            } catch (Exception ignored) {}
+            mediaPlayer = null;
+        }
+        isAudioPlaying = false;
+    }
+
+    public boolean isAudioPlaying() {
+        return mediaPlayer != null && isAudioPlaying;
+    }
+
+    public String getCurrentAudioTitle() {
+        return currentAudioTitle;
+    }
+
+    public String getCurrentAudioArtist() {
+        return currentAudioArtist;
+    }
+
+    public int getAudioPosition() {
+        return mediaPlayer != null ? mediaPlayer.getCurrentPosition() : 0;
+    }
+
+    public int getAudioDuration() {
+        return mediaPlayer != null ? mediaPlayer.getDuration() : 0;
+    }
+
+    private void updateNotification(String title, String text) {
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this, 0, notificationIntent,
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setSmallIcon(android.R.drawable.sym_def_app_icon)
+                .setContentIntent(pendingIntent)
+                .setOngoing(isAudioPlaying);
+
+        if (isAudioPlaying) {
+            Intent pauseIntent = new Intent(this, ServerService.class).setAction(ACTION_PAUSE);
+            PendingIntent pPause = PendingIntent.getService(this, 1, pauseIntent, PendingIntent.FLAG_IMMUTABLE);
+            builder.addAction(android.R.drawable.ic_media_pause, "Pause", pPause);
+        } else if (mediaPlayer != null) {
+            Intent playIntent = new Intent(this, ServerService.class).setAction(ACTION_PLAY);
+            PendingIntent pPlay = PendingIntent.getService(this, 2, playIntent, PendingIntent.FLAG_IMMUTABLE);
+            builder.addAction(android.R.drawable.ic_media_play, "Play", pPlay);
+        }
+
+        Notification notification = builder.build();
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (manager != null) {
+            manager.notify(NOTIFICATION_ID, notification);
+        }
+    }
+
     @Override
     public void onDestroy() {
+        stopNativeAudio();
         stopServer();
         super.onDestroy();
     }

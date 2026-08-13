@@ -634,6 +634,14 @@ public class LocalHttpServer {
                         sendResponse(os, 200, "OK", "text/plain; charset=UTF-8");
                     } else if (path.equals("/cache")) {
                         handleCache(os, params, isTv);
+                    } else if (path.equals("/api/player/play")) {
+                        handleApiPlayerPlay(os, params);
+                    } else if (path.equals("/api/player/pause")) {
+                        handleApiPlayerPause(os);
+                    } else if (path.equals("/api/player/resume")) {
+                        handleApiPlayerResume(os);
+                    } else if (path.equals("/api/player/stop")) {
+                        handleApiPlayerStop(os);
                     } else if (path.equals("/cache-status")) {
                         handleCacheStatus(os, params);
                     } else if (path.equals("/search-history")) {
@@ -959,6 +967,37 @@ public class LocalHttpServer {
                 String html = HtmlRenderer.renderOfflineHome(serviceId, "Error loading audio stream: " + e.getMessage(), cachedVideos, isTv);
                 sendResponse(os, 200, html, "text/html; charset=UTF-8");
             }
+        }
+
+        private void handleApiPlayerPlay(OutputStream os, Map<String, String> params) throws Exception {
+            String url = params.get("url");
+            String title = params.get("title");
+            String artist = params.get("artist");
+            if (context instanceof ServerService) {
+                ((ServerService) context).playNativeAudio(url, title, artist);
+            }
+            sendResponse(os, 200, "{\"status\":\"ok\"}", "application/json");
+        }
+
+        private void handleApiPlayerPause(OutputStream os) throws Exception {
+            if (context instanceof ServerService) {
+                ((ServerService) context).pauseNativeAudio();
+            }
+            sendResponse(os, 200, "{\"status\":\"ok\"}", "application/json");
+        }
+
+        private void handleApiPlayerResume(OutputStream os) throws Exception {
+            if (context instanceof ServerService) {
+                ((ServerService) context).resumeNativeAudio();
+            }
+            sendResponse(os, 200, "{\"status\":\"ok\"}", "application/json");
+        }
+
+        private void handleApiPlayerStop(OutputStream os) throws Exception {
+            if (context instanceof ServerService) {
+                ((ServerService) context).stopNativeAudio();
+            }
+            sendResponse(os, 200, "{\"status\":\"ok\"}", "application/json");
         }
 
         private void handleHistory(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {

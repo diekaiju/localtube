@@ -89,13 +89,66 @@ public class WebPlayerActivity extends AppCompatActivity {
         webView.addJavascriptInterface(new AppInterface(), "NewPipeApp");
         webView.setWebChromeClient(webChromeClient);
 
+        try {
+            Intent serviceIntent = new Intent(this, ServerService.class);
+            bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         handleIntent(getIntent());
     }
+
+    private ServerService serverService;
+    private boolean isBound = false;
+
+    private final android.content.ServiceConnection serviceConnection = new android.content.ServiceConnection() {
+        @Override
+        public void onServiceConnected(android.content.ComponentName name, android.os.IBinder service) {
+            ServerService.LocalBinder binder = (ServerService.LocalBinder) service;
+            serverService = binder.getService();
+            isBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(android.content.ComponentName name) {
+            serverService = null;
+            isBound = false;
+        }
+    };
 
     public class AppInterface {
         @android.webkit.JavascriptInterface
         public void enterPip() {
             runOnUiThread(() -> enterPipMode());
+        }
+
+        @android.webkit.JavascriptInterface
+        public void playNativeAudio(String url, String title, String artist) {
+            if (serverService != null) {
+                serverService.playNativeAudio(url, title, artist);
+            }
+        }
+
+        @android.webkit.JavascriptInterface
+        public void pauseNativeAudio() {
+            if (serverService != null) {
+                serverService.pauseNativeAudio();
+            }
+        }
+
+        @android.webkit.JavascriptInterface
+        public void resumeNativeAudio() {
+            if (serverService != null) {
+                serverService.resumeNativeAudio();
+            }
+        }
+
+        @android.webkit.JavascriptInterface
+        public void stopNativeAudio() {
+            if (serverService != null) {
+                serverService.stopNativeAudio();
+            }
         }
     }
 
@@ -186,10 +239,6 @@ public class WebPlayerActivity extends AppCompatActivity {
         if (webView != null) {
             try {
                 webView.stopLoading();
-                webView.clearCache(true);
-                webView.clearHistory();
-                webView.clearFormData();
-                webView.clearSslPreferences();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -199,9 +248,16 @@ public class WebPlayerActivity extends AppCompatActivity {
         try {
             android.webkit.CookieManager.getInstance().removeAllCookies(null);
             android.webkit.CookieManager.getInstance().flush();
-            android.webkit.WebStorage.getInstance().deleteAllData();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        if (isBound) {
+            try {
+                unbindService(serviceConnection);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            isBound = false;
         }
         super.onDestroy();
     }
