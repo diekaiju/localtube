@@ -33,6 +33,7 @@ public class NativeAudioPlayerActivity extends AppCompatActivity {
     private ImageButton audioBtnPrev;
     private ImageButton audioBtnNext;
     private ImageButton btnBack;
+    private android.view.View audioProgressBar;
 
     private ServerService serverService;
     private boolean isBound = false;
@@ -118,6 +119,12 @@ public class NativeAudioPlayerActivity extends AppCompatActivity {
                 int currentPos = serverService.getAudioPosition();
                 int duration = serverService.getAudioDuration();
 
+                if (duration > 0) {
+                    if (audioProgressBar != null) {
+                        audioProgressBar.setVisibility(android.view.View.GONE);
+                    }
+                }
+
                 audioSeekBar.setMax(duration);
                 audioSeekBar.setProgress(currentPos);
 
@@ -146,6 +153,7 @@ public class NativeAudioPlayerActivity extends AppCompatActivity {
         audioBtnPrev = findViewById(R.id.audio_btn_prev);
         audioBtnNext = findViewById(R.id.audio_btn_next);
         btnBack = findViewById(R.id.btn_back);
+        audioProgressBar = findViewById(R.id.audio_progress_bar);
 
         // Extract metadata from Intent
         Intent intent = getIntent();

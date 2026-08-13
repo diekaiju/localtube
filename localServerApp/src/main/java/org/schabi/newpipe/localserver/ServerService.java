@@ -51,6 +51,12 @@ public class ServerService extends Service {
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
+        try {
+            mediaSession = new android.support.v4.media.session.MediaSessionCompat(this, "LocalTubeMediaSession");
+            mediaSession.setActive(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static final String ACTION_PLAY = "org.schabi.newpipe.localserver.ACTION_PLAY";
@@ -58,6 +64,7 @@ public class ServerService extends Service {
     public static final String ACTION_STOP = "org.schabi.newpipe.localserver.ACTION_STOP";
 
     private android.media.MediaPlayer mediaPlayer;
+    private android.support.v4.media.session.MediaSessionCompat mediaSession;
     private String currentAudioTitle = "";
     private String currentAudioArtist = "";
     private String currentAudioUrl = "";
@@ -288,6 +295,12 @@ public class ServerService extends Service {
                 .setContentIntent(pendingIntent)
                 .setOngoing(isAudioPlaying);
 
+        if (mediaSession != null) {
+            builder.setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
+                .setShowActionsInCompactView(0)
+                .setMediaSession(mediaSession.getSessionToken()));
+        }
+
         if (isAudioPlaying) {
             Intent pauseIntent = new Intent(this, ServerService.class).setAction(ACTION_PAUSE);
             PendingIntent pPause = PendingIntent.getService(this, 1, pauseIntent, PendingIntent.FLAG_IMMUTABLE);
@@ -309,6 +322,13 @@ public class ServerService extends Service {
     public void onDestroy() {
         stopNativeAudio();
         stopServer();
+        if (mediaSession != null) {
+            try {
+                mediaSession.release();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         super.onDestroy();
     }
 

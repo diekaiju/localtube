@@ -70,6 +70,7 @@ dependencies {
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation("androidx.media:media:1.6.0")
 
     implementation("org.java-websocket:Java-WebSocket:1.5.3")
 }
