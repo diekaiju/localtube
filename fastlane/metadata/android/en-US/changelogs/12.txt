@@ -1,5 +1,7 @@
-1: Added a setting to automatically default to Audio-Only playback (Shorts excluded)
-2: Added Swipe-to-Refresh support to reload pages inside the WebView container easily
-3: Replaced the WebView-based audio player with a fully native Android Audio Player Activity for optimized background playback performance
-4: Replaced the bottom cancel button in Google login/import dialogs with a clean top-right cross close icon
-5: Configured rotation lifecycle support to prevent media reload issues during screen rotation
+1: Added a dedicated WebPlayer WebView container inside the Android application to browse and play feeds directly within the app
+2: Added a setting to automatically default to Audio-Only playback (Shorts excluded)
+3: Added Swipe-to-Refresh support to reload pages inside the WebView container easily
+4: Replaced the WebView-based audio player with a fully native Android Audio Player Activity for optimized background playback performance
+5: Replaced the bottom cancel button in Google login/import dialogs with a clean top-right cross close icon
+6: Configured rotation lifecycle support to prevent media reload issues during screen rotation
+7: some bugs fixes
