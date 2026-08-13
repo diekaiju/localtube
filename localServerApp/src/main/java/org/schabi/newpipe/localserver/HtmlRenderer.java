@@ -2105,7 +2105,7 @@ public class HtmlRenderer {
             if (related instanceof StreamInfoItem) {
                 StreamInfoItem stream = (StreamInfoItem) related;
                 uploader = stream.getUploaderName();
-                metaText = (stream.getViewCount() >= 0 ? stream.getViewCount() + " views" : "Live") + " • " + (stream.getTextualUploadDate() != null ? stream.getTextualUploadDate() : "");
+                metaText = (stream.getViewCount() >= 0 ? formatCount(stream.getViewCount()) + " views" : "Live") + " • " + (stream.getTextualUploadDate() != null ? stream.getTextualUploadDate() : "");
             } else {
                 uploader = related.getName();
             }
@@ -2315,7 +2315,7 @@ public class HtmlRenderer {
                 StreamInfoItem stream = (StreamInfoItem) item;
                 sb.append("            <a href=\"/channel?serviceId=").append(serviceId).append("&id=").append(stream.getUploaderUrl()).append("\" class=\"card-uploader\">")
                   .append(stream.getUploaderName()).append("</a>\n")
-                  .append("            <span>👁️ ").append(stream.getViewCount() >= 0 ? stream.getViewCount() + " views" : "Live / Dynamic").append(" • ")
+                  .append("            <span>👁️ ").append(stream.getViewCount() >= 0 ? formatCount(stream.getViewCount()) + " views" : "Live / Dynamic").append(" • ")
                   .append(stream.getTextualUploadDate() != null ? stream.getTextualUploadDate() : "").append("</span>\n");
             } else {
                 sb.append("            <span class=\"card-uploader\">").append(item.getName()).append("</span>\n");
