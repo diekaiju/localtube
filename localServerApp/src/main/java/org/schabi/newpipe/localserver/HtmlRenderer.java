@@ -204,11 +204,6 @@ public class HtmlRenderer {
             "  .search-btn { border-radius: 40px; border: none; background: transparent; }\n" +
             "  .search-form.search-active .search-btn { border-radius: 0 40px 40px 0; border: 1px solid var(--search-input-border); border-left: none; background-color: var(--search-btn-bg); }\n" +
             "  .top-bar.search-active div:first-child, .top-bar.search-active div:last-child { display: none !important; }\n" +
-            "  .uploader-profile { display: grid !important; grid-template-columns: 40px 1fr auto; grid-template-areas: 'avatar info sub' 'actions actions actions'; gap: 8px 12px; align-items: center; }\n" +
-            "  .uploader-avatar { grid-area: avatar; }\n" +
-            "  .uploader-info { grid-area: info; min-width: 0; }\n" +
-            "  .uploader-profile > .subscribe-btn:not(#cache-btn) { grid-area: sub; margin-left: 0 !important; margin-right: 0 !important; padding: 6px 16px !important; font-size: 13px !important; }\n" +
-            "  .uploader-profile > #cache-btn { grid-area: actions; width: 100%; margin-top: 4px; padding: 8px 16px !important; font-size: 13px !important; }\n" +
             "}\n" +
             ".player-container { display: flex; flex-direction: column; gap: 20px; margin-top: 16px; }\n" +
             ".player-layout { display: flex; flex-direction: column; gap: 24px; }\n" +
@@ -221,12 +216,31 @@ public class HtmlRenderer {
             ".media-info { padding: 16px 0; border-bottom: 1px solid var(--media-info-border); }\n" +
             ".media-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--media-title-color); line-height: 1.4; }\n" +
             ".media-stats { font-size: 14px; color: var(--media-stats-color); margin-bottom: 12px; }\n" +
-            ".uploader-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }\n" +
-            ".uploader-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }\n" +
-            ".uploader-info { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; }\n" +
-            ".uploader-name { font-size: 16px; font-weight: 500; color: var(--uploader-name-color); text-decoration: none; }\n" +
-            ".uploader-subs { font-size: 12px; color: var(--uploader-subs-color); }\n" +
-            ".subscribe-btn { padding: 8px 24px; border-radius: 100px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; text-decoration: none; text-align: center; color: #ffffff; background-color: #6750A4; }\n" +
+            ".uploader-profile { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }\n" +
+            "@media (min-width: 768px) {\n" +
+            "  .uploader-profile { flex-direction: row; align-items: center; justify-content: space-between; gap: 16px; }\n" +
+            "}\n" +
+            ".uploader-main { display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0; }\n" +
+            "@media (min-width: 768px) {\n" +
+            "  .uploader-main { width: auto; }\n" +
+            "}\n" +
+            ".uploader-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }\n" +
+            ".uploader-info { display: flex; flex-direction: column; justify-content: center; flex-grow: 1; min-width: 0; overflow: hidden; }\n" +
+            ".uploader-name { font-size: 15px; font-weight: 600; color: var(--uploader-name-color, var(--text-color)); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n" +
+            ".uploader-subs { font-size: 12px; color: var(--uploader-subs-color, #a0a0a0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n" +
+            ".subscribe-btn { padding: 8px 20px; border-radius: 100px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; text-decoration: none; text-align: center; color: #ffffff; background-color: var(--logo-color, #6750A4); flex-shrink: 0; margin-left: auto; white-space: nowrap; transition: opacity 0.2s; }\n" +
+            ".subscribe-btn.subscribed { background-color: var(--service-tab-bg, rgba(255,255,255,0.1)); color: var(--text-color); }\n" +
+            ".action-buttons-group { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; width: 100%; }\n" +
+            "@media (min-width: 768px) {\n" +
+            "  .action-buttons-group { width: auto; }\n" +
+            "}\n" +
+            ".action-buttons-group::-webkit-scrollbar { display: none; }\n" +
+            ".like-dislike-pill { display: inline-flex; align-items: center; background-color: var(--service-tab-bg, rgba(255,255,255,0.1)); border-radius: 100px; height: 36px; overflow: hidden; flex-shrink: 0; }\n" +
+            ".pill-btn { background: none; border: none; padding: 0 14px; height: 100%; color: var(--text-color); font-weight: 500; font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: default; white-space: nowrap; }\n" +
+            ".pill-divider { width: 1px; height: 18px; background-color: rgba(255,255,255,0.15); }\n" +
+            ".action-pill-btn { background-color: var(--service-tab-bg, rgba(255,255,255,0.1)); color: var(--text-color, #fff); height: 36px; line-height: 36px; padding: 0 18px; border-radius: 100px; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; text-decoration: none; flex-shrink: 0; border: none; cursor: pointer; white-space: nowrap; }\n" +
+            ".action-pill-btn.danger { background-color: #c00c0c; color: #ffffff; }\n" +
+            ".action-pill-btn.disabled { opacity: 0.6; cursor: default; pointer-events: none; }\n" +
             ".settings-card { background-color: var(--settings-card-bg); border-radius: 24px; padding: 24px; border: 1px solid var(--settings-card-border); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }\n" +
             ".subscribe-btn:hover { opacity: 0.9; }\n" +
             ".video-js { font-family: inherit; color: #ffffff; border-radius: 16px; overflow: hidden; }\n" +
@@ -2028,38 +2042,38 @@ public class HtmlRenderer {
         sb.append("        <div class=\"media-info\">\n")
           .append("          <h1 class=\"media-title\">").append(info.getName()).append("</h1>\n");
 
-        sb.append("          <div class=\"uploader-profile\" style=\"display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:16px;\">\n")
-          .append("            <div style=\"display:flex; align-items:center; gap:12px;\">\n")
+        sb.append("          <div class=\"uploader-profile\">\n")
+          .append("            <div class=\"uploader-main\">\n")
           .append("              <img class=\"uploader-avatar\" src=\"").append(getThumbnailUrl(info.getUploaderAvatars())).append("\">\n")
           .append("              <div class=\"uploader-info\">\n")
-          .append("                <a href=\"/channel?serviceId=\"").append(serviceId).append("&id=").append(info.getUploaderUrl()).append("\" class=\"uploader-name\">")
+          .append("                <a href=\"/channel?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUploaderUrl())).append("\" class=\"uploader-name\">")
           .append(info.getUploaderName()).append("</a>\n")
           .append("                <span class=\"uploader-subs\">").append(info.getUploaderSubscriberCount() >= 0 ? info.getUploaderSubscriberCount() + " subscribers" : "").append("</span>\n")
           .append("              </div>\n");
 
         String uploaderAvatar = getThumbnailUrl(info.getUploaderAvatars());
         if (isSubscribed) {
-            sb.append("              <a href=\"/subscribe?action=unsubscribe&id=\"").append(encodeUrl(info.getUploaderUrl())).append("&back=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleSubscribe(event, this, '").append(escapeJs(info.getUploaderUrl())).append("', '").append(escapeJs(info.getUploaderName())).append("', '").append(escapeJs(uploaderAvatar)).append("')\" class=\"subscribe-btn subscribed\" style=\"margin-left:8px;\">Subscribed</a>\n");
+            sb.append("              <a href=\"/subscribe?action=unsubscribe&id=").append(encodeUrl(info.getUploaderUrl())).append("&back=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleSubscribe(event, this, '").append(escapeJs(info.getUploaderUrl())).append("', '").append(escapeJs(info.getUploaderName())).append("', '").append(escapeJs(uploaderAvatar)).append("')\" class=\"subscribe-btn subscribed\">Subscribed</a>\n");
         } else {
-            sb.append("              <a href=\"/subscribe?action=subscribe&id=\"").append(encodeUrl(info.getUploaderUrl())).append("&name=").append(encodeUrl(info.getUploaderName())).append("&avatar=").append(encodeUrl(uploaderAvatar)).append("&back=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleSubscribe(event, this, '").append(escapeJs(info.getUploaderUrl())).append("', '").append(escapeJs(info.getUploaderName())).append("', '").append(escapeJs(uploaderAvatar)).append("')\" class=\"subscribe-btn\" style=\"margin-left:8px;\">Subscribe</a>\n");
+            sb.append("              <a href=\"/subscribe?action=subscribe&id=").append(encodeUrl(info.getUploaderUrl())).append("&name=").append(encodeUrl(info.getUploaderName())).append("&avatar=").append(encodeUrl(uploaderAvatar)).append("&back=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleSubscribe(event, this, '").append(escapeJs(info.getUploaderUrl())).append("', '").append(escapeJs(info.getUploaderName())).append("', '").append(escapeJs(uploaderAvatar)).append("')\" class=\"subscribe-btn\">Subscribe</a>\n");
         }
         sb.append("            </div>\n");
 
-        sb.append("            <div class=\"action-buttons-group\" style=\"display:flex; align-items:center; gap:8px; margin-left:auto;\">\n")
-          .append("              <div style=\"display:inline-flex; align-items:center; background-color:var(--service-tab-bg); border-radius:100px; height:36px; overflow:hidden;\">\n")
-          .append("                <button style=\"background:none; border:none; padding:0 12px 0 16px; height:100%; color:var(--text-color); font-weight:500; font-size:13px; display:flex; align-items:center; gap:6px; cursor:default;\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\"><path d=\"M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z\"/></svg> ").append(likesText).append("</button>\n")
-          .append("                <div style=\"width:1px; height:20px; background-color:rgba(0,0,0,0.15);\"></div>\n")
-          .append("                <button style=\"background:none; border:none; padding:0 16px 0 12px; height:100%; color:var(--text-color); display:flex; align-items:center; cursor:default;\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"transform:scaleY(-1);\"><path d=\"M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z\"/></svg></button>\n")
+        sb.append("            <div class=\"action-buttons-group\">\n")
+          .append("              <div class=\"like-dislike-pill\">\n")
+          .append("                <button class=\"pill-btn like-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\"><path d=\"M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z\"/></svg> ").append(likesText).append("</button>\n")
+          .append("                <div class=\"pill-divider\"></div>\n")
+          .append("                <button class=\"pill-btn dislike-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"transform:scaleY(-1);\"><path d=\"M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z\"/></svg></button>\n")
           .append("              </div>\n");
 
         if (cachedVideo == null) {
-            sb.append("              <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"subscribe-btn\" style=\"background-color:var(--service-tab-bg); color:var(--text-color); margin-left:0; height:36px; line-height:36px; padding:0 20px; display:inline-flex; align-items:center;\">Download</a>\n");
+            sb.append("              <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"action-pill-btn\">Download</a>\n");
         } else if ("COMPLETED".equals(cachedVideo.getStatus())) {
-            sb.append("              <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=delete&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"subscribe-btn\" style=\"background-color:#c00c0c; color:#ffffff; margin-left:0; height:36px; line-height:36px; padding:0 20px; display:inline-flex; align-items:center;\">Delete Download</a>\n");
+            sb.append("              <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=delete&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"action-pill-btn danger\">Delete Download</a>\n");
         } else if ("DOWNLOADING".equals(cachedVideo.getStatus()) || "PENDING".equals(cachedVideo.getStatus())) {
-            sb.append("              <span id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" class=\"subscribe-btn\" style=\"background-color:var(--service-tab-bg); color:var(--text-color); cursor:default; pointer-events:none; margin-left:0; height:36px; line-height:36px; padding:0 20px; display:inline-flex; align-items:center;\">Downloading (").append(cachedVideo.getProgress()).append("%)</span>\n");
+            sb.append("              <span id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" class=\"action-pill-btn disabled\">Downloading (").append(cachedVideo.getProgress()).append("%)</span>\n");
         } else if ("FAILED".equals(cachedVideo.getStatus())) {
-            sb.append("              <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"subscribe-btn\" style=\"background-color:#c00c0c; color:#ffffff; margin-left:0; height:36px; line-height:36px; padding:0 20px; display:inline-flex; align-items:center;\">Retry Download</a>\n");
+            sb.append("              <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"action-pill-btn danger\">Retry Download</a>\n");
         }
         sb.append("            </div>\n");
         sb.append("          </div>\n");
@@ -2251,14 +2265,14 @@ public class HtmlRenderer {
             }
 
             if (item.getInfoType() == org.schabi.newpipe.extractor.InfoItem.InfoType.CHANNEL) {
-                sb.append("    <div class=\"card\" style=\"flex-direction:row; align-items:center; gap:24px; padding:16px 0;\">\n")
+                sb.append("    <div class=\"card\" style=\"flex-direction:row; align-items:center; gap:16px; padding:12px 0; min-width:0; max-width:100%; overflow:hidden;\">\n")
                   .append("      <a href=\"").append(clickUrl).append("\" style=\"flex-shrink:0;\">\n")
-                  .append("        <img class=\"card-thumbnail\" src=\"").append(getThumbnailUrl(item.getThumbnails())).append("\" style=\"width:100px; height:100px; border-radius:50%; aspect-ratio:1/1;\">\n")
+                  .append("        <img class=\"card-thumbnail\" src=\"").append(getThumbnailUrl(item.getThumbnails())).append("\" style=\"width:80px; height:80px; border-radius:50%; aspect-ratio:1/1; object-fit:cover;\">\n")
                   .append("      </a>\n")
-                  .append("      <div class=\"card-info\">\n")
-                  .append("        <a href=\"").append(clickUrl).append("\" class=\"card-title\" style=\"font-size:18px; margin-bottom:4px;\">").append(item.getName()).append("</a>\n")
+                  .append("      <div class=\"card-info\" style=\"min-width:0; flex-grow:1; flex-shrink:1; overflow:hidden;\">\n")
+                  .append("        <a href=\"").append(clickUrl).append("\" class=\"card-title\" style=\"font-size:16px; font-weight:600; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;\">").append(item.getName()).append("</a>\n")
                   .append("        <div class=\"card-meta\">\n")
-                  .append("          <span class=\"card-uploader\">").append(item.getName()).append("</span>\n")
+                  .append("          <span class=\"card-uploader\" style=\"white-space:nowrap; overflow:hidden; text-overflow:ellipsis;\">").append(item.getName()).append("</span>\n")
                   .append("          <span style=\"color:#ff0000; font-weight:bold; font-size:11px;\">👤 Channel</span>\n")
                   .append("        </div>\n")
                   .append("      </div>\n")
@@ -2309,10 +2323,19 @@ public class HtmlRenderer {
     }
 
     private static String getThumbnailUrl(List<Image> thumbnails) {
-        if (thumbnails == null || thumbnails.isEmpty()) {
-            return "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=300&auto=format&fit=crop";
+        if (thumbnails != null && !thumbnails.isEmpty()) {
+            for (int i = thumbnails.size() - 1; i >= 0; i--) {
+                Image img = thumbnails.get(i);
+                if (img != null && img.getUrl() != null && !img.getUrl().trim().isEmpty()) {
+                    String url = img.getUrl().trim();
+                    if (url.startsWith("//")) {
+                        url = "https:" + url;
+                    }
+                    return url;
+                }
+            }
         }
-        return thumbnails.get(thumbnails.size() - 1).getUrl();
+        return "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=300&auto=format&fit=crop";
     }
 
     private static String encodeUrl(String url) {
@@ -2810,13 +2833,15 @@ public class HtmlRenderer {
           .append("      removeLoadingCard();\n")
           .append("      if (data && data.items && data.items.length > 0) {\n")
           .append("        const container = document.getElementById('shorts-container');\n")
-          .append("        if (shortsQueue.length === 0) container.innerHTML = '';\n")
+          .append("        const isFirstLoad = (shortsQueue.length === 0);\n")
+          .append("        if (isFirstLoad) container.innerHTML = '';\n")
           .append("        data.items.forEach(item => {\n")
           .append("          const idx = shortsQueue.length;\n")
           .append("          shortsQueue.push(item);\n")
           .append("          renderShortCard(container, item, idx);\n")
           .append("        });\n")
           .append("        currentPage++;\n")
+          .append("        if (isFirstLoad) { container.scrollTop = 0; }\n")
           .append("        observeNewCards();\n")
           .append("      } else if (data && data.loading) {\n")
           .append("        removeLoadingCard();\n")
