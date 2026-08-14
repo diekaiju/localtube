@@ -1,0 +1,1 @@
+1: Fixed an issue where the native audio player would keep playing music after closing the player activity
