@@ -303,6 +303,9 @@ public class NativeAudioPlayerActivity extends AppCompatActivity {
     protected void onDestroy() {
         stopProgressUpdater();
         if (isBound) {
+            if (serverService != null) {
+                serverService.stopNativeAudio();
+            }
             unbindService(connection);
             isBound = false;
         }
