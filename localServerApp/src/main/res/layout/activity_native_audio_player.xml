@@ -41,7 +41,7 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_compass"
+            android:src="@drawable/ic_video"
             android:contentDescription="Open Web UI"
             app:tint="?attr/colorOnSurface" />
     </RelativeLayout>

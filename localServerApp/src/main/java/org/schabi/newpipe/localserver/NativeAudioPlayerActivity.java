@@ -176,8 +176,9 @@ public class NativeAudioPlayerActivity extends AppCompatActivity {
                 if (mediaUrl != null && !mediaUrl.isEmpty()) {
                     try {
                         String webUrl = "http://localhost:8080/watch?serviceId=" + serviceId + "&id=" + java.net.URLEncoder.encode(mediaUrl, "UTF-8");
-                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(webUrl));
-                        startActivity(browserIntent);
+                        Intent webIntent = new Intent(NativeAudioPlayerActivity.this, WebPlayerActivity.class);
+                        webIntent.putExtra("url", webUrl);
+                        startActivity(webIntent);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
