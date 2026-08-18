@@ -2798,7 +2798,7 @@ public class HtmlRenderer {
           .append("            <span class=\"setting-label\">Preferred Video Quality</span>\n")
           .append("            <span class=\"setting-desc\">Default playback resolution for streams.</span>\n")
           .append("          </div>\n")
-          .append("          <select name=\"video_quality\" style=\"padding: 8px 16px; border-radius: 8px; border: 1px solid var(--search-input-border); background-color: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; outline: none; cursor: pointer;\">\n");
+          .append("          <select name=\"video_quality\" style=\"padding: 8px 16px; border-radius: 8px; border: 1px solid var(--search-input-border); background-color: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; outline: none; cursor: pointer; width: 100%; max-width: 280px;\">\n");
 
         String[] qualities = {"144p", "240p", "360p", "480p", "720p", "1080p", "1440p", "2160p"};
         for (String q : qualities) {
@@ -2813,7 +2813,7 @@ public class HtmlRenderer {
           .append("            <span class=\"setting-label\">Home Feed Content</span>\n")
           .append("            <span class=\"setting-desc\">Choose what content appears on your Home feed.</span>\n")
           .append("          </div>\n")
-          .append("          <select name=\"home_feed_mode\" style=\"padding: 8px 16px; border-radius: 8px; border: 1px solid var(--search-input-border); background-color: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; outline: none; cursor: pointer;\">\n");
+          .append("          <select name=\"home_feed_mode\" style=\"padding: 8px 16px; border-radius: 8px; border: 1px solid var(--search-input-border); background-color: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; outline: none; cursor: pointer; width: 100%; max-width: 280px;\">\n");
 
         String[][] modes = {
             {"mix", "Mix (Recommendations & Subscriptions)"},
