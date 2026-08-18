@@ -563,6 +563,12 @@ public class HtmlRenderer {
                 "            const savedTheme = localStorage.getItem('theme');\n" +
                 "            const theme = savedTheme ? savedTheme : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');\n" +
                 "            document.documentElement.setAttribute('data-theme', theme);\n" +
+                "            \n" +
+                "            const accent = localStorage.getItem('theme-color') || 'system';\n" +
+                "            document.documentElement.setAttribute('data-theme-color', accent);\n" +
+                "            \n" +
+                "            const pureBlack = localStorage.getItem('pure-black') === 'true';\n" +
+                "            document.documentElement.setAttribute('data-pure-black', pureBlack);\n" +
                 "        })();\n" +
                 "    </script>\n" +
                 "</head>\n" +
@@ -976,6 +982,27 @@ public class HtmlRenderer {
                 "                    const newTheme = settingsThemeToggle.checked ? 'dark' : 'light';\n" +
                 "                    document.documentElement.setAttribute('data-theme', newTheme);\n" +
                 "                    localStorage.setItem('theme', newTheme);\n" +
+                "                });\n" +
+                "            }\n" +
+                "            \n" +
+                "            const settingsAccentSelect = document.getElementById('settings-accent-select');\n" +
+                "            if (settingsAccentSelect) {\n" +
+                "                const currentAccent = localStorage.getItem('theme-color') || 'system';\n" +
+                "                settingsAccentSelect.value = currentAccent;\n" +
+                "                settingsAccentSelect.addEventListener('change', function() {\n" +
+                "                    const newAccent = settingsAccentSelect.value;\n" +
+                "                    document.documentElement.setAttribute('data-theme-color', newAccent);\n" +
+                "                    localStorage.setItem('theme-color', newAccent);\n" +
+                "                });\n" +
+                "            }\n" +
+                "            \n" +
+                "            const settingsPureBlackToggle = document.getElementById('settings-pureblack-toggle');\n" +
+                "            if (settingsPureBlackToggle) {\n" +
+                "                settingsPureBlackToggle.checked = (localStorage.getItem('pure-black') === 'true');\n" +
+                "                settingsPureBlackToggle.addEventListener('change', function() {\n" +
+                "                    const isPureBlack = settingsPureBlackToggle.checked;\n" +
+                "                    document.documentElement.setAttribute('data-pure-black', isPureBlack);\n" +
+                "                    localStorage.setItem('pure-black', isPureBlack ? 'true' : 'false');\n" +
                 "                });\n" +
                 "            }\n" +
                 "            \n" +
@@ -2858,6 +2885,30 @@ public class HtmlRenderer {
           .append("            <span class=\"slider\"></span>\n")
           .append("          </label>\n")
           .append("        </div>\n")
+          .append("        <div class=\"setting-row\" id=\"settings-accent-row\">\n")
+          .append("          <div class=\"setting-label-group\">\n")
+          .append("            <span class=\"setting-label\">Theme Accent Color</span>\n")
+          .append("            <span class=\"setting-desc\">Select the primary accent color of the interface.</span>\n")
+          .append("          </div>\n")
+          .append("          <select id=\"settings-accent-select\" style=\"padding: 8px 16px; border-radius: 8px; border: 1px solid var(--search-input-border); background-color: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; outline: none; cursor: pointer;\">\n")
+          .append("            <option value=\"system\">System (Material You)</option>\n")
+          .append("            <option value=\"purple\">Classic Purple</option>\n")
+          .append("            <option value=\"green\">Forest Green</option>\n")
+          .append("            <option value=\"blue\">Ocean Blue</option>\n")
+          .append("            <option value=\"orange\">Sunset Orange</option>\n")
+          .append("            <option value=\"red\">Crimson Red</option>\n")
+          .append("          </select>\n")
+          .append("        </div>\n")
+          .append("        <div class=\"setting-row\" id=\"settings-pureblack-row\">\n")
+          .append("          <div class=\"setting-label-group\">\n")
+          .append("            <span class=\"setting-label\">AMOLED Black</span>\n")
+          .append("            <span class=\"setting-desc\">Use pure black background in dark theme.</span>\n")
+          .append("          </div>\n")
+          .append("          <label class=\"switch\">\n")
+          .append("            <input type=\"checkbox\" id=\"settings-pureblack-toggle\">\n")
+          .append("            <span class=\"slider\"></span>\n")
+          .append("          </label>\n")
+          .append("        </div>\n")
           .append("        <div class=\"setting-row\" id=\"settings-audio-only-row\">\n")
           .append("          <div class=\"setting-label-group\">\n")
           .append("            <span class=\"setting-label\">Default to Audio Only</span>\n")
@@ -2977,6 +3028,139 @@ public class HtmlRenderer {
               .append("  --slider-bg: ").append(darkColors.getOrDefault("secondaryContainer", "#4a4458")).append(";\n")
               .append("}\n");
         }
+        
+        sb.append("\n/* Custom color theme overrides */\n")
+          .append("[data-theme-color=\"purple\"] {\n")
+          .append("  --logo-color: #6750A4;\n")
+          .append("  --bottom-nav-item-active-color: #21005d;\n")
+          .append("  --bottom-nav-active-pill-bg: #e8def8;\n")
+          .append("  --settings-section-title-color: #6750A4;\n")
+          .append("  --slider-bg: #e8def8;\n")
+          .append("  --search-btn-hover: #e8def8;\n")
+          .append("  --service-tab-hover-bg: #e8def8;\n")
+          .append("}\n")
+          .append("[data-theme=\"dark\"][data-theme-color=\"purple\"] {\n")
+          .append("  --bg-color: #000000;\n")
+          .append("  --header-bg: #121212;\n")
+          .append("  --card-bg: #121212;\n")
+          .append("  --bottom-nav-bg: #121212;\n")
+          .append("  --settings-card-bg: #121212;\n")
+          .append("  --textarea-bg: #121212;\n")
+          .append("  --logo-color: #d0bcff;\n")
+          .append("  --bottom-nav-item-active-color: #e8def8;\n")
+          .append("  --bottom-nav-active-pill-bg: #4a4458;\n")
+          .append("  --settings-section-title-color: #d0bcff;\n")
+          .append("  --slider-bg: #4a4458;\n")
+          .append("  --search-btn-hover: #4a4458;\n")
+          .append("  --service-tab-hover-bg: #4a4458;\n")
+          .append("}\n")
+          .append("[data-theme-color=\"green\"] {\n")
+          .append("  --logo-color: #2E7D32;\n")
+          .append("  --bottom-nav-item-active-color: #1B5E20;\n")
+          .append("  --bottom-nav-active-pill-bg: #C8E6C9;\n")
+          .append("  --settings-section-title-color: #2E7D32;\n")
+          .append("  --slider-bg: #C8E6C9;\n")
+          .append("  --search-btn-hover: #C8E6C9;\n")
+          .append("  --service-tab-hover-bg: #C8E6C9;\n")
+          .append("}\n")
+          .append("[data-theme=\"dark\"][data-theme-color=\"green\"] {\n")
+          .append("  --bg-color: #000000;\n")
+          .append("  --header-bg: #121212;\n")
+          .append("  --card-bg: #121212;\n")
+          .append("  --bottom-nav-bg: #121212;\n")
+          .append("  --settings-card-bg: #121212;\n")
+          .append("  --textarea-bg: #121212;\n")
+          .append("  --logo-color: #81C784;\n")
+          .append("  --bottom-nav-item-active-color: #E8F5E9;\n")
+          .append("  --bottom-nav-active-pill-bg: #1B5E20;\n")
+          .append("  --settings-section-title-color: #81C784;\n")
+          .append("  --slider-bg: #1B5E20;\n")
+          .append("  --search-btn-hover: #1B5E20;\n")
+          .append("  --service-tab-hover-bg: #1B5E20;\n")
+          .append("}\n")
+          .append("[data-theme-color=\"blue\"] {\n")
+          .append("  --logo-color: #1565C0;\n")
+          .append("  --bottom-nav-item-active-color: #0D47A1;\n")
+          .append("  --bottom-nav-active-pill-bg: #BBDEFB;\n")
+          .append("  --settings-section-title-color: #1565C0;\n")
+          .append("  --slider-bg: #BBDEFB;\n")
+          .append("  --search-btn-hover: #BBDEFB;\n")
+          .append("  --service-tab-hover-bg: #BBDEFB;\n")
+          .append("}\n")
+          .append("[data-theme=\"dark\"][data-theme-color=\"blue\"] {\n")
+          .append("  --bg-color: #000000;\n")
+          .append("  --header-bg: #121212;\n")
+          .append("  --card-bg: #121212;\n")
+          .append("  --bottom-nav-bg: #121212;\n")
+          .append("  --settings-card-bg: #121212;\n")
+          .append("  --textarea-bg: #121212;\n")
+          .append("  --logo-color: #90CAF9;\n")
+          .append("  --bottom-nav-item-active-color: #E3F2FD;\n")
+          .append("  --bottom-nav-active-pill-bg: #1565C0;\n")
+          .append("  --settings-section-title-color: #90CAF9;\n")
+          .append("  --slider-bg: #1565C0;\n")
+          .append("  --search-btn-hover: #1565C0;\n")
+          .append("  --service-tab-hover-bg: #1565C0;\n")
+          .append("}\n")
+          .append("[data-theme-color=\"orange\"] {\n")
+          .append("  --logo-color: #E65100;\n")
+          .append("  --bottom-nav-item-active-color: #BF360C;\n")
+          .append("  --bottom-nav-active-pill-bg: #FFE0B2;\n")
+          .append("  --settings-section-title-color: #E65100;\n")
+          .append("  --slider-bg: #FFE0B2;\n")
+          .append("  --search-btn-hover: #FFE0B2;\n")
+          .append("  --service-tab-hover-bg: #FFE0B2;\n")
+          .append("}\n")
+          .append("[data-theme=\"dark\"][data-theme-color=\"orange\"] {\n")
+          .append("  --bg-color: #000000;\n")
+          .append("  --header-bg: #121212;\n")
+          .append("  --card-bg: #121212;\n")
+          .append("  --bottom-nav-bg: #121212;\n")
+          .append("  --settings-card-bg: #121212;\n")
+          .append("  --textarea-bg: #121212;\n")
+          .append("  --logo-color: #FFB74D;\n")
+          .append("  --bottom-nav-item-active-color: #FFF3E0;\n")
+          .append("  --bottom-nav-active-pill-bg: #E65100;\n")
+          .append("  --settings-section-title-color: #FFB74D;\n")
+          .append("  --slider-bg: #E65100;\n")
+          .append("  --search-btn-hover: #E65100;\n")
+          .append("  --service-tab-hover-bg: #E65100;\n")
+          .append("}\n")
+          .append("[data-theme-color=\"red\"] {\n")
+          .append("  --logo-color: #C62828;\n")
+          .append("  --bottom-nav-item-active-color: #B71C1C;\n")
+          .append("  --bottom-nav-active-pill-bg: #FFCDD2;\n")
+          .append("  --settings-section-title-color: #C62828;\n")
+          .append("  --slider-bg: #FFCDD2;\n")
+          .append("  --search-btn-hover: #FFCDD2;\n")
+          .append("  --service-tab-hover-bg: #FFCDD2;\n")
+          .append("}\n")
+          .append("[data-theme=\"dark\"][data-theme-color=\"red\"] {\n")
+          .append("  --bg-color: #000000;\n")
+          .append("  --header-bg: #121212;\n")
+          .append("  --card-bg: #121212;\n")
+          .append("  --bottom-nav-bg: #121212;\n")
+          .append("  --settings-card-bg: #121212;\n")
+          .append("  --textarea-bg: #121212;\n")
+          .append("  --logo-color: #E57373;\n")
+          .append("  --bottom-nav-item-active-color: #FFEBEE;\n")
+          .append("  --bottom-nav-active-pill-bg: #C62828;\n")
+          .append("  --settings-section-title-color: #E57373;\n")
+          .append("  --slider-bg: #C62828;\n")
+          .append("  --search-btn-hover: #C62828;\n")
+          .append("  --service-tab-hover-bg: #C62828;\n")
+          .append("}\n");
+
+        sb.append("\n/* AMOLED Pure Black Override */\n")
+          .append("[data-theme=\"dark\"][data-pure-black=\"true\"] {\n")
+          .append("  --bg-color: #000000 !important;\n")
+          .append("  --header-bg: #121212 !important;\n")
+          .append("  --card-bg: #121212 !important;\n")
+          .append("  --bottom-nav-bg: #121212 !important;\n")
+          .append("  --settings-card-bg: #121212 !important;\n")
+          .append("  --textarea-bg: #121212 !important;\n")
+          .append("}\n");
+
         return sb.toString();
     }
 
