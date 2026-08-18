@@ -560,7 +560,8 @@ public class HtmlRenderer {
                 "    </style>\n" +
                 "    <script>\n" +
                 "        (function() {\n" +
-                "            const theme = localStorage.getItem('theme') || 'light';\n" +
+                "            const savedTheme = localStorage.getItem('theme');\n" +
+                "            const theme = savedTheme ? savedTheme : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');\n" +
                 "            document.documentElement.setAttribute('data-theme', theme);\n" +
                 "        })();\n" +
                 "    </script>\n" +

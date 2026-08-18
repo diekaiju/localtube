@@ -170,6 +170,21 @@ public class NativeAudioPlayerActivity extends AppCompatActivity {
         // Set up click listeners
         btnBack.setOnClickListener(v -> finish());
 
+        ImageButton btnOpenWebUi = findViewById(R.id.btn_open_web_ui);
+        if (btnOpenWebUi != null) {
+            btnOpenWebUi.setOnClickListener(v -> {
+                if (mediaUrl != null && !mediaUrl.isEmpty()) {
+                    try {
+                        String webUrl = "http://localhost:8080/watch?serviceId=" + serviceId + "&id=" + java.net.URLEncoder.encode(mediaUrl, "UTF-8");
+                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(webUrl));
+                        startActivity(browserIntent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+
         audioBtnPlay.setOnClickListener(v -> {
             if (isBound && serverService != null) {
                 if (serverService.isAudioPlaying()) {

@@ -75,7 +75,11 @@
             android:name=".ServerService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="mediaPlayback|specialUse" />
+            android:foregroundServiceType="mediaPlayback|specialUse">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
             
     </application>
 
