@@ -402,6 +402,37 @@ public class SettingsActivity extends AppCompatActivity {
                 }
             });
         }
+
+        final Spinner spinnerHomeFeedMode = view.findViewById(R.id.spinner_home_feed_mode);
+        if (spinnerHomeFeedMode != null) {
+            final String[] modeKeys = {"mix", "subs", "recs"};
+            final ArrayAdapter<String> modeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, new String[]{
+                    "Mix (Recommendations & Subscriptions)",
+                    "Subscriptions Only",
+                    "Recommendations Only"
+            });
+            modeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerHomeFeedMode.setAdapter(modeAdapter);
+
+            String currentMode = db.getHomeFeedMode();
+            for (int i = 0; i < modeKeys.length; i++) {
+                if (modeKeys[i].equals(currentMode)) {
+                    spinnerHomeFeedMode.setSelection(i);
+                    break;
+                }
+            }
+
+            spinnerHomeFeedMode.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    db.setSetting("home_feed_mode", modeKeys[position]);
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                }
+            });
+        }
     }
 
     private class ViewPagerAdapter extends RecyclerView.Adapter<ViewPagerAdapter.ViewHolder> {

@@ -2778,7 +2778,7 @@ public class HtmlRenderer {
         return wrapInTemplate("Offline Dashboard - LocalTube", sb.toString(), isTv);
     }
 
-    public static String renderSettings(int serviceId, String currentQuality, boolean hideWatched, boolean hideShorts, boolean saved, boolean isTv) {
+    public static String renderSettings(int serviceId, String currentQuality, boolean hideWatched, boolean hideShorts, String homeFeedMode, boolean saved, boolean isTv) {
         StringBuilder sb = new StringBuilder();
         sb.append(getHeaderHtml(serviceId, "", "settings"));
         sb.append("<div class=\"container\">\n")
@@ -2804,6 +2804,25 @@ public class HtmlRenderer {
         for (String q : qualities) {
             String selected = q.equals(currentQuality) ? "selected" : "";
             sb.append("            <option value=\"").append(q).append("\" ").append(selected).append(">").append(q).append("</option>\n");
+        }
+
+        sb.append("          </select>\n")
+          .append("        </div>\n")
+          .append("        <div class=\"setting-row\">\n")
+          .append("          <div class=\"setting-label-group\">\n")
+          .append("            <span class=\"setting-label\">Home Feed Content</span>\n")
+          .append("            <span class=\"setting-desc\">Choose what content appears on your Home feed.</span>\n")
+          .append("          </div>\n")
+          .append("          <select name=\"home_feed_mode\" style=\"padding: 8px 16px; border-radius: 8px; border: 1px solid var(--search-input-border); background-color: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; outline: none; cursor: pointer;\">\n");
+
+        String[][] modes = {
+            {"mix", "Mix (Recommendations & Subscriptions)"},
+            {"subs", "Subscriptions Only"},
+            {"recs", "Recommendations Only"}
+        };
+        for (String[] m : modes) {
+            String selected = m[0].equals(homeFeedMode) ? "selected" : "";
+            sb.append("            <option value=\"").append(m[0]).append("\" ").append(selected).append(">").append(m[1]).append("</option>\n");
         }
 
         sb.append("          </select>\n")

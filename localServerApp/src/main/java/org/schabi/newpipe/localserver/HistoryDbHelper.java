@@ -430,6 +430,10 @@ public class HistoryDbHelper extends SQLiteOpenHelper {
         return getSetting("video_quality", "360p");
     }
 
+    public String getHomeFeedMode() {
+        return getSetting("home_feed_mode", "mix");
+    }
+
 
     public List<String> getBlockedKeywords() {
         String val = getSetting("blocked_keywords", "");

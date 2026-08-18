@@ -55,6 +55,22 @@
                     android:layout_marginBottom="20dp"/>
 
 
+                <!-- Home Feed Mode Selector -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Home Feed Content"
+                    style="@style/TextAppearance.Material3.LabelLarge"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_marginBottom="8dp"/>
+
+                <Spinner
+                    android:id="@+id/spinner_home_feed_mode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"/>
+
+
                 <!-- Hide Watched -->
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/sw_hide_watched"

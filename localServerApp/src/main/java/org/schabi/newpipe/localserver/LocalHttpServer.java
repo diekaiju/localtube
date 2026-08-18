@@ -704,7 +704,38 @@ public class LocalHttpServer {
                 List<InfoItem> items;
                 Page next;
 
-                if (nextPage != null) {
+                String feedMode = dbHelper.getHomeFeedMode();
+                if ("subs".equals(feedMode)) {
+                    items = new ArrayList<>();
+                    next = null;
+                    List<InfoItem> subscriptions = dbHelper.getSubscriptions();
+                    if (subscriptions != null && !subscriptions.isEmpty()) {
+                        List<InfoItem> selectedChannels = new ArrayList<>(subscriptions);
+                        java.util.Collections.shuffle(selectedChannels);
+                        int limit = Math.min(10, selectedChannels.size());
+                        List<java.util.concurrent.Future<List<InfoItem>>> futures = new ArrayList<>();
+                        for (int i = 0; i < limit; i++) {
+                            final String url = selectedChannels.get(i).getUrl();
+                            futures.add(executorService.submit(new java.util.concurrent.Callable<List<InfoItem>>() {
+                                @Override
+                                public List<InfoItem> call() throws Exception {
+                                    return fetchChannelUploads(service, url);
+                                }
+                            }));
+                        }
+                        for (java.util.concurrent.Future<List<InfoItem>> future : futures) {
+                            try {
+                                List<InfoItem> res = future.get(5, java.util.concurrent.TimeUnit.SECONDS);
+                                if (res != null) {
+                                    items.addAll(res);
+                                }
+                            } catch (Exception e) {
+                                log("Future timeout/error fetching channel uploads: " + e.getMessage());
+                            }
+                        }
+                        java.util.Collections.shuffle(items);
+                    }
+                } else if (nextPage != null) {
                     SearchExtractor extractor = service.getSearchExtractor("trending");
                     InfoItemsPage<InfoItem> page = extractor.getPage(nextPage);
                     items = page.getItems();
@@ -723,46 +754,48 @@ public class LocalHttpServer {
                     items = extractor.getInitialPage().getItems();
                     next = extractor.getInitialPage().getNextPage();
 
-                    List<InfoItem> subscriptions = dbHelper.getSubscriptions();
-                    if (subscriptions != null && !subscriptions.isEmpty()) {
-                        List<InfoItem> selectedChannels = new ArrayList<>(subscriptions);
-                        java.util.Collections.shuffle(selectedChannels);
-                        int limit = Math.min(3, selectedChannels.size());
-                        List<java.util.concurrent.Future<List<InfoItem>>> futures = new ArrayList<>();
-                        for (int i = 0; i < limit; i++) {
-                            final String url = selectedChannels.get(i).getUrl();
-                            futures.add(executorService.submit(new java.util.concurrent.Callable<List<InfoItem>>() {
-                                @Override
-                                public List<InfoItem> call() throws Exception {
-                                    return fetchChannelUploads(service, url);
-                                }
-                            }));
-                        }
-                        List<InfoItem> channelItems = new ArrayList<>();
-                        for (java.util.concurrent.Future<List<InfoItem>> future : futures) {
-                            try {
-                                List<InfoItem> res = future.get(5, java.util.concurrent.TimeUnit.SECONDS);
-                                if (res != null) {
-                                    channelItems.addAll(res);
-                                }
-                            } catch (Exception e) {
-                                log("Future timeout/error fetching channel uploads: " + e.getMessage());
+                    if ("mix".equals(feedMode)) {
+                        List<InfoItem> subscriptions = dbHelper.getSubscriptions();
+                        if (subscriptions != null && !subscriptions.isEmpty()) {
+                            List<InfoItem> selectedChannels = new ArrayList<>(subscriptions);
+                            java.util.Collections.shuffle(selectedChannels);
+                            int limit = Math.min(3, selectedChannels.size());
+                            List<java.util.concurrent.Future<List<InfoItem>>> futures = new ArrayList<>();
+                            for (int i = 0; i < limit; i++) {
+                                final String url = selectedChannels.get(i).getUrl();
+                                futures.add(executorService.submit(new java.util.concurrent.Callable<List<InfoItem>>() {
+                                    @Override
+                                    public List<InfoItem> call() throws Exception {
+                                        return fetchChannelUploads(service, url);
+                                    }
+                                }));
                             }
-                        }
-                        if (!channelItems.isEmpty()) {
-                            java.util.Collections.shuffle(channelItems);
-                            List<InfoItem> mergedItems = new ArrayList<>();
-                            int channelIdx = 0;
-                            int feedIdx = 0;
-                            while (channelIdx < channelItems.size() || feedIdx < items.size()) {
-                                for (int k = 0; k < 2 && channelIdx < channelItems.size(); k++) {
-                                    mergedItems.add(channelItems.get(channelIdx++));
-                                }
-                                if (feedIdx < items.size()) {
-                                    mergedItems.add(items.get(feedIdx++));
+                            List<InfoItem> channelItems = new ArrayList<>();
+                            for (java.util.concurrent.Future<List<InfoItem>> future : futures) {
+                                try {
+                                    List<InfoItem> res = future.get(5, java.util.concurrent.TimeUnit.SECONDS);
+                                    if (res != null) {
+                                        channelItems.addAll(res);
+                                    }
+                                } catch (Exception e) {
+                                    log("Future timeout/error fetching channel uploads: " + e.getMessage());
                                 }
                             }
-                            items = mergedItems;
+                            if (!channelItems.isEmpty()) {
+                                java.util.Collections.shuffle(channelItems);
+                                List<InfoItem> mergedItems = new ArrayList<>();
+                                int channelIdx = 0;
+                                int feedIdx = 0;
+                                while (channelIdx < channelItems.size() || feedIdx < items.size()) {
+                                    for (int k = 0; k < 2 && channelIdx < channelItems.size(); k++) {
+                                        mergedItems.add(channelItems.get(channelIdx++));
+                                    }
+                                    if (feedIdx < items.size()) {
+                                        mergedItems.add(items.get(feedIdx++));
+                                    }
+                                }
+                                items = mergedItems;
+                            }
                         }
                     }
                 }
@@ -1627,10 +1660,12 @@ public class LocalHttpServer {
                 String quality = params.get("video_quality");
                 String hideWatched = params.get("hide_watched");
                 String hideShorts = params.get("hide_shorts");
+                String homeFeedMode = params.get("home_feed_mode");
 
                 dbHelper.setSetting("video_quality", quality != null ? quality : "360p");
                 dbHelper.setSetting("hide_watched", "on".equals(hideWatched) ? "true" : "false");
                 dbHelper.setSetting("hide_shorts", "on".equals(hideShorts) ? "true" : "false");
+                dbHelper.setSetting("home_feed_mode", homeFeedMode != null ? homeFeedMode : "mix");
 
                 String redirectHeader = "HTTP/1.1 303 See Other\r\n" +
                         "Location: /settings?saved=true\r\n" +
@@ -1643,9 +1678,10 @@ public class LocalHttpServer {
             String currentQuality = dbHelper.getVideoQuality();
             boolean hideWatched = dbHelper.getHideWatched();
             boolean hideShorts = dbHelper.getHideShorts();
+            String homeFeedMode = dbHelper.getHomeFeedMode();
             boolean saved = "true".equals(params.get("saved"));
 
-            String html = HtmlRenderer.renderSettings(0, currentQuality, hideWatched, hideShorts, saved, isTv);
+            String html = HtmlRenderer.renderSettings(0, currentQuality, hideWatched, hideShorts, homeFeedMode, saved, isTv);
             sendResponse(os, 200, html, "text/html; charset=UTF-8");
         }
 
