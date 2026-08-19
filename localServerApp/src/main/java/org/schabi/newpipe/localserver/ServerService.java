@@ -124,6 +124,9 @@ public class ServerService extends MediaSessionService {
                 .setContentText("Listening on: " + addressText)
                 .setSmallIcon(android.R.drawable.sym_def_app_icon)
                 .setContentIntent(pendingIntent)
+                .setOnlyAlertOnce(true)
+                .setSilent(true)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build();
 
         // Support Android 14 API 34+ foreground service types
@@ -306,7 +309,10 @@ public class ServerService extends MediaSessionService {
                 .setContentText(text)
                 .setSmallIcon(android.R.drawable.sym_def_app_icon)
                 .setContentIntent(pendingIntent)
-                .setOngoing(isAudioPlaying);
+                .setOngoing(isAudioPlaying)
+                .setOnlyAlertOnce(true)
+                .setSilent(true)
+                .setPriority(NotificationCompat.PRIORITY_LOW);
 
         if (isAudioPlaying) {
             Intent pauseIntent = new Intent(this, ServerService.class).setAction(ACTION_PAUSE);
@@ -354,8 +360,11 @@ public class ServerService extends MediaSessionService {
             NotificationChannel serviceChannel = new NotificationChannel(
                     CHANNEL_ID,
                     "LocalTube Channel",
-                    NotificationManager.IMPORTANCE_DEFAULT
+                    NotificationManager.IMPORTANCE_LOW
             );
+            serviceChannel.setSound(null, null);
+            serviceChannel.enableVibration(false);
+            serviceChannel.setShowBadge(false);
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(serviceChannel);
