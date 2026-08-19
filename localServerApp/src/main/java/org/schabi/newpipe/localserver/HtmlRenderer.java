@@ -724,6 +724,18 @@ public class HtmlRenderer {
                 "            const tg = document.getElementById('share-tg'); if (tg) tg.href = 'https://t.me/share/url?url=' + encUrl + '&text=' + encTitle;\n" +
                 "            const tw = document.getElementById('share-tw'); if (tw) tw.href = 'https://twitter.com/intent/tweet?text=' + encTitle + '&url=' + encUrl;\n" +
                 "            const em = document.getElementById('share-em'); if (em) em.href = 'mailto:?subject=' + encTitle + '&body=' + encUrl;\n" +
+                "            const bindClick = (id) => {\n" +
+                "                const el = document.getElementById(id);\n" +
+                "                if (el) {\n" +
+                "                    el.onclick = function(e) {\n" +
+                "                        if (window.NewPipeApp && window.NewPipeApp.openExternalUrl) {\n" +
+                "                            e.preventDefault();\n" +
+                "                            window.NewPipeApp.openExternalUrl(this.href);\n" +
+                "                        }\n" +
+                "                    };\n" +
+                "                }\n" +
+                "            };\n" +
+                "            bindClick('share-wa'); bindClick('share-tg'); bindClick('share-tw'); bindClick('share-em');\n" +
                 "            overlay.classList.add('active');\n" +
                 "        }\n" +
                 "        \n" +

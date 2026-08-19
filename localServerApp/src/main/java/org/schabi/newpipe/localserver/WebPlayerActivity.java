@@ -109,6 +109,15 @@ public class WebPlayerActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url != null && isExternalShareUrl(url)) {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url));
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return true;
+                }
                 if (url.contains("/audio")) {
                     try {
                         android.net.Uri uri = android.net.Uri.parse(url);
@@ -204,6 +213,20 @@ public class WebPlayerActivity extends AppCompatActivity {
         }
 
         @android.webkit.JavascriptInterface
+        public void openExternalUrl(String url) {
+            if (url != null && !url.isEmpty()) {
+                runOnUiThread(() -> {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url));
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+        }
+
+        @android.webkit.JavascriptInterface
         public void playNativeAudio(String url, String title, String artist) {
             if (serverService != null) {
                 serverService.playNativeAudio(url, title, artist);
@@ -245,6 +268,15 @@ public class WebPlayerActivity extends AppCompatActivity {
                 serverService.seekNativeAudio(positionMs);
             }
         }
+    }
+
+    public static boolean isExternalShareUrl(String url) {
+        if (url == null) return false;
+        String lower = url.toLowerCase();
+        return lower.startsWith("mailto:") || lower.startsWith("whatsapp:") || lower.startsWith("tg:") || lower.startsWith("intent:")
+                || lower.contains("api.whatsapp.com") || lower.contains("whatsapp.com")
+                || lower.contains("t.me") || lower.contains("telegram.me")
+                || lower.contains("twitter.com/intent") || lower.contains("x.com/intent");
     }
 
     public void enterPipMode() {
