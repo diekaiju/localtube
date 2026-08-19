@@ -178,7 +178,8 @@ public class YoutubeSubscriptionImportFragment extends DialogFragment {
         @JavascriptInterface
         public void onSubscriptionsScraped(String json) {
             if (getActivity() == null) return;
-            getActivity().runOnUiThread(() -> {
+            new Thread(() -> {
+                int successCount = 0;
                 try {
                     JSONArray channelsArray = new JSONArray(json);
                     HistoryDbHelper db = HistoryDbHelper.getInstance(getContext());
@@ -187,21 +188,47 @@ public class YoutubeSubscriptionImportFragment extends DialogFragment {
                         String url = obj.getString("url");
                         String name = obj.getString("name");
                         String avatar = obj.optString("avatar", "");
-                        db.addSubscription(url, name, avatar);
+
+                        try {
+                            String serverUrl = "http://127.0.0.1:8080/subscribe_action?action=subscribe&id="
+                                    + java.net.URLEncoder.encode(url, "UTF-8")
+                                    + "&name=" + java.net.URLEncoder.encode(name, "UTF-8")
+                                    + "&avatar=" + java.net.URLEncoder.encode(avatar, "UTF-8")
+                                    + "&back=ajax";
+                            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) new java.net.URL(serverUrl).openConnection();
+                            conn.setRequestMethod("GET");
+                            conn.setConnectTimeout(3000);
+                            conn.setReadTimeout(3000);
+                            int resCode = conn.getResponseCode();
+                            if (resCode == 200) {
+                                successCount++;
+                            } else {
+                                db.addSubscription(url, name, avatar);
+                                successCount++;
+                            }
+                            conn.disconnect();
+                        } catch (Exception e) {
+                            db.addSubscription(url, name, avatar);
+                            successCount++;
+                        }
                     }
-                    Log.d("SubscriptionImport", "Scraped and saved " + channelsArray.length() + " subscriptions.");
-                    if (channelsArray.length() > 0) {
-                        Toast.makeText(getContext(), "Imported " + channelsArray.length() + " subscriptions successfully!", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(getContext(), "No subscriptions found.", Toast.LENGTH_SHORT).show();
-                    }
-                    dismiss();
+                    Log.d("SubscriptionImport", "Scraped and saved " + successCount + " subscriptions via subscribe action.");
                 } catch (Exception e) {
                     Log.e("SubscriptionImport", "Failed to parse scraped channels", e);
-                    Toast.makeText(getContext(), "Failed to parse subscriptions.", Toast.LENGTH_SHORT).show();
-                    dismiss();
                 }
-            });
+
+                int finalCount = successCount;
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if (finalCount > 0) {
+                            Toast.makeText(getContext(), "Imported " + finalCount + " subscriptions successfully!", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getContext(), "No subscriptions found.", Toast.LENGTH_SHORT).show();
+                        }
+                        dismiss();
+                    });
+                }
+            }).start();
         }
     }
 }
