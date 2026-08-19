@@ -1,0 +1,7 @@
+1: High-speed parallel video and audio stream downloading with 64KB I/O buffering
+2: Quiet background media service notifications (removed noisy alerts and popups)
+3: Subscription import pipeline refactored to use standard subscription workflow
+4: Automatic channel avatar database updates when visiting channel pages with initial badge fallbacks
+5: Pure Web UI Share modal with 1-click link copying and external sharing targets
+6: Removed Save Settings button in favor of instant silent background auto-save
+7: Anchored Reels card viewport controls and removed Reels subscribe button
