@@ -1146,6 +1146,28 @@ public class HtmlRenderer {
                 "                });\n" +
                 "            }\n" +
                 "            \n" +
+                "            const autoSaveSetting = (paramName, paramValue) => {\n" +
+                "                fetch('/settings?action=save&format=ajax&' + encodeURIComponent(paramName) + '=' + encodeURIComponent(paramValue))\n" +
+                "                    .then(() => { if (typeof showToast === 'function') showToast('Preference saved'); })\n" +
+                "                    .catch(err => console.error(err));\n" +
+                "            };\n" +
+                "            const settingQuality = document.getElementById('setting-video-quality');\n" +
+                "            if (settingQuality) {\n" +
+                "                settingQuality.addEventListener('change', function() { autoSaveSetting('video_quality', this.value); });\n" +
+                "            }\n" +
+                "            const settingFeedMode = document.getElementById('setting-home-feed-mode');\n" +
+                "            if (settingFeedMode) {\n" +
+                "                settingFeedMode.addEventListener('change', function() { autoSaveSetting('home_feed_mode', this.value); });\n" +
+                "            }\n" +
+                "            const settingHideWatched = document.getElementById('setting-hide-watched');\n" +
+                "            if (settingHideWatched) {\n" +
+                "                settingHideWatched.addEventListener('change', function() { autoSaveSetting('hide_watched', this.checked ? 'true' : 'false'); });\n" +
+                "            }\n" +
+                "            const settingHideShorts = document.getElementById('setting-hide-shorts');\n" +
+                "            if (settingHideShorts) {\n" +
+                "                settingHideShorts.addEventListener('change', function() { autoSaveSetting('hide_shorts', this.checked ? 'true' : 'false'); });\n" +
+                "            }\n" +
+                "            \n" +
                 "            document.addEventListener('click', function(e) {\n" +
                 "                const target = e.target.closest('a');\n" +
                 "                if (target && target.href) {\n" +
@@ -2944,14 +2966,7 @@ public class HtmlRenderer {
         sb.append(getHeaderHtml(serviceId, "", "settings"));
         sb.append("<div class=\"container\">\n")
           .append("  <div class=\"settings-card\">\n")
-          .append("    <h1 class=\"settings-title\">⚙️ Preferences &amp; Backup</h1>\n");
-
-        if (saved) {
-            sb.append("    <div class=\"alert-banner\">✓ Settings saved successfully!</div>\n");
-        }
-
-        sb.append("    <form action=\"/settings\" method=\"GET\">\n")
-          .append("      <input type=\"hidden\" name=\"action\" value=\"save\">\n")
+          .append("    <h1 class=\"settings-title\">⚙️ Preferences &amp; Backup</h1>\n")
           .append("      <div class=\"settings-section\">\n")
           .append("        <h3 class=\"settings-section-title\">Filter Settings</h3>\n")
           .append("        <div class=\"setting-row\">\n")
@@ -2959,7 +2974,7 @@ public class HtmlRenderer {
           .append("            <span class=\"setting-label\">Preferred Video Quality</span>\n")
           .append("            <span class=\"setting-desc\">Default playback resolution for streams.</span>\n")
           .append("          </div>\n")
-          .append("          <select name=\"video_quality\" style=\"padding: 8px 16px; border-radius: 8px; border: 1px solid var(--search-input-border); background-color: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; outline: none; cursor: pointer; width: 100%; max-width: 280px;\">\n");
+          .append("          <select id=\"setting-video-quality\" name=\"video_quality\" style=\"padding: 8px 16px; border-radius: 8px; border: 1px solid var(--search-input-border); background-color: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; outline: none; cursor: pointer; width: 100%; max-width: 280px;\">\n");
 
         String[] qualities = {"144p", "240p", "360p", "480p", "720p", "1080p", "1440p", "2160p"};
         for (String q : qualities) {
@@ -2974,7 +2989,7 @@ public class HtmlRenderer {
           .append("            <span class=\"setting-label\">Home Feed Content</span>\n")
           .append("            <span class=\"setting-desc\">Choose what content appears on your Home feed.</span>\n")
           .append("          </div>\n")
-          .append("          <select name=\"home_feed_mode\" style=\"padding: 8px 16px; border-radius: 8px; border: 1px solid var(--search-input-border); background-color: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; outline: none; cursor: pointer; width: 100%; max-width: 280px;\">\n");
+          .append("          <select id=\"setting-home-feed-mode\" name=\"home_feed_mode\" style=\"padding: 8px 16px; border-radius: 8px; border: 1px solid var(--search-input-border); background-color: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; outline: none; cursor: pointer; width: 100%; max-width: 280px;\">\n");
 
         String[][] modes = {
             {"mix", "Mix (Recommendations & Subscriptions)"},
@@ -2994,7 +3009,7 @@ public class HtmlRenderer {
           .append("            <span class=\"setting-desc\">Hide videos you have already watched from lists.</span>\n")
           .append("          </div>\n")
           .append("          <label class=\"switch\">\n")
-          .append("            <input type=\"checkbox\" name=\"hide_watched\" value=\"on\" ").append(hideWatched ? "checked" : "").append(">\n")
+          .append("            <input type=\"checkbox\" id=\"setting-hide-watched\" name=\"hide_watched\" value=\"on\" ").append(hideWatched ? "checked" : "").append(">\n")
           .append("            <span class=\"slider\"></span>\n")
           .append("          </label>\n")
           .append("        </div>\n")
@@ -3004,7 +3019,7 @@ public class HtmlRenderer {
           .append("            <span class=\"setting-desc\">Hide vertical videos shorter than 2 minutes.</span>\n")
           .append("          </div>\n")
           .append("          <label class=\"switch\">\n")
-          .append("            <input type=\"checkbox\" name=\"hide_shorts\" value=\"on\" ").append(hideShorts ? "checked" : "").append(">\n")
+          .append("            <input type=\"checkbox\" id=\"setting-hide-shorts\" name=\"hide_shorts\" value=\"on\" ").append(hideShorts ? "checked" : "").append(">\n")
           .append("            <span class=\"slider\"></span>\n")
           .append("          </label>\n")
           .append("        </div>\n")
@@ -3058,10 +3073,7 @@ public class HtmlRenderer {
           .append("            <span class=\"setting-desc\">View your local watch history.</span>\n")
           .append("          </div>\n")
           .append("          <a href=\"/history\" class=\"subscribe-btn\" style=\"background-color: var(--logo-color); padding: 8px 20px; font-size: 14px; text-decoration: none; border-radius: 100px; display: inline-flex; align-items: center; justify-content: center; height: 36px;\">View</a>\n")
-          .append("        </div>\n")
           .append("      </div>\n")
-          .append("      <button type=\"submit\" class=\"btn-save btn-save-primary\" style=\"margin-bottom: 24px;\">Save Settings</button>\n")
-          .append("    </form>\n")
           .append("    <div class=\"settings-section\">\n")
           .append("      <h3 class=\"settings-section-title\">Backup &amp; Restore Database</h3>\n")
           .append("      <p class=\"setting-desc\" style=\"margin-bottom: 16px;\">Export your local history, subscriptions, and bookmarks to a JSON file, or restore them from a previous backup.</p>\n")

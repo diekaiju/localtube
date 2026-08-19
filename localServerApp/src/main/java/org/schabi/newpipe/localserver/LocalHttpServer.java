@@ -1657,15 +1657,23 @@ public class LocalHttpServer {
         private void handleSettings(OutputStream os, Map<String, String> params, boolean isTv) throws Exception {
             String action = params.get("action");
             if ("save".equals(action)) {
-                String quality = params.get("video_quality");
-                String hideWatched = params.get("hide_watched");
-                String hideShorts = params.get("hide_shorts");
-                String homeFeedMode = params.get("home_feed_mode");
+                if (params.containsKey("video_quality")) {
+                    dbHelper.setSetting("video_quality", params.get("video_quality"));
+                }
+                if (params.containsKey("hide_watched")) {
+                    dbHelper.setSetting("hide_watched", "true".equals(params.get("hide_watched")) || "on".equals(params.get("hide_watched")) ? "true" : "false");
+                }
+                if (params.containsKey("hide_shorts")) {
+                    dbHelper.setSetting("hide_shorts", "true".equals(params.get("hide_shorts")) || "on".equals(params.get("hide_shorts")) ? "true" : "false");
+                }
+                if (params.containsKey("home_feed_mode")) {
+                    dbHelper.setSetting("home_feed_mode", params.get("home_feed_mode"));
+                }
 
-                dbHelper.setSetting("video_quality", quality != null ? quality : "360p");
-                dbHelper.setSetting("hide_watched", "on".equals(hideWatched) ? "true" : "false");
-                dbHelper.setSetting("hide_shorts", "on".equals(hideShorts) ? "true" : "false");
-                dbHelper.setSetting("home_feed_mode", homeFeedMode != null ? homeFeedMode : "mix");
+                if ("ajax".equals(params.get("format"))) {
+                    sendResponse(os, 200, "OK", "text/plain; charset=UTF-8");
+                    return;
+                }
 
                 String redirectHeader = "HTTP/1.1 303 See Other\r\n" +
                         "Location: /settings?saved=true\r\n" +
