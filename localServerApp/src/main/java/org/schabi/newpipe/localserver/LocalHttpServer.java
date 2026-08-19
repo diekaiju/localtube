@@ -1733,8 +1733,18 @@ public class LocalHttpServer {
                 }
             }
 
-            List<InfoItem> filtered = filterItems(items);
             boolean isSubscribed = dbHelper.isSubscribed(channelExtractor.getLinkHandler().getUrl());
+            if (isSubscribed) {
+                try {
+                    String cUrl = channelExtractor.getLinkHandler().getUrl();
+                    String cName = channelExtractor.getName();
+                    String cAvatar = HtmlRenderer.getThumbnailUrl(channelExtractor.getAvatars());
+                    if (cAvatar != null && !cAvatar.isEmpty()) {
+                        dbHelper.addSubscription(cUrl, cName, cAvatar);
+                    }
+                } catch (Exception ignored) {}
+            }
+            List<InfoItem> filtered = filterItems(items);
             String html = HtmlRenderer.renderChannel(serviceId, channelExtractor, tab, filtered, next, isSubscribed, isTv);
             sendResponse(os, 200, html, "text/html; charset=UTF-8");
         }

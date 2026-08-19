@@ -2489,14 +2489,28 @@ public class HtmlRenderer {
             }
 
             if (item.getInfoType() == org.schabi.newpipe.extractor.InfoItem.InfoType.CHANNEL) {
+                String cName = item.getName() != null ? item.getName() : "Channel";
+                String firstChar = !cName.isEmpty() ? cName.substring(0, 1).toUpperCase() : "?";
+                int hash = Math.abs(cName.hashCode());
+                String[] colors = {"#ff5722", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50", "#8bc34a", "#cddc39", "#ffc107", "#ff9800"};
+                String avatarBg = colors[hash % colors.length];
+                String thumb = getThumbnailUrl(item.getThumbnails());
+
                 sb.append("    <div class=\"card\" style=\"flex-direction:row; align-items:center; gap:16px; padding:12px 0; min-width:0; max-width:100%; overflow:hidden;\">\n")
-                  .append("      <a href=\"").append(clickUrl).append("\" style=\"flex-shrink:0;\">\n")
-                  .append("        <img class=\"channel-card-avatar\" src=\"").append(getThumbnailUrl(item.getThumbnails())).append("\">\n")
-                  .append("      </a>\n")
+                  .append("      <a href=\"").append(clickUrl).append("\" style=\"flex-shrink:0; position:relative; display:inline-block;\">\n");
+
+                if (thumb != null && !thumb.isEmpty()) {
+                    sb.append("        <img class=\"channel-card-avatar\" src=\"").append(thumb).append("\" onerror=\"this.style.display='none'; this.nextElementSibling.style.display='flex';\">\n")
+                      .append("        <div class=\"channel-card-avatar\" style=\"display:none; background-color:").append(avatarBg).append("; color:#ffffff; font-weight:700; font-size:28px; align-items:center; justify-content:center;\">").append(firstChar).append("</div>\n");
+                } else {
+                    sb.append("        <div class=\"channel-card-avatar\" style=\"display:flex; background-color:").append(avatarBg).append("; color:#ffffff; font-weight:700; font-size:28px; align-items:center; justify-content:center;\">").append(firstChar).append("</div>\n");
+                }
+
+                sb.append("      </a>\n")
                   .append("      <div class=\"card-info\" style=\"min-width:0; flex-grow:1; flex-shrink:1; overflow:hidden;\">\n")
-                  .append("        <a href=\"").append(clickUrl).append("\" class=\"card-title\" style=\"font-size:16px; font-weight:600; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;\">").append(item.getName()).append("</a>\n")
+                  .append("        <a href=\"").append(clickUrl).append("\" class=\"card-title\" style=\"font-size:16px; font-weight:600; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;\">").append(cName).append("</a>\n")
                   .append("        <div class=\"card-meta\">\n")
-                  .append("          <span class=\"card-uploader\" style=\"white-space:nowrap; overflow:hidden; text-overflow:ellipsis;\">").append(item.getName()).append("</span>\n")
+                  .append("          <span class=\"card-uploader\" style=\"white-space:nowrap; overflow:hidden; text-overflow:ellipsis;\">").append(cName).append("</span>\n")
                   .append("          <span style=\"color:#ff0000; font-weight:bold; font-size:11px;\">👤 Channel</span>\n")
                   .append("        </div>\n")
                   .append("      </div>\n")
@@ -2546,7 +2560,7 @@ public class HtmlRenderer {
         sb.append("  </div>\n");
     }
 
-    private static String getThumbnailUrl(List<Image> thumbnails) {
+    public static String getThumbnailUrl(List<Image> thumbnails) {
         if (thumbnails != null && !thumbnails.isEmpty()) {
             for (int i = thumbnails.size() - 1; i >= 0; i--) {
                 Image img = thumbnails.get(i);
