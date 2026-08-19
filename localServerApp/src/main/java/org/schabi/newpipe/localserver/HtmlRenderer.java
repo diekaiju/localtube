@@ -557,6 +557,20 @@ public class HtmlRenderer {
                 "            border-color: #7c3aed !important;\n" +
                 "            transition: all 0.2s ease-in-out !important;\n" +
                 "        }\n" +
+                "        #share-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 100000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.25s ease; }\n" +
+                "        #share-modal-overlay.active { display: flex; opacity: 1; }\n" +
+                "        .share-modal-card { background: var(--card-bg, #1c1b1f); color: var(--text-color, #fff); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: translateY(20px); transition: transform 0.25s ease; font-family: 'Roboto', sans-serif; }\n" +
+                "        #share-modal-overlay.active .share-modal-card { transform: translateY(0); }\n" +
+                "        .share-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }\n" +
+                "        .share-modal-title { font-size: 18px; font-weight: 600; }\n" +
+                "        .share-modal-close { background: none; border: none; color: currentColor; font-size: 24px; cursor: pointer; opacity: 0.7; line-height: 1; }\n" +
+                "        .share-link-box { display: flex; gap: 8px; margin-bottom: 20px; background: rgba(255,255,255,0.06); border-radius: 12px; padding: 4px 6px 4px 12px; border: 1px solid rgba(255,255,255,0.1); align-items: center; }\n" +
+                "        .share-link-input { flex: 1; background: none; border: none; color: inherit; font-size: 13px; outline: none; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }\n" +
+                "        .share-copy-btn { background: var(--logo-color, #7c3aed); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }\n" +
+                "        .share-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: center; }\n" +
+                "        .share-item { display: flex; flex-direction: column; align-items: center; gap: 6px; text-decoration: none; color: inherit; font-size: 12px; opacity: 0.85; transition: opacity 0.2s, transform 0.2s; }\n" +
+                "        .share-item:hover { opacity: 1; transform: translateY(-2px); }\n" +
+                "        .share-icon-btn { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; }\n" +
                 "    </style>\n" +
                 "    <script>\n" +
                 "        (function() {\n" +
@@ -639,6 +653,112 @@ public class HtmlRenderer {
                 "                .catch(err => {\n" +
                 "                    alert('Connection error: ' + err);\n" +
                 "                });\n" +
+                "        }\n" +
+                "        \n" +
+                "        function showToast(msg) {\n" +
+                "            let t = document.getElementById('app-toast');\n" +
+                "            if (!t) {\n" +
+                "                t = document.createElement('div');\n" +
+                "                t.id = 'app-toast';\n" +
+                "                t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(28,27,31,0.92);color:#e6e1e5;padding:10px 20px;border-radius:24px;font-size:14px;font-weight:500;z-index:999999;transition:opacity 0.3s ease, transform 0.3s ease;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);font-family:Roboto,sans-serif;';\n" +
+                "                document.body.appendChild(t);\n" +
+                "            }\n" +
+                "            t.innerText = msg;\n" +
+                "            t.style.opacity = '1';\n" +
+                "            t.style.transform = 'translateX(-50%) translateY(0)';\n" +
+                "            clearTimeout(t._timer);\n" +
+                "            t._timer = setTimeout(() => {\n" +
+                "                t.style.opacity = '0';\n" +
+                "                t.style.transform = 'translateX(-50%) translateY(10px)';\n" +
+                "            }, 2200);\n" +
+                "        }\n" +
+                "        \n" +
+                "        function openShareModal(url, title) {\n" +
+                "            const fullUrl = (url && url.startsWith('http')) ? url : ('https://www.youtube.com/watch?v=' + (url || ''));\n" +
+                "            let overlay = document.getElementById('share-modal-overlay');\n" +
+                "            if (!overlay) {\n" +
+                "                overlay = document.createElement('div');\n" +
+                "                overlay.id = 'share-modal-overlay';\n" +
+                "                overlay.onclick = function(e) { if (e.target === overlay) closeShareModal(); };\n" +
+                "                overlay.innerHTML = \n" +
+                "                    '<div class=\"share-modal-card\">' +\n" +
+                "                    '  <div class=\"share-modal-header\">' +\n" +
+                "                    '    <span class=\"share-modal-title\">Share</span>' +\n" +
+                "                    '    <button class=\"share-modal-close\" onclick=\"closeShareModal()\">&times;</button>' +\n" +
+                "                    '  </div>' +\n" +
+                "                    '  <div class=\"share-link-box\">' +\n" +
+                "                    '    <input type=\"text\" id=\"share-input-url\" class=\"share-link-input\" readonly>' +\n" +
+                "                    '    <button id=\"share-copy-btn\" class=\"share-copy-btn\" onclick=\"copyShareInputUrl()\">Copy</button>' +\n" +
+                "                    '  </div>' +\n" +
+                "                    '  <div class=\"share-grid\">' +\n" +
+                "                    '    <a id=\"share-wa\" class=\"share-item\" target=\"_blank\" rel=\"noopener\">' +\n" +
+                "                    '      <div class=\"share-icon-btn\" style=\"background:#25D366;\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"22\" height=\"22\"><path d=\"M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.84 9.84 0 0012.04 2zm.01 1.67c4.55 0 8.24 3.69 8.24 8.24 0 2.2-.86 4.27-2.42 5.82a8.19 8.19 0 01-5.82 2.42c-1.47 0-2.91-.39-4.17-1.14l-.3-.18-3.1 1.18 1.18-3.04-.19-.31A8.2 8.2 0 013.8 11.91c0-4.55 3.69-8.24 8.24-8.24z\"/></svg></div>' +\n" +
+                "                    '      <span>WhatsApp</span>' +\n" +
+                "                    '    </a>' +\n" +
+                "                    '    <a id=\"share-tg\" class=\"share-item\" target=\"_blank\" rel=\"noopener\">' +\n" +
+                "                    '      <div class=\"share-icon-btn\" style=\"background:#0088cc;\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"22\" height=\"22\"><path d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.67-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.25.38-.51 1.07-.78 4.18-1.82 6.97-3.02 8.37-3.6 3.98-1.65 4.81-1.94 5.35-1.95.12 0 .38.03.55.17.14.12.18.28.2.46-.01.07.01.25 0 .37z\"/></svg></div>' +\n" +
+                "                    '      <span>Telegram</span>' +\n" +
+                "                    '    </a>' +\n" +
+                "                    '    <a id=\"share-tw\" class=\"share-item\" target=\"_blank\" rel=\"noopener\">' +\n" +
+                "                    '      <div class=\"share-icon-btn\" style=\"background:#000000;\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"20\" height=\"20\"><path d=\"M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z\"/></svg></div>' +\n" +
+                "                    '      <span>X</span>' +\n" +
+                "                    '    </a>' +\n" +
+                "                    '    <a id=\"share-em\" class=\"share-item\">' +\n" +
+                "                    '      <div class=\"share-icon-btn\" style=\"background:#ea4335;\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"22\" height=\"22\"><path d=\"M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z\"/></svg></div>' +\n" +
+                "                    '      <span>Email</span>' +\n" +
+                "                    '    </a>' +\n" +
+                "                    '  </div>' +\n" +
+                "                    '</div>';\n" +
+                "                document.body.appendChild(overlay);\n" +
+                "            }\n" +
+                "            const input = document.getElementById('share-input-url');\n" +
+                "            if (input) input.value = fullUrl;\n" +
+                "            const copyBtn = document.getElementById('share-copy-btn');\n" +
+                "            if (copyBtn) {\n" +
+                "                copyBtn.innerText = 'Copy';\n" +
+                "                copyBtn.style.background = 'var(--logo-color, #7c3aed)';\n" +
+                "            }\n" +
+                "            const encUrl = encodeURIComponent(fullUrl);\n" +
+                "            const encTitle = encodeURIComponent(title || 'LocalTube Video');\n" +
+                "            const wa = document.getElementById('share-wa'); if (wa) wa.href = 'https://api.whatsapp.com/send?text=' + encTitle + '%20' + encUrl;\n" +
+                "            const tg = document.getElementById('share-tg'); if (tg) tg.href = 'https://t.me/share/url?url=' + encUrl + '&text=' + encTitle;\n" +
+                "            const tw = document.getElementById('share-tw'); if (tw) tw.href = 'https://twitter.com/intent/tweet?text=' + encTitle + '&url=' + encUrl;\n" +
+                "            const em = document.getElementById('share-em'); if (em) em.href = 'mailto:?subject=' + encTitle + '&body=' + encUrl;\n" +
+                "            overlay.classList.add('active');\n" +
+                "        }\n" +
+                "        \n" +
+                "        function closeShareModal() {\n" +
+                "            const overlay = document.getElementById('share-modal-overlay');\n" +
+                "            if (overlay) overlay.classList.remove('active');\n" +
+                "        }\n" +
+                "        \n" +
+                "        function copyShareInputUrl() {\n" +
+                "            const input = document.getElementById('share-input-url');\n" +
+                "            const copyBtn = document.getElementById('share-copy-btn');\n" +
+                "            if (input && input.value) {\n" +
+                "                const markSuccess = () => {\n" +
+                "                    if (copyBtn) {\n" +
+                "                        copyBtn.innerText = 'Copied!';\n" +
+                "                        copyBtn.style.background = '#2e7d32';\n" +
+                "                    }\n" +
+                "                    showToast('Link copied to clipboard');\n" +
+                "                };\n" +
+                "                if (navigator.clipboard && navigator.clipboard.writeText) {\n" +
+                "                    navigator.clipboard.writeText(input.value).then(markSuccess).catch(() => {\n" +
+                "                        input.select();\n" +
+                "                        document.execCommand('copy');\n" +
+                "                        markSuccess();\n" +
+                "                    });\n" +
+                "                } else {\n" +
+                "                    input.select();\n" +
+                "                    document.execCommand('copy');\n" +
+                "                    markSuccess();\n" +
+                "                }\n" +
+                "            }\n" +
+                "        }\n" +
+                "        \n" +
+                "        function shareLink(url, title) {\n" +
+                "            openShareModal(url, title);\n" +
                 "        }\n" +
                 "        \n" +
                 "        function startCommandPolling() {\n" +
@@ -2133,7 +2253,8 @@ public class HtmlRenderer {
           .append("                <button class=\"pill-btn dislike-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"transform:scaleY(-1);\"><path d=\"M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z\"/></svg></button>\n")
           .append("              </div>\n")
           .append("              <button type=\"button\" onclick=\"if (window.NewPipeApp &amp;&amp; window.NewPipeApp.enterPip) { window.NewPipeApp.enterPip(); } else if (document.pictureInPictureEnabled &amp;&amp; document.querySelector('video')) { document.querySelector('video').requestPictureInPicture(); }\" class=\"action-pill-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"margin-right:6px;\"><path d=\"M19 11h-8v6h8v-6zm4-8H1c-.55 0-1 .45-1 1v16c0 .55.45 1 1 1h22c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zm-2 16H3V5h18v14z\"/></svg>Pop-up</button>\n")
-          .append("              <a href=\"/audio?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" class=\"action-pill-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"margin-right:6px;\"><path d=\"M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\"/></svg>Audio Only</a>\n");
+          .append("              <a href=\"/audio?serviceId=").append(serviceId).append("&id=").append(encodeUrl(info.getUrl())).append("\" class=\"action-pill-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"margin-right:6px;\"><path d=\"M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\"/></svg>Audio Only</a>\n")
+          .append("              <button type=\"button\" onclick=\"shareLink('").append(escapeJs(info.getUrl())).append("', '").append(escapeJs(info.getName())).append("')\" class=\"action-pill-btn\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"16\" height=\"16\" style=\"margin-right:6px;\"><path d=\"M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z\"/></svg>Share</button>\n");
 
         if (cachedVideo == null) {
             sb.append("              <a id=\"cache-btn\" data-url=\"").append(escapeJs(info.getUrl())).append("\" href=\"/cache?action=add&id=").append(encodeUrl(info.getUrl())).append("\" onclick=\"toggleCache(event, this, '").append(escapeJs(info.getUrl())).append("', ").append(serviceId).append(")\" class=\"action-pill-btn\">Download</a>\n");
@@ -3349,7 +3470,7 @@ public class HtmlRenderer {
           .append("      '<path d=\"M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z\"/>' :\n")
           .append("      '<path d=\"M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z\"/>';\n")
           .append("    card.onclick = function() { togglePlayCard(card); };\n")
-          .append("    card.innerHTML = `<video class=\"shorts-video\" id=\"short-video-${idx}\" ontimeupdate=\"const pb = document.getElementById('shorts-progress-bar-${idx}'); if (pb && this.duration) pb.style.width = (this.currentTime / this.duration * 100) + '%';\" loop playsinline preload=\"none\" poster=\"${item.thumbnailUrl || ''}\" muted></video><div class=\"shorts-overlay\"><div class=\"shorts-top-bar\"></div><div class=\"shorts-bottom-info\" onclick=\"event.stopPropagation()\"><div class=\"shorts-author-row\"><div style=\"width:40px;height:40px;border-radius:50%;border:2px solid var(--logo-color, #6750A4);background:${avatarColor};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#fff;flex-shrink:0;\">${firstChar}</div><a href=\"/channel?id=${encodeURIComponent(item.uploaderUrl || '')}\" class=\"shorts-author-name\">${item.uploaderName || 'Creator'}</a><button class=\"shorts-sub-btn\">Subscribe</button></div><div class=\"shorts-title\">${item.name || ''}</div></div><div class=\"shorts-actions\"><div style=\"text-align:center;\" onclick=\"event.stopPropagation()\"><button class=\"shorts-action-btn\" onclick=\"toggleSave(this, '${item.url}', '${item.name || ''}', '${item.uploaderName || ''}', '${item.thumbnailUrl || ''}')\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z\"/></svg></button><div class=\"shorts-action-label\">Save</div></div><div style=\"text-align:center;\" onclick=\"event.stopPropagation()\"><button class=\"shorts-action-btn\" onclick=\"location.href='/watch?id=' + encodeURIComponent('${item.url}')\" title=\"Open in full player\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z\"/></svg></button><div class=\"shorts-action-label\">Open</div></div><div style=\"text-align:center;\" onclick=\"event.stopPropagation()\"><button class=\"shorts-action-btn mute-btn\" onclick=\"toggleMuteGlobal(event)\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\">${muteSvg}</svg></button><div class=\"shorts-action-label mute-label\">${isMuted ? 'Muted' : 'Unmuted'}</div></div><div style=\"text-align:center;\" onclick=\"event.stopPropagation()\"><button class=\"shorts-action-btn\" onclick=\"navigator.clipboard.writeText('https://www.youtube.com/watch?v=' + '${item.url}'); alert('Link copied!');\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z\"/></svg></button><div class=\"shorts-action-label\">Share</div></div></div><div class=\"shorts-progress-bar-container\"><div class=\"shorts-progress-bar\" id=\"shorts-progress-bar-${idx}\"></div></div></div>`;\n")
+          .append("    card.innerHTML = `<video class=\"shorts-video\" id=\"short-video-${idx}\" ontimeupdate=\"const pb = document.getElementById('shorts-progress-bar-${idx}'); if (pb && this.duration) pb.style.width = (this.currentTime / this.duration * 100) + '%';\" loop playsinline preload=\"none\" poster=\"${item.thumbnailUrl || ''}\" muted></video><div class=\"shorts-overlay\"><div class=\"shorts-top-bar\"></div><div class=\"shorts-bottom-info\" onclick=\"event.stopPropagation()\"><div class=\"shorts-author-row\"><div style=\"width:40px;height:40px;border-radius:50%;border:2px solid var(--logo-color, #6750A4);background:${avatarColor};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#fff;flex-shrink:0;\">${firstChar}</div><a href=\"/channel?id=${encodeURIComponent(item.uploaderUrl || '')}\" class=\"shorts-author-name\">${item.uploaderName || 'Creator'}</a><button class=\"shorts-sub-btn\">Subscribe</button></div><div class=\"shorts-title\">${item.name || ''}</div></div><div class=\"shorts-actions\"><div style=\"text-align:center;\" onclick=\"event.stopPropagation()\"><button class=\"shorts-action-btn\" onclick=\"toggleSave(this, '${item.url}', '${item.name || ''}', '${item.uploaderName || ''}', '${item.thumbnailUrl || ''}')\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z\"/></svg></button><div class=\"shorts-action-label\">Save</div></div><div style=\"text-align:center;\" onclick=\"event.stopPropagation()\"><button class=\"shorts-action-btn\" onclick=\"location.href='/watch?id=' + encodeURIComponent('${item.url}')\" title=\"Open in full player\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z\"/></svg></button><div class=\"shorts-action-label\">Open</div></div><div style=\"text-align:center;\" onclick=\"event.stopPropagation()\"><button class=\"shorts-action-btn mute-btn\" onclick=\"toggleMuteGlobal(event)\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\">${muteSvg}</svg></button><div class=\"shorts-action-label mute-label\">${isMuted ? 'Muted' : 'Unmuted'}</div></div><div style=\"text-align:center;\" onclick=\"event.stopPropagation()\"><button class=\"shorts-action-btn\" onclick=\"shareLink('${item.url}', '${item.name || ''}')\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"24\" height=\"24\"><path d=\"M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z\"/></svg></button><div class=\"shorts-action-label\">Share</div></div></div><div class=\"shorts-progress-bar-container\"><div class=\"shorts-progress-bar\" id=\"shorts-progress-bar-${idx}\"></div></div></div>`;\n")
           .append("    container.appendChild(card);\n")
           .append("  }\n")
           .append("  let shortObserver = null;\n")
