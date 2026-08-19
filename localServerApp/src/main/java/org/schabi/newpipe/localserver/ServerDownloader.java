@@ -27,10 +27,12 @@ public class ServerDownloader extends Downloader {
     private final OkHttpClient client;
 
     public ServerDownloader() {
-        // Implement simple in-memory cookie jar to store consent / bypass cookies
         this.client = new OkHttpClient.Builder()
+                .connectionPool(new okhttp3.ConnectionPool(10, 5, TimeUnit.MINUTES))
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
+                .followRedirects(true)
+                .followSslRedirects(true)
                 .cookieJar(new CookieJar() {
                     private final HashMap<String, List<Cookie>> cookieStore = new HashMap<>();
 

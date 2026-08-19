@@ -25,8 +25,14 @@ public class VideoCacheManager {
     private static VideoCacheManager instance;
     private final Context context;
     private final HistoryDbHelper dbHelper;
-    private final ExecutorService executor = Executors.newFixedThreadPool(2);
-    private final OkHttpClient client = new OkHttpClient();
+    private final ExecutorService executor = Executors.newFixedThreadPool(8);
+    private final OkHttpClient client = new OkHttpClient.Builder()
+            .connectionPool(new okhttp3.ConnectionPool(10, 5, java.util.concurrent.TimeUnit.MINUTES))
+            .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .followRedirects(true)
+            .followSslRedirects(true)
+            .build();
 
     private VideoCacheManager(Context context) {
         this.context = context.getApplicationContext();
@@ -208,24 +214,39 @@ public class VideoCacheManager {
                         File tempVideoFile = new File(cacheDir, sanitizedName + "_temp_video.mp4");
                         File tempAudioFile = new File(cacheDir, sanitizedName + "_temp_audio.m4a");
 
+                        final VideoStream finalVideo = selectedVideo;
+                        final org.schabi.newpipe.extractor.stream.AudioStream finalAudio = selectedAudio;
+
                         try {
-                            // Download video (75% of progress)
-                            downloadFile(selectedVideo.getContent(), tempVideoFile, new ProgressListener() {
-                                @Override
-                                public void onProgress(int progress) {
-                                    int totalProgress = (int) (progress * 0.75);
-                                    dbHelper.updateCachedVideoProgress(targetUrl, "DOWNLOADING", totalProgress, null, null);
+                            final int[] videoProgress = {0};
+                            final int[] audioProgress = {0};
+
+                            java.util.concurrent.Future<?> videoFuture = executor.submit(() -> {
+                                try {
+                                    downloadFile(finalVideo.getContent(), tempVideoFile, progress -> {
+                                        videoProgress[0] = progress;
+                                        int totalProgress = (int) (videoProgress[0] * 0.70 + audioProgress[0] * 0.25);
+                                        dbHelper.updateCachedVideoProgress(targetUrl, "DOWNLOADING", totalProgress, null, null);
+                                    });
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
                                 }
                             });
 
-                            // Download audio (20% of progress, from 75% to 95%)
-                            downloadFile(selectedAudio.getContent(), tempAudioFile, new ProgressListener() {
-                                @Override
-                                public void onProgress(int progress) {
-                                    int totalProgress = 75 + (int) (progress * 0.20);
-                                    dbHelper.updateCachedVideoProgress(targetUrl, "DOWNLOADING", totalProgress, null, null);
+                            java.util.concurrent.Future<?> audioFuture = executor.submit(() -> {
+                                try {
+                                    downloadFile(finalAudio.getContent(), tempAudioFile, progress -> {
+                                        audioProgress[0] = progress;
+                                        int totalProgress = (int) (videoProgress[0] * 0.70 + audioProgress[0] * 0.25);
+                                        dbHelper.updateCachedVideoProgress(targetUrl, "DOWNLOADING", totalProgress, null, null);
+                                    });
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
                                 }
                             });
+
+                            videoFuture.get();
+                            audioFuture.get();
 
                             // Mux them
                             dbHelper.updateCachedVideoProgress(targetUrl, "DOWNLOADING", 96, null, null);
@@ -365,7 +386,7 @@ public class VideoCacheManager {
                      java.io.RandomAccessFile raf = new java.io.RandomAccessFile(destination, "rw")) {
 
                     raf.seek(downloadedBytes);
-                    byte[] buffer = new byte[16384];
+                    byte[] buffer = new byte[65536];
                     int read;
                     long lastProgressTime = 0;
 

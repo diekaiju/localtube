@@ -1308,7 +1308,7 @@ public class LocalHttpServer {
                     // Pipe body bytes
                     if (response.body() != null) {
                         try (java.io.InputStream is = response.body().byteStream()) {
-                            byte[] buffer = new byte[8192];
+                            byte[] buffer = new byte[65536];
                             int read;
                             while ((read = is.read(buffer)) != -1) {
                                 os.write(buffer, 0, read);
