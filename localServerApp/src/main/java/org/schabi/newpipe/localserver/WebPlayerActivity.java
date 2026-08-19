@@ -15,6 +15,9 @@ public class WebPlayerActivity extends AppCompatActivity {
     private WebView webView;
     private View customView;
     private WebChromeClient.CustomViewCallback customViewCallback;
+    private android.webkit.ValueCallback<android.net.Uri[]> uploadMessage;
+    private final static int FILECHOOSER_RESULTCODE = 1;
+    private final static int EXPORT_RESULTCODE = 2;
 
     private final WebChromeClient webChromeClient = new WebChromeClient() {
         @Override
@@ -59,6 +62,23 @@ public class WebPlayerActivity extends AppCompatActivity {
             
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
             setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+        }
+
+        @Override
+        public boolean onShowFileChooser(WebView webView, android.webkit.ValueCallback<android.net.Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+            if (uploadMessage != null) {
+                uploadMessage.onReceiveValue(null);
+                uploadMessage = null;
+            }
+            uploadMessage = filePathCallback;
+            try {
+                Intent intent = fileChooserParams.createIntent();
+                startActivityForResult(intent, FILECHOOSER_RESULTCODE);
+            } catch (android.content.ActivityNotFoundException e) {
+                uploadMessage = null;
+                return false;
+            }
+            return true;
         }
     };
 
@@ -133,6 +153,21 @@ public class WebPlayerActivity extends AppCompatActivity {
 
         webView.addJavascriptInterface(new AppInterface(), "NewPipeApp");
         webView.setWebChromeClient(webChromeClient);
+        webView.setDownloadListener(new android.webkit.DownloadListener() {
+            @Override
+            public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("application/json");
+                    intent.putExtra(Intent.EXTRA_TITLE, "localtube_backup.json");
+                    startActivityForResult(intent, EXPORT_RESULTCODE);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    android.widget.Toast.makeText(WebPlayerActivity.this, "Failed to start export: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                }
+            }
+        });
 
         try {
             Intent serviceIntent = new Intent(this, ServerService.class);
@@ -273,6 +308,47 @@ public class WebPlayerActivity extends AppCompatActivity {
                 String videoUrl = intent.getStringExtra("video_url");
                 String watchUrl = "http://localhost:8080/watch?serviceId=0&id=" + android.net.Uri.encode(videoUrl);
                 webView.loadUrl(watchUrl);
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == FILECHOOSER_RESULTCODE) {
+            if (uploadMessage == null) return;
+            android.net.Uri[] results = null;
+            if (resultCode == RESULT_OK && data != null) {
+                String dataString = data.getDataString();
+                if (dataString != null) {
+                    results = new android.net.Uri[]{android.net.Uri.parse(dataString)};
+                } else if (data.getClipData() != null) {
+                    int numSelected = data.getClipData().getItemCount();
+                    results = new android.net.Uri[numSelected];
+                    for (int i = 0; i < numSelected; i++) {
+                        results[i] = data.getClipData().getItemAt(i).getUri();
+                    }
+                }
+            }
+            uploadMessage.onReceiveValue(results);
+            uploadMessage = null;
+        } else if (requestCode == EXPORT_RESULTCODE) {
+            if (resultCode == RESULT_OK && data != null && data.getData() != null) {
+                android.net.Uri uri = data.getData();
+                try {
+                    HistoryDbHelper dbHelper = HistoryDbHelper.getInstance(this);
+                    String json = dbHelper.exportToJson();
+                    try (java.io.OutputStream os = getContentResolver().openOutputStream(uri)) {
+                        if (os != null) {
+                            os.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                            os.flush();
+                            android.widget.Toast.makeText(this, "Database exported successfully!", android.widget.Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    android.widget.Toast.makeText(this, "Export failed: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                }
             }
         }
     }
