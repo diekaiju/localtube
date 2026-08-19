@@ -4,4 +4,5 @@
 4: Automatic channel avatar database updates when visiting channel pages with initial badge fallbacks
 5: Pure Web UI Share modal with 1-click link copying and external sharing targets
 6: Removed Save Settings button in favor of instant silent background auto-save
-7: Anchored Reels card viewport controls and removed Reels subscribe button
+7: Pure Black (OLED) theme option and custom accent color palette selection in Web UI Settings
+8: Anchored Reels card viewport controls and removed Reels subscribe button
