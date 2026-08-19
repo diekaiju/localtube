@@ -159,15 +159,15 @@ public class HtmlRenderer {
             ".service-selector { display: none; }\n" +
             ".container { transition: all 0.2s ease; }\n" +
             ".grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 40px 16px; }\n" +
-            ".card { display: flex; flex-direction: column; cursor: pointer; background-color: var(--card-bg); border-radius: 24px; padding: 12px; border: 1px solid var(--card-border); transition: transform 0.2s, box-shadow 0.2s; }\n" +
+            ".card { display: flex; flex-direction: column; cursor: pointer; background-color: var(--card-bg); border-radius: 24px; padding: 12px; border: 1px solid var(--card-border); transition: transform 0.2s, box-shadow 0.2s; min-width: 0; overflow: hidden; word-break: break-word; overflow-wrap: break-word; }\n" +
             ".card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }\n" +
-            ".card-thumbnail { width: 100%; aspect-ratio: 16/9; background-color: var(--card-thumbnail-bg); object-fit: cover; border-radius: 16px; transition: border-radius 0.2s; }\n" +
-            ".card-details { display: flex; gap: 12px; padding: 12px 0 0 0; }\n" +
-            ".card-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 15px; flex-shrink: 0; }\n" +
-            ".card-info { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; }\n" +
-            ".card-title { font-size: 15px; font-weight: 500; line-height: 1.4; max-height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 4px; color: var(--card-title-color); }\n" +
-            ".card-meta { font-size: 13px; color: var(--card-meta-color); display: flex; flex-direction: column; gap: 2px; }\n" +
-            ".card-uploader { font-weight: 500; color: var(--card-meta-color); text-decoration: none; }\n" +
+            ".card-thumbnail { width: 100%; aspect-ratio: 16/9; background-color: var(--card-thumbnail-bg); object-fit: cover; border-radius: 16px; transition: border-radius 0.2s; flex-shrink: 0; max-height: 240px; }\n" +
+            ".card-details { display: flex; gap: 12px; padding: 12px 0 0 0; min-width: 0; overflow: hidden; }\n" +
+            ".card-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 15px; flex-shrink: 0; aspect-ratio: 1 / 1; object-fit: cover; }\n" +
+            ".card-info { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; overflow: hidden; word-break: break-word; overflow-wrap: break-word; }\n" +
+            ".card-title { font-size: 15px; font-weight: 500; line-height: 1.4; max-height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 4px; color: var(--card-title-color); word-break: break-word; overflow-wrap: break-word; min-width: 0; }\n" +
+            ".card-meta { font-size: 13px; color: var(--card-meta-color); display: flex; flex-direction: column; gap: 2px; word-break: break-word; overflow-wrap: break-word; min-width: 0; }\n" +
+            ".card-uploader { font-weight: 500; color: var(--card-meta-color); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: inline-block; }\n" +
             ".card-uploader:hover { color: var(--text-color); }\n" +
             ".pagination { display: flex; justify-content: center; margin: 32px 0; }\n" +
             ".btn-page { display: inline-block; padding: 10px 24px; border-radius: 100px; font-weight: 500; font-size: 14px; background-color: var(--service-tab-bg); color: var(--text-color); border: none; cursor: pointer; transition: background-color 0.2s; }\n" +
@@ -213,8 +213,8 @@ public class HtmlRenderer {
             ".main-content { display: flex; flex-direction: column; gap: 16px; }\n" +
             ".sidebar { display: flex; flex-direction: column; gap: 16px; }\n" +
             ".native-player { width: 100%; aspect-ratio: 16/9; border-radius: 12px; background-color: #000; outline: none; }\n" +
-            ".media-info { padding: 16px 0; border-bottom: 1px solid var(--media-info-border); }\n" +
-            ".media-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--media-title-color); line-height: 1.4; }\n" +
+            ".media-info { padding: 16px 0; border-bottom: 1px solid var(--media-info-border); min-width: 0; overflow: hidden; }\n" +
+            ".media-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--media-title-color); line-height: 1.4; word-break: break-word; overflow-wrap: break-word; min-width: 0; }\n" +
             ".media-stats { font-size: 14px; color: var(--media-stats-color); margin-bottom: 12px; }\n" +
             ".uploader-profile { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }\n" +
             "@media (min-width: 768px) {\n" +
@@ -224,10 +224,10 @@ public class HtmlRenderer {
             "@media (min-width: 768px) {\n" +
             "  .uploader-main { width: auto; }\n" +
             "}\n" +
-            ".uploader-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }\n" +
-            ".uploader-info { display: flex; flex-direction: column; justify-content: center; flex-grow: 1; min-width: 0; overflow: hidden; }\n" +
-            ".uploader-name { font-size: 15px; font-weight: 600; color: var(--uploader-name-color, var(--text-color)); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n" +
-            ".uploader-subs { font-size: 12px; color: var(--uploader-subs-color, #a0a0a0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n" +
+            ".uploader-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; aspect-ratio: 1 / 1; }\n" +
+            ".uploader-info { display: flex; flex-direction: column; justify-content: center; flex-grow: 1; min-width: 0; overflow: hidden; word-break: break-word; overflow-wrap: break-word; }\n" +
+            ".uploader-name { font-size: 15px; font-weight: 600; color: var(--uploader-name-color, var(--text-color)); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }\n" +
+            ".uploader-subs { font-size: 12px; color: var(--uploader-subs-color, #a0a0a0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }\n" +
             ".subscribe-btn { padding: 8px 20px; border-radius: 100px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; text-decoration: none; text-align: center; color: #ffffff; background-color: var(--logo-color, #6750A4); flex-shrink: 0; margin-left: auto; white-space: nowrap; transition: opacity 0.2s; }\n" +
             ".subscribe-btn.subscribed { background-color: var(--service-tab-bg, rgba(255,255,255,0.1)); color: var(--text-color); }\n" +
             ".action-buttons-group { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; width: 100%; }\n" +
@@ -241,7 +241,7 @@ public class HtmlRenderer {
             ".action-pill-btn { background-color: var(--service-tab-bg, rgba(255,255,255,0.1)); color: var(--text-color, #fff); height: 36px; line-height: 36px; padding: 0 18px; border-radius: 100px; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; text-decoration: none; flex-shrink: 0; border: none; cursor: pointer; white-space: nowrap; }\n" +
             ".action-pill-btn.danger { background-color: #c00c0c; color: #ffffff; }\n" +
             ".action-pill-btn.disabled { opacity: 0.6; cursor: default; pointer-events: none; }\n" +
-            ".settings-card { background-color: var(--settings-card-bg); border-radius: 24px; padding: 24px; border: 1px solid var(--settings-card-border); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }\n" +
+            ".settings-card { background-color: var(--settings-card-bg); border-radius: 24px; padding: 24px; border: 1px solid var(--settings-card-border); box-shadow: 0 4px 12px rgba(0,0,0,0.02); min-width: 0; overflow: hidden; word-break: break-word; overflow-wrap: break-word; }\n" +
             ".subscribe-btn:hover { opacity: 0.9; }\n" +
             ".video-js { font-family: inherit; color: #ffffff; border-radius: 16px; overflow: hidden; }\n" +
             ".video-js .vjs-big-play-button { background-color: var(--logo-color); border: none; width: 64px; height: 64px; line-height: 64px; border-radius: 50%; margin-top: -32px; margin-left: -32px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: background-color 0.2s, transform 0.2s; }\n" +
@@ -259,23 +259,23 @@ public class HtmlRenderer {
             "body.pip-mode .container { margin: 0 !important; padding: 0 !important; max-width: 100% !important; margin-top: 0 !important; }\n" +
             "body.pip-mode .player-container { margin-top: 0 !important; }\n" +
             "body.pip-mode .native-player, body.pip-mode .video-js { height: 100vh !important; width: 100vw !important; border-radius: 0 !important; }\n" +
-            ".media-description { font-size: 14px; line-height: 1.5; color: var(--media-desc-color); white-space: pre-wrap; background-color: var(--media-desc-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--media-desc-border); margin-top: 12px; }\n" +
-            ".comments-section { padding-top: 16px; }\n" +
+            ".media-description { font-size: 14px; line-height: 1.5; color: var(--media-desc-color); white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; min-width: 0; background-color: var(--media-desc-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--media-desc-border); margin-top: 12px; }\n" +
+            ".comments-section { padding-top: 16px; min-width: 0; }\n" +
             ".comment-count { font-size: 16px; font-weight: 500; margin-bottom: 16px; color: var(--comment-count-color); }\n" +
-            ".comment { display: flex; gap: 12px; margin-bottom: 16px; }\n" +
-            ".comment-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background-color: var(--card-thumbnail-bg); }\n" +
-            ".comment-details { display: flex; flex-direction: column; gap: 4px; }\n" +
-            ".comment-header { display: flex; gap: 8px; align-items: center; }\n" +
-            ".comment-author { font-size: 13px; font-weight: 500; color: var(--comment-author-color); }\n" +
-            ".comment-time { font-size: 12px; color: var(--comment-time-color); }\n" +
-            ".comment-text { font-size: 14px; line-height: 1.4; color: var(--comment-text-color); white-space: pre-wrap; }\n" +
-            ".channel-header { background-color: var(--channel-header-bg); border-radius: 12px; overflow: hidden; margin-bottom: 24px; border: 1px solid var(--channel-header-border); }\n" +
+            ".comment { display: flex; gap: 12px; margin-bottom: 16px; min-width: 0; }\n" +
+            ".comment-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; aspect-ratio: 1 / 1; background-color: var(--card-thumbnail-bg); }\n" +
+            ".comment-details { display: flex; flex-direction: column; gap: 4px; min-width: 0; overflow: hidden; word-break: break-word; overflow-wrap: break-word; }\n" +
+            ".comment-header { display: flex; gap: 8px; align-items: center; min-width: 0; }\n" +
+            ".comment-author { font-size: 13px; font-weight: 500; color: var(--comment-author-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n" +
+            ".comment-time { font-size: 12px; color: var(--comment-time-color); flex-shrink: 0; }\n" +
+            ".comment-text { font-size: 14px; line-height: 1.4; color: var(--comment-text-color); white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; min-width: 0; }\n" +
+            ".channel-header { background-color: var(--channel-header-bg); border-radius: 12px; overflow: hidden; margin-bottom: 24px; border: 1px solid var(--channel-header-border); min-width: 0; }\n" +
             ".channel-banner { width: 100%; height: 160px; object-fit: cover; background: #272727; }\n" +
-            ".channel-details { display: flex; padding: 16px; align-items: center; gap: 16px; flex-wrap: wrap; }\n" +
-            ".channel-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }\n" +
-            ".channel-info-block { display: flex; flex-direction: column; gap: 4px; flex-grow: 1; }\n" +
-            ".channel-name { font-size: 24px; font-weight: 700; color: var(--channel-name-color); }\n" +
-            ".channel-desc { font-size: 14px; color: var(--channel-desc-color); max-width: 600px; margin-top: 8px; line-height: 1.4; }\n" +
+            ".channel-details { display: flex; padding: 16px; align-items: center; gap: 16px; flex-wrap: wrap; min-width: 0; }\n" +
+            ".channel-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; flex-shrink: 0; aspect-ratio: 1 / 1; }\n" +
+            ".channel-info-block { display: flex; flex-direction: column; gap: 4px; flex-grow: 1; min-width: 0; overflow: hidden; word-break: break-word; overflow-wrap: break-word; }\n" +
+            ".channel-name { font-size: 24px; font-weight: 700; color: var(--channel-name-color); word-break: break-word; overflow-wrap: break-word; min-width: 0; }\n" +
+            ".channel-desc { font-size: 14px; color: var(--channel-desc-color); max-width: 600px; margin-top: 8px; line-height: 1.4; word-break: break-word; overflow-wrap: break-word; min-width: 0; }\n" +
             ".channel-tabs-selector { display: flex; border-top: 1px solid var(--media-info-border); padding: 0 16px; }\n" +
             ".channel-tab-btn { padding: 12px 16px; font-size: 14px; font-weight: 500; color: var(--card-meta-color); border-bottom: 3px solid transparent; cursor: pointer; text-decoration: none; }\n" +
             ".channel-tab-btn:hover { color: var(--text-color); }\n" +
@@ -2306,12 +2306,12 @@ public class HtmlRenderer {
             }
             if (uploader == null) uploader = "";
 
-            sb.append("        <div class=\"card\" style=\"margin-bottom:8px; flex-direction:row; gap:8px; height:94px; background:transparent; border:none; box-shadow:none;\">\n")
+            sb.append("        <div class=\"card\" style=\"margin-bottom:8px; flex-direction:row; gap:8px; height:94px; background:transparent; border:none; box-shadow:none; min-width:0; overflow:hidden;\">\n")
               .append("          <a href=\"/watch?serviceId=").append(serviceId).append("&id=").append(related.getUrl()).append("\" style=\"flex-shrink:0; width:168px; height:94px; border-radius:8px; overflow:hidden; background:var(--card-thumbnail-bg);\">\n")
-              .append("            <img src=\"").append(getThumbnailUrl(related.getThumbnails())).append("\" style=\"width:100%; height:100%; object-fit:cover;\">\n")
+              .append("            <img src=\"").append(getThumbnailUrl(related.getThumbnails())).append("\" style=\"width:100%; height:100%; object-fit:cover; flex-shrink:0;\">\n")
               .append("          </a>\n")
-              .append("          <div class=\"card-details\" style=\"padding:0; display:flex; flex-direction:column; justify-content:flex-start; min-width:0; flex-grow:1;\">\n")
-              .append("            <a href=\"/watch?serviceId=").append(serviceId).append("&id=").append(related.getUrl()).append("\" class=\"card-title\" style=\"font-size:14px; font-weight:500; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.2; margin-bottom:4px;\">")
+              .append("          <div class=\"card-details\" style=\"padding:0; display:flex; flex-direction:column; justify-content:flex-start; min-width:0; flex-grow:1; overflow:hidden;\">\n")
+              .append("            <a href=\"/watch?serviceId=").append(serviceId).append("&id=").append(related.getUrl()).append("\" class=\"card-title\" style=\"font-size:14px; font-weight:500; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.2; margin-bottom:4px; word-break:break-word; overflow-wrap:break-word;\">")
               .append(related.getName()).append("</a>\n")
               .append("            <span class=\"card-meta\" style=\"font-size:12px; line-height:1.4;\">\n")
               .append("              <span class=\"card-uploader\">").append(uploader).append("</span>\n");
