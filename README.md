@@ -6,6 +6,9 @@
 
 ---
 
+[![downloads](https://img.shields.io/github/downloads/diekaiju/localtube/total?logo=github&label=GitHub%20Downloads)](https://github.com/diekaiju/localtube/releases)
+
+
 ## 📺 LocalTube Application (`localServerApp`)
 
 LocalTube transforms your Android device into a private, self-hosted YouTube streaming web server.
